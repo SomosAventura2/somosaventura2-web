@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SomosAventura - Gestión</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --whatsapp: #25D366;
+            --green-primary: #4CAF50;
+            --green-mountain: #2d5a3d;
+            --green-dark: #1a3a28;
+            --bg-dark: #0e2f36;
+            --bg-card: #1a3d47;
+            --text-primary: #ffffff;
+            --text-secondary: #b8c5be;
+            --accent: #76c893;
+            --shadow: rgba(0, 0, 0, 0.5);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: rgba(118, 200, 147, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            padding-bottom: 80px;
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.6;
+        }
+
+        /* ===== LOGIN ===== */
+        .login-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--green-mountain) 0%, var(--green-dark) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-screen::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 30s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .login-card {
+            background: var(--bg-card);
+            border-radius: 32px;
+            padding: 48px 32px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            border: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .login-card h1 {
+            font-size: 32px;
+            color: var(--accent);
+            margin-bottom: 8px;
+            font-weight: 800;
+        }
+
+        .login-card p {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            font-size: 15px;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            font-size: 16px;
+            margin-bottom: 16px;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .login-form input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .login-form input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(118, 200, 147, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-mountain) 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(239, 68, 68, 0.2);
+            border-radius: 12px;
+            display: none;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .error-msg.show {
+            display: block;
+        }
+
+        /* ===== APP ===== */
+        .app {
+            max-width: 480px;
+            margin: 0 auto;
+            display: none;
+            background: var(--bg-dark);
+            min-height: 100vh;
+        }
+
+        .app.active {
+            display: block;
+        }
+
+        /* Header */
+        .app-header {
+            background: linear-gradient(135deg, var(--green-mountain) 0%, var(--green-dark) 100%);
+            color: white;
+            padding: 24px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 16px var(--shadow);
+        }
+
+        .app-header .logo-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .app-header h1 {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: var(--green-mountain);
+        }
+
+        /* Tabs */
+        .nav-tabs {
+            background: var(--bg-card);
+            display: flex;
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 72px;
+            z-index: 99;
+            overflow-x: auto;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 18px 12px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            border: none;
+            background: transparent;
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .nav-tab:hover {
+            color: var(--accent);
+            background: rgba(118, 200, 147, 0.1);
+        }
+
+        .nav-tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+            background: rgba(118, 200, 147, 0.1);
+        }
+
+        /* Content */
+        .section {
+            display: none;
+            padding: 20px 16px;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px var(--shadow);
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 24px rgba(118, 200, 147, 0.2);
+            transform: translateY(-2px);
+            border-color: rgba(118, 200, 147, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-meta {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Badges */
+        .badge {
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent);
+        }
+
+        .badge-closed {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ff6b6b;
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .badge-paid {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .badge-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        /* Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .stat {
+            background: rgba(118, 200, 147, 0.1);
+            padding: 14px 10px;
+            border-radius: 14px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--accent);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            display: block;
+            font-weight: 600;
+        }
+
+        /* Payment Progress */
+        .payment-progress {
+            margin-top: 16px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success) 0%, var(--accent) 100%);
+            transition: width 0.5s ease;
+        }
+
+        .progress-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Buttons */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-mountain) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-outline:hover {
+            background: var(--accent);
+            color: var(--bg-dark);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 10px 18px;
+            font-size: 14px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(118, 200, 147, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* Search */
+        .search-box {
+            width: 100%;
+            padding: 14px 20px 14px 44px;
+            border: 2px solid var(--border);
+            border-radius: 999px;
+            font-size: 15px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.1) url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23b8c5be" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>') no-repeat 16px center;
+            transition: all 0.3s;
+            color: var(--text-primary);
+        }
+
+        .search-box::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(118, 200, 147, 0.2);
+            background: rgba(255, 255, 255, 0.15) url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%2376c893" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>') no-repeat 16px center;
+        }
+
+        /* List Items */
+        .list-item {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item-info {
+            flex: 1;
+        }
+
+        .list-item-title {
+            font-weight: 700;
+            margin-bottom: 4px;
+            font-size: 15px;
+        }
+
+        .list-item-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Compact Person List */
+        .person-list-compact {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .person-item-compact {
+            background: rgba(118, 200, 147, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+
+        .person-item-compact:hover {
+            background: rgba(118, 200, 147, 0.1);
+            border-color: rgba(118, 200, 147, 0.3);
+        }
+
+        .person-info-compact {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .person-name-compact {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .person-meta-compact {
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .person-meta-compact span {
+            white-space: nowrap;
+        }
+
+        .person-delete-btn {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ff6b6b;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            min-width: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .person-delete-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.5);
+            transform: scale(1.05);
+        }
+
+        /* Compact Attendance List */
+        .attendance-group-compact {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .attendance-group-compact:hover {
+            border-color: rgba(118, 200, 147, 0.3);
+            box-shadow: 0 2px 8px rgba(118, 200, 147, 0.1);
+        }
+
+        .attendance-header-compact {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .attendance-header-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .attendance-title-compact {
+            font-weight: 800;
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .attendance-meta-compact {
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .attendance-badge-compact {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+            background: rgba(118, 200, 147, 0.2);
+            color: var(--accent);
+        }
+
+        .attendance-progress-compact {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .attendance-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success) 0%, var(--accent) 100%);
+            transition: width 0.3s ease;
+        }
+
+        .attendance-list-compact {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .attendance-item-compact {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .attendance-item-compact:hover {
+            background: rgba(118, 200, 147, 0.1);
+        }
+
+        .attendance-checkbox-compact {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .attendance-name-compact {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .attendance-name-compact.checked {
+            color: var(--accent);
+        }
+
+        /* Compact Filter */
+        .filter-compact {
+            margin-bottom: 16px;
+        }
+
+        .filter-compact-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(118, 200, 147, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 12px;
+        }
+
+        .filter-compact-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .filter-compact-select {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-compact-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .filter-compact-select option {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        /* Checkbox */
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 12px;
+            transition: background 0.2s;
+        }
+
+        .checkbox-label:hover {
+            background: rgba(118, 200, 147, 0.1);
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: var(--accent);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 8px;
+            font-size: 20px;
+            color: var(--text-primary);
+        }
+
+        /* Bottom Action */
+        .bottom-action {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            padding: 16px;
+            box-shadow: 0 -4px 16px var(--shadow);
+            max-width: 480px;
+            margin: 0 auto;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 24px 24px 0 0;
+            padding: 28px 20px;
+            max-width: 480px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+            border: 1px solid var(--border);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 24px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        /* Payment Item */
+        .payment-item {
+            background: rgba(118, 200, 147, 0.1);
+            padding: 16px;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .payment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .payment-amount {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 16px 0;
+        }
+
+        /* Personas en Reserva */
+        .personas-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .personas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .personas-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+
+        .persona-item {
+            background: rgba(118, 200, 147, 0.1);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border);
+        }
+
+        .persona-nombre {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .persona-remove {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        .persona-remove:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+
+        .personas-input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .personas-input-group input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .personas-input-group input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .personas-input-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .personas-input-group button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-mountain) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .personas-input-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        .personas-input-group button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .personas-info {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        .personas-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-top: 8px;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        select.form-input {
+            color: var(--text-primary);
+        }
+
+        select.form-input option {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <div class="logo">🏔️</div>
+            <h1>SomosAventura2</h1>
+            <p>Gestión de Rutas y Reservas</p>
+            
+            <div class="login-form">
+                <input type="text" id="username" placeholder="Usuario" autocomplete="username">
+                <input type="password" id="password" placeholder="Contraseña" autocomplete="current-password">
+                <button class="login-btn" onclick="login()">Iniciar Sesión</button>
+            </div>
+            
+            <div id="errorMsg" class="error-msg">❌ Usuario o contraseña incorrectos</div>
+        </div>
+    </div>
+
+    <!-- APP -->
+    <div id="app" class="app">
+        <div class="app-header">
+            <div class="logo-text">
+                <span>🏔️</span>
+                <h1>SomosAventura2</h1>
+            </div>
+            <button class="logout-btn" onclick="logout()">Salir</button>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('rutas')">📍 Rutas</button>
+            <button class="nav-tab" onclick="showTab('reservas')">👥 Reservas</button>
+            <button class="nav-tab" onclick="showTab('participantes')">✅ Personas</button>
+            <button class="nav-tab" onclick="showTab('asistencia')">📋 Asistencia</button>
+        </div>
+
+        <!-- RUTAS -->
+        <div id="rutas" class="section active">
+            <input type="text" class="search-box" id="searchRutas" placeholder="Buscar rutas..." oninput="renderRutas()">
+            <div id="listaRutas"></div>
+            <div class="bottom-action">
+                <button class="btn btn-primary" onclick="openModal('modalNuevaRuta')">+ Nueva Ruta</button>
+            </div>
+        </div>
+
+        <!-- RESERVAS -->
+        <div id="reservas" class="section">
+            <div class="filter-compact">
+                <div class="filter-compact-wrapper">
+                    <span class="filter-compact-label">🔍 Ruta:</span>
+                    <select id="filtroRutaReservas" class="filter-compact-select" onchange="renderReservas()">
+                        <option value="">Todas las rutas</option>
+                    </select>
+                </div>
+            </div>
+            <input type="text" class="search-box" id="searchReservas" placeholder="Buscar reservas..." oninput="renderReservas()">
+            <div id="listaReservas"></div>
+            <div class="bottom-action">
+                <button class="btn btn-primary" onclick="openModal('modalNuevaReserva')">+ Nueva Reserva</button>
+            </div>
+        </div>
+
+        <!-- PARTICIPANTES -->
+        <div id="participantes" class="section">
+            <div class="filter-compact">
+                <div class="filter-compact-wrapper">
+                    <span class="filter-compact-label">🔍 Ruta:</span>
+                    <select id="filtroRutaParticipantes" class="filter-compact-select" onchange="renderParticipantes()">
+                        <option value="">Todas las rutas</option>
+                    </select>
+                </div>
+            </div>
+            <input type="text" class="search-box" id="searchParticipantes" placeholder="Buscar personas..." oninput="renderParticipantes()">
+            <div id="listaParticipantes"></div>
+            <div class="bottom-action">
+                <button class="btn btn-primary" onclick="openModal('modalNuevoParticipante')">+ Nueva Persona</button>
+            </div>
+        </div>
+
+        <!-- ASISTENCIA -->
+        <div id="asistencia" class="section">
+            <div class="filter-compact">
+                <div class="filter-compact-wrapper">
+                    <span class="filter-compact-label">🔍 Ruta:</span>
+                    <select id="filtroRuta" class="filter-compact-select" onchange="renderAsistencia()">
+                        <option value="">Todas las rutas</option>
+                    </select>
+                </div>
+            </div>
+            <div id="listaAsistencia"></div>
+        </div>
+    </div>
+
+    <!-- MODAL: NUEVA RUTA -->
+    <div id="modalNuevaRuta" class="modal" onclick="closeModalOnBackdrop(event, 'modalNuevaRuta')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">📍 Nueva Ruta</div>
+            <div class="form-group">
+                <label class="form-label">Nombre de la Ruta</label>
+                <input type="text" id="rutaNombre" class="form-input" placeholder="Ej: Cascada Mirandina">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Fecha</label>
+                    <input type="date" id="rutaFecha" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cupos</label>
+                    <input type="number" id="rutaCupos" class="form-input" placeholder="20">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Precio en Euros (€)</label>
+                <input type="number" id="rutaPrecioEuros" class="form-input" placeholder="10.00" step="0.01">
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-outline" onclick="closeModal('modalNuevaRuta')">Cancelar</button>
+                <button class="btn btn-primary" onclick="agregarRuta()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: NUEVA RESERVA -->
+    <div id="modalNuevaReserva" class="modal" onclick="closeModalOnBackdrop(event, 'modalNuevaReserva')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">👥 Nueva Reserva</div>
+            <div class="form-group">
+                <label class="form-label">Nombre del Líder</label>
+                <input type="text" id="reservaLider" class="form-input" placeholder="Ej: Valeria">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Ruta</label>
+                <select id="reservaRuta" class="form-input" onchange="actualizarPersonasEnReserva()">
+                    <option value="">Selecciona una ruta</option>
+                </select>
+            </div>
+            <div id="infoPrecioRuta" style="display: none; background: rgba(118, 200, 147, 0.1); padding: 14px; border-radius: 14px; margin-bottom: 16px; border: 1px solid var(--border);">
+                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Precio Referencial</div>
+                <div style="font-size: 20px; font-weight: 800; color: var(--accent);" id="precioReferencialRuta"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Cupos Reservados</label>
+                    <input type="number" id="reservaCantidad" class="form-input" placeholder="5" onchange="actualizarPersonasEnReserva()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Monto Inicial (Bs)</label>
+                    <input type="number" id="reservaMontoPagado" class="form-input" placeholder="17500" step="0.01">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">📎 Referencia del Pago Inicial (Opcional)</label>
+                <input type="text" id="reservaReferenciaPago" class="form-input" placeholder="Ej: Transferencia 001, Zelle, Efectivo">
+            </div>
+            
+            <!-- SECCIÓN DE PERSONAS -->
+            <div class="personas-section">
+                <div class="personas-header">
+                    <label class="form-label" style="margin: 0;">👥 Agregar Personas</label>
+                </div>
+                <div class="personas-input-group">
+                    <input type="text" id="personaNombreInput" class="form-input" placeholder="Nombre de la persona" onkeypress="if(event.key==='Enter') agregarPersonaTemporal()">
+                    <button type="button" id="btnAgregarPersona" onclick="agregarPersonaTemporal()">Agregar</button>
+                </div>
+                <div id="personasTemporalesList" class="personas-list"></div>
+                <div id="personasInfo" class="personas-info"></div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-outline" onclick="closeModal('modalNuevaReserva')">Cancelar</button>
+                <button class="btn btn-primary" onclick="agregarReserva()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: NUEVO PARTICIPANTE -->
+    <div id="modalNuevoParticipante" class="modal" onclick="closeModalOnBackdrop(event, 'modalNuevoParticipante')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">✅ Nueva Persona</div>
+            <div class="form-group">
+                <label class="form-label">Nombre Completo</label>
+                <input type="text" id="participanteNombre" class="form-input" placeholder="Ej: Juan Pérez">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Líder de Reserva</label>
+                <select id="participanteReserva" class="form-input">
+                    <option value="">Selecciona un líder</option>
+                </select>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-outline" onclick="closeModal('modalNuevoParticipante')">Cancelar</button>
+                <button class="btn btn-primary" onclick="agregarParticipante()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DETALLE RESERVA / PAGOS -->
+    <div id="modalDetalleReserva" class="modal" onclick="closeModalOnBackdrop(event, 'modalDetalleReserva')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">💰 Gestión de Pagos</div>
+            <div id="detalleReservaContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // AUTENTICACIÓN
+        const USUARIOS = {
+            'Chanti': '0526',
+            'Luifer': '2612',
+            'test': 'test'
+        };
+
+        function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (USUARIOS[username] && USUARIOS[username] === password) {
+                sessionStorage.setItem('authenticated', 'true');
+                sessionStorage.setItem('currentUser', username);
+                showApp();
+            } else {
+                document.getElementById('errorMsg').classList.add('show');
+                setTimeout(() => {
+                    document.getElementById('errorMsg').classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            location.reload();
+        }
+
+        function showApp() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('app').classList.add('active');
+            loadData();
+            updateSelects();
+            renderAll();
+        }
+
+        function checkAuth() {
+            if (sessionStorage.getItem('authenticated') === 'true') {
+                showApp();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            document.getElementById('password')?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') login();
+            });
+        });
+
+        // DATOS
+        let data = {
+            rutas: [],
+            reservas: [],
+            participantes: []
+        };
+
+        // Personas temporales en el modal de reserva
+        let personasTemporales = [];
+
+        function loadData() {
+            const saved = localStorage.getItem('somosAventura2Data');
+            if (saved) data = JSON.parse(saved);
+        }
+
+        function saveData() {
+            localStorage.setItem('somosAventura2Data', JSON.stringify(data));
+        }
+
+        // NAVEGACIÓN
+        function showTab(tabName) {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            updateSelects();
+            renderAll();
+        }
+
+        // MODALES
+        function openModal(modalId) {
+            updateSelects();
+            if (modalId === 'modalNuevaReserva') {
+                personasTemporales = [];
+                renderPersonasTemporales();
+            }
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            if (modalId === 'modalNuevaReserva') {
+                personasTemporales = [];
+                document.getElementById('reservaLider').value = '';
+                document.getElementById('reservaRuta').value = '';
+                document.getElementById('reservaCantidad').value = '';
+                document.getElementById('reservaMontoPagado').value = '';
+                document.getElementById('reservaReferenciaPago').value = '';
+                document.getElementById('personaNombreInput').value = '';
+                document.getElementById('infoPrecioRuta').style.display = 'none';
+            }
+        }
+
+        function closeModalOnBackdrop(event, modalId) {
+            if (event.target.classList.contains('modal')) {
+                closeModal(modalId);
+            }
+        }
+
+        // SELECTS
+        function updateSelects() {
+            const selectRuta = document.getElementById('reservaRuta');
+            selectRuta.innerHTML = '<option value="">Selecciona una ruta</option>';
+            data.rutas.forEach(ruta => {
+                const disponibles = calcularCuposDisponibles(ruta.nombre);
+                selectRuta.innerHTML += `<option value="${ruta.nombre}">${ruta.nombre} - ${ruta.fecha} (${disponibles} disponibles)</option>`;
+            });
+
+            const selectReserva = document.getElementById('participanteReserva');
+            selectReserva.innerHTML = '<option value="">Selecciona un líder</option>';
+            data.reservas.forEach(reserva => {
+                selectReserva.innerHTML += `<option value="${reserva.lider}">${reserva.lider} - ${reserva.ruta}</option>`;
+            });
+
+            const filtroRuta = document.getElementById('filtroRuta');
+            filtroRuta.innerHTML = '<option value="">Todas las rutas</option>';
+            data.rutas.forEach(ruta => {
+                filtroRuta.innerHTML += `<option value="${ruta.nombre}">${ruta.nombre} - ${ruta.fecha}</option>`;
+            });
+
+            const filtroRutaReservas = document.getElementById('filtroRutaReservas');
+            filtroRutaReservas.innerHTML = '<option value="">Todas las rutas</option>';
+            data.rutas.forEach(ruta => {
+                filtroRutaReservas.innerHTML += `<option value="${ruta.nombre}">${ruta.nombre} - ${ruta.fecha}</option>`;
+            });
+
+            const filtroRutaParticipantes = document.getElementById('filtroRutaParticipantes');
+            filtroRutaParticipantes.innerHTML = '<option value="">Todas las rutas</option>';
+            data.rutas.forEach(ruta => {
+                filtroRutaParticipantes.innerHTML += `<option value="${ruta.nombre}">${ruta.nombre} - ${ruta.fecha}</option>`;
+            });
+        }
+
+        // CÁLCULOS
+        function calcularCuposOcupados(nombreRuta) {
+            return data.reservas
+                .filter(r => r.ruta === nombreRuta)
+                .reduce((sum, r) => sum + r.cantidad, 0);
+        }
+
+        function calcularCuposDisponibles(nombreRuta) {
+            const ruta = data.rutas.find(r => r.nombre === nombreRuta);
+            if (!ruta) return 0;
+            return ruta.cupos - calcularCuposOcupados(nombreRuta);
+        }
+
+        function contarParticipantes(lider) {
+            return data.participantes.filter(p => p.lider === lider).length;
+        }
+
+        function getRutaParticipante(lider) {
+            const reserva = data.reservas.find(r => r.lider === lider);
+            return reserva ? reserva.ruta : 'Sin ruta';
+        }
+
+        function calcularTotalRecaudado(nombreRuta) {
+            return data.reservas
+                .filter(r => r.ruta === nombreRuta)
+                .reduce((sum, r) => sum + (r.montoPagado || 0), 0);
+        }
+
+        function calcularMontoEsperado(nombreRuta) {
+            const cuposReservados = data.reservas
+                .filter(r => r.ruta === nombreRuta)
+                .reduce((sum, r) => sum + r.cantidad, 0);
+            return cuposReservados;
+        }
+
+        // MOSTRAR PRECIO REFERENCIAL EN MODAL RESERVA
+        function mostrarPrecioRuta() {
+            const rutaNombre = document.getElementById('reservaRuta').value;
+            if (rutaNombre) {
+                const ruta = data.rutas.find(r => r.nombre === rutaNombre);
+                if (ruta) {
+                    const precioEuros = ruta.precioEuros || 0;
+                    document.getElementById('infoPrecioRuta').style.display = 'block';
+                    document.getElementById('precioReferencialRuta').textContent = `${precioEuros}€ por cupo`;
+                } else {
+                    document.getElementById('infoPrecioRuta').style.display = 'none';
+                }
+            } else {
+                document.getElementById('infoPrecioRuta').style.display = 'none';
+            }
+        }
+
+        // GESTIÓN DE PERSONAS TEMPORALES EN RESERVA
+        function agregarPersonaTemporal() {
+            const nombre = document.getElementById('personaNombreInput').value.trim();
+            const cantidad = parseInt(document.getElementById('reservaCantidad').value) || 0;
+            const lider = document.getElementById('reservaLider').value.trim();
+            
+            if (!nombre) {
+                alert('❌ Ingresa un nombre');
+                return;
+            }
+            
+            if (!lider) {
+                alert('❌ Primero ingresa el nombre del líder');
+                return;
+            }
+            
+            // Verificar duplicados
+            if (personasTemporales.includes(nombre)) {
+                alert('❌ Esta persona ya está agregada');
+                document.getElementById('personaNombreInput').value = '';
+                return;
+            }
+            
+            // Verificar si el líder ya está agregado
+            if (nombre.toLowerCase() === lider.toLowerCase()) {
+                alert('⚠️ El líder se agregará automáticamente al guardar');
+                document.getElementById('personaNombreInput').value = '';
+                return;
+            }
+            
+            // Verificar cupos (incluyendo el líder que se agregará automáticamente)
+            const totalPersonas = personasTemporales.length + 1; // +1 por el líder
+            if (cantidad > 0 && totalPersonas >= cantidad) {
+                alert(`⚠️ Ya has agregado el máximo de personas (${cantidad} cupos reservados). El líder cuenta como uno.`);
+                document.getElementById('personaNombreInput').value = '';
+                return;
+            }
+            
+            personasTemporales.push(nombre);
+            document.getElementById('personaNombreInput').value = '';
+            renderPersonasTemporales();
+        }
+
+        function eliminarPersonaTemporal(index) {
+            personasTemporales.splice(index, 1);
+            renderPersonasTemporales();
+        }
+
+        function renderPersonasTemporales() {
+            const container = document.getElementById('personasTemporalesList');
+            const info = document.getElementById('personasInfo');
+            const cantidad = parseInt(document.getElementById('reservaCantidad').value) || 0;
+            const lider = document.getElementById('reservaLider').value.trim();
+            
+            if (personasTemporales.length === 0 && !lider) {
+                container.innerHTML = '';
+                info.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            personasTemporales.forEach((nombre, index) => {
+                html += `
+                    <div class="persona-item">
+                        <span class="persona-nombre">${nombre}</span>
+                        <button class="persona-remove" onclick="eliminarPersonaTemporal(${index})">Eliminar</button>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            
+            // Actualizar info
+            const totalPersonas = personasTemporales.length + (lider ? 1 : 0);
+            if (cantidad > 0) {
+                const disponibles = cantidad - totalPersonas;
+                if (disponibles >= 0) {
+                    info.innerHTML = `Total: ${totalPersonas}/${cantidad} personas (${disponibles} disponibles)`;
+                    info.className = 'personas-info';
+                } else {
+                    info.innerHTML = `⚠️ Has excedido los cupos. Máximo: ${cantidad} personas (incluyendo el líder)`;
+                    info.className = 'personas-warning';
+                }
+            } else {
+                info.innerHTML = `Total: ${totalPersonas} persona${totalPersonas !== 1 ? 's' : ''} agregada${totalPersonas !== 1 ? 's' : ''}`;
+                info.className = 'personas-info';
+            }
+        }
+
+        function actualizarPersonasEnReserva() {
+            mostrarPrecioRuta();
+            renderPersonasTemporales();
+        }
+
+        // AGREGAR RUTA
+        function agregarRuta() {
+            const nombre = document.getElementById('rutaNombre').value.trim();
+            const fecha = document.getElementById('rutaFecha').value;
+            const cupos = parseInt(document.getElementById('rutaCupos').value);
+            const precioEuros = parseFloat(document.getElementById('rutaPrecioEuros').value);
+
+            if (!nombre || !fecha || !cupos || !precioEuros) {
+                alert('❌ Completa todos los campos');
+                return;
+            }
+
+            if (data.rutas.find(r => r.nombre === nombre)) {
+                alert('❌ Ya existe una ruta con ese nombre');
+                return;
+            }
+
+            data.rutas.push({ nombre, fecha, cupos, precioEuros });
+            saveData();
+            
+            document.getElementById('rutaNombre').value = '';
+            document.getElementById('rutaFecha').value = '';
+            document.getElementById('rutaCupos').value = '';
+            document.getElementById('rutaPrecioEuros').value = '';
+            
+            closeModal('modalNuevaRuta');
+            updateSelects();
+            renderRutas();
+            alert('✅ Ruta creada exitosamente');
+        }
+
+        // AGREGAR RESERVA
+        function agregarReserva() {
+            const lider = document.getElementById('reservaLider').value.trim();
+            const ruta = document.getElementById('reservaRuta').value;
+            const cantidad = parseInt(document.getElementById('reservaCantidad').value);
+            const montoPagado = parseFloat(document.getElementById('reservaMontoPagado').value) || 0;
+
+            if (!lider || !ruta || !cantidad) {
+                alert('❌ Completa todos los campos obligatorios');
+                return;
+            }
+
+            if (data.reservas.find(r => r.lider === lider)) {
+                alert('❌ Ya existe una reserva con ese líder');
+                return;
+            }
+
+            const disponibles = calcularCuposDisponibles(ruta);
+            if (cantidad > disponibles) {
+                alert(`⚠️ Solo hay ${disponibles} cupos disponibles`);
+                return;
+            }
+
+            // Validar que las personas temporales no excedan los cupos
+            const totalPersonas = personasTemporales.length + 1; // +1 por el líder
+            if (totalPersonas > cantidad) {
+                alert(`⚠️ Has agregado ${totalPersonas} personas pero solo reservaste ${cantidad} cupos. El líder cuenta como uno.`);
+                return;
+            }
+
+            // Crear la reserva
+            // Si hay monto inicial, agregarlo como primer pago
+            const referenciaPago = document.getElementById('reservaReferenciaPago').value.trim();
+            const pagosIniciales = [];
+            if (montoPagado > 0) {
+                pagosIniciales.push({
+                    monto: montoPagado,
+                    referencia: referenciaPago || 'Pago inicial',
+                    fecha: new Date().toISOString()
+                });
+            }
+            
+            data.reservas.push({ lider, ruta, cantidad, montoPagado, pagos: pagosIniciales });
+            
+            // AUTO-REGISTRO DEL LÍDER
+            // Verificar si el líder ya existe como participante
+            const liderExiste = data.participantes.find(p => 
+                p.nombre.toLowerCase() === lider.toLowerCase() && p.lider === lider
+            );
+            
+            if (!liderExiste) {
+                data.participantes.push({ 
+                    nombre: lider, 
+                    lider: lider, 
+                    asiste: false 
+                });
+            }
+            
+            // Agregar las personas temporales
+            personasTemporales.forEach(nombre => {
+                // Verificar que no exista ya
+                const existe = data.participantes.find(p => 
+                    p.nombre.toLowerCase() === nombre.toLowerCase() && p.lider === lider
+                );
+                
+                if (!existe) {
+                    data.participantes.push({ 
+                        nombre: nombre, 
+                        lider: lider, 
+                        asiste: false 
+                    });
+                }
+            });
+            
+            saveData();
+            
+            // Limpiar formulario
+            document.getElementById('reservaLider').value = '';
+            document.getElementById('reservaRuta').value = '';
+            document.getElementById('reservaCantidad').value = '';
+            document.getElementById('reservaMontoPagado').value = '';
+            document.getElementById('reservaReferenciaPago').value = '';
+            document.getElementById('personaNombreInput').value = '';
+            document.getElementById('infoPrecioRuta').style.display = 'none';
+            personasTemporales = [];
+            renderPersonasTemporales();
+            
+            closeModal('modalNuevaReserva');
+            updateSelects();
+            renderReservas();
+            renderRutas();
+            renderParticipantes();
+            alert('✅ Reserva creada exitosamente. El líder y las personas agregadas han sido registradas automáticamente.');
+        }
+
+        // AGREGAR PARTICIPANTE
+        function agregarParticipante() {
+            const nombre = document.getElementById('participanteNombre').value.trim();
+            const lider = document.getElementById('participanteReserva').value;
+
+            if (!nombre || !lider) {
+                alert('❌ Completa todos los campos');
+                return;
+            }
+
+            const reserva = data.reservas.find(r => r.lider === lider);
+            const registrados = contarParticipantes(lider);
+
+            if (registrados >= reserva.cantidad) {
+                alert(`⚠️ El líder ${lider} ya tiene ${reserva.cantidad} personas registradas`);
+                return;
+            }
+
+            // Verificar duplicados
+            const existe = data.participantes.find(p => 
+                p.nombre.toLowerCase() === nombre.toLowerCase() && p.lider === lider
+            );
+            
+            if (existe) {
+                alert('❌ Esta persona ya está registrada para este líder');
+                return;
+            }
+
+            data.participantes.push({ nombre, lider, asiste: false });
+            saveData();
+            
+            document.getElementById('participanteNombre').value = '';
+            
+            closeModal('modalNuevoParticipante');
+            renderParticipantes();
+            renderReservas();
+            renderAsistencia();
+            alert('✅ Persona registrada exitosamente');
+        }
+
+        // ACTUALIZAR PAGOS
+        function actualizarPagos(lider, nuevoMonto, referencia) {
+            const reserva = data.reservas.find(r => r.lider === lider);
+            if (!reserva) return;
+            
+            if (!nuevoMonto || nuevoMonto < 0) {
+                alert('❌ Ingresa un monto válido');
+                return;
+            }
+            
+            // Agregar el nuevo pago al historial
+            if (!reserva.pagos) reserva.pagos = [];
+            reserva.pagos.push({
+                monto: nuevoMonto,
+                referencia: referencia || '',
+                fecha: new Date().toISOString()
+            });
+            
+            // Actualizar monto total pagado
+            reserva.montoPagado = reserva.pagos.reduce((sum, p) => sum + p.monto, 0);
+            
+            saveData();
+            renderReservas();
+            renderRutas();
+            // Limpiar campos del formulario
+            document.getElementById('nuevoPago').value = '';
+            document.getElementById('nuevoPagoReferencia').value = '';
+            
+            verDetalleReserva(lider); // Refrescar el modal
+            alert('✅ Pago registrado exitosamente');
+        }
+
+        // VER DETALLE RESERVA
+        function verDetalleReserva(lider) {
+            const reserva = data.reservas.find(r => r.lider === lider);
+            if (!reserva) return;
+            
+            const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
+            const montoPagado = reserva.montoPagado || 0;
+            
+            const historialPagos = (reserva.pagos || []).map((pago, index) => `
+                <div style="padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: var(--success); margin-bottom: 4px;">Bs ${pago.monto.toLocaleString()}</div>
+                            ${pago.referencia ? `<div style="font-size: 12px; color: var(--accent); margin-bottom: 4px;">📎 Ref: ${pago.referencia}</div>` : ''}
+                            <div style="font-size: 12px; color: var(--text-secondary);">${new Date(pago.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            const html = `
+                <div class="payment-item">
+                    <div class="payment-header">
+                        <div>
+                            <div style="font-weight: 700; margin-bottom: 4px;">📊 Resumen de Pagos</div>
+                            <div style="font-size: 13px; color: var(--text-secondary);">Ruta: ${reserva.ruta}</div>
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">Cupos Reservados</div>
+                            <div style="font-size: 20px; font-weight: 800; color: var(--text-primary);">${reserva.cantidad}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">Precio Referencial</div>
+                            <div style="font-size: 20px; font-weight: 800; color: var(--text-primary);">${ruta ? ruta.precioEuros : 0}€</div>
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <div style="margin-bottom: 12px;">
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Total Pagado</div>
+                        <div style="font-size: 24px; font-weight: 800; color: var(--success);">Bs ${montoPagado.toLocaleString()}</div>
+                    </div>
+                </div>
+                
+                ${(reserva.pagos && reserva.pagos.length > 0) ? `
+                    <div style="margin-top: 20px;">
+                        <div style="font-weight: 700; margin-bottom: 12px; color: var(--text-primary);">📝 Historial de Pagos</div>
+                        ${historialPagos}
+                    </div>
+                ` : ''}
+                
+                <div class="divider"></div>
+                <div class="form-group">
+                    <label class="form-label">💵 Registrar Nuevo Pago (Bs)</label>
+                    <input type="number" id="nuevoPago" class="form-input" 
+                           placeholder="Monto en bolívares" 
+                           step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">📎 Referencia (Opcional)</label>
+                    <input type="text" id="nuevoPagoReferencia" class="form-input" 
+                           placeholder="Número de referencia del pago">
+                </div>
+                <button class="btn btn-success" onclick="actualizarPagos('${lider}', parseFloat(document.getElementById('nuevoPago').value), document.getElementById('nuevoPagoReferencia').value.trim())">
+                    ✅ Registrar Pago
+                </button>
+                
+                <button class="btn btn-outline" style="margin-top: 16px;" onclick="closeModal('modalDetalleReserva')">
+                    Cerrar
+                </button>
+            `;
+            
+            document.getElementById('detalleReservaContent').innerHTML = html;
+            openModal('modalDetalleReserva');
+        }
+
+        // ELIMINAR
+        function eliminarRuta(nombre) {
+            if (!confirm(`¿Eliminar la ruta "${nombre}"?`)) return;
+            data.rutas = data.rutas.filter(r => r.nombre !== nombre);
+            data.reservas = data.reservas.filter(r => r.ruta !== nombre);
+            saveData();
+            updateSelects();
+            renderRutas();
+            renderReservas();
+        }
+
+        function eliminarReserva(lider) {
+            if (!confirm(`¿Eliminar la reserva de "${lider}"?`)) return;
+            data.reservas = data.reservas.filter(r => r.lider !== lider);
+            data.participantes = data.participantes.filter(p => p.lider !== lider);
+            saveData();
+            updateSelects();
+            renderReservas();
+            renderParticipantes();
+            renderRutas();
+        }
+
+        function eliminarParticipante(index) {
+            const p = data.participantes[index];
+            if (!confirm(`¿Eliminar a "${p.nombre}"?`)) return;
+            data.participantes.splice(index, 1);
+            saveData();
+            renderParticipantes();
+            renderReservas();
+        }
+
+        // ASISTENCIA
+        function toggleAsistencia(index) {
+            data.participantes[index].asiste = !data.participantes[index].asiste;
+            saveData();
+            renderAsistencia();
+        }
+
+        // RENDER RUTAS
+        function renderRutas() {
+            const search = document.getElementById('searchRutas').value.toLowerCase();
+            const filtered = data.rutas.filter(r => 
+                r.nombre.toLowerCase().includes(search) || 
+                r.fecha.includes(search)
+            );
+            
+            const html = filtered.length === 0 ? 
+                `<div class="empty-state">
+                    <div class="empty-state-icon">🏔️</div>
+                    <h3>No hay rutas registradas</h3>
+                    <p>Crea tu primera ruta de senderismo</p>
+                </div>` :
+                filtered.map(ruta => {
+                    const ocupados = calcularCuposOcupados(ruta.nombre);
+                    const disponibles = ruta.cupos - ocupados;
+                    const porcentaje = (ocupados / ruta.cupos * 100).toFixed(0);
+                    const recaudado = calcularTotalRecaudado(ruta.nombre);
+                    const badgeClass = disponibles > 5 ? 'badge-active' : disponibles > 0 ? 'badge-warning' : 'badge-closed';
+                    const badgeText = disponibles > 0 ? 'Activa' : 'Completa';
+                    const precioEuros = ruta.precioEuros || 0;
+                    
+                    return `
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">🏔️ ${ruta.nombre}</div>
+                                    <div class="card-meta">📅 ${new Date(ruta.fecha).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                                </div>
+                                <span class="badge ${badgeClass}">${badgeText}</span>
+                            </div>
+                            <div class="stats-row">
+                                <div class="stat">
+                                    <span class="stat-value">${ocupados}/${ruta.cupos}</span>
+                                    <span class="stat-label">Cupos</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-value">${disponibles}</span>
+                                    <span class="stat-label">Disponibles</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-value">Bs ${recaudado.toLocaleString()}</span>
+                                    <span class="stat-label">Recaudado</span>
+                                </div>
+                            </div>
+                            <div class="progress-bar" style="margin-top: 16px;">
+                                <div class="progress-fill" style="width: ${porcentaje}%"></div>
+                            </div>
+                            <div class="progress-text">
+                                <span>Precio Ref.: ${precioEuros}€/cupo</span>
+                                <span>${porcentaje}% ocupado</span>
+                            </div>
+                            <button class="btn btn-danger btn-small" style="margin-top: 16px;" onclick="eliminarRuta('${ruta.nombre}')">
+                                🗑️ Eliminar Ruta
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            
+            document.getElementById('listaRutas').innerHTML = html;
+        }
+
+        // RENDER RESERVAS
+        function renderReservas() {
+            const search = document.getElementById('searchReservas').value.toLowerCase();
+            const filtroRuta = document.getElementById('filtroRutaReservas').value;
+            
+            let filtered = data.reservas.filter(r => 
+                r.lider.toLowerCase().includes(search) || 
+                r.ruta.toLowerCase().includes(search)
+            );
+            
+            if (filtroRuta) {
+                filtered = filtered.filter(r => r.ruta === filtroRuta);
+            }
+            
+            const html = filtered.length === 0 ?
+                `<div class="empty-state">
+                    <div class="empty-state-icon">👥</div>
+                    <h3>No hay reservas</h3>
+                    <p>Crea tu primera reserva grupal</p>
+                </div>` :
+                filtered.map(reserva => {
+                    const registrados = contarParticipantes(reserva.lider);
+                    const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
+                    
+                    // Validar que la ruta existe
+                    if (!ruta) {
+                        return '';
+                    }
+                    
+                    // Calcular total pagado (suma de todos los pagos)
+                    const totalPagado = reserva.montoPagado || 0;
+                    const precioEuros = ruta.precioEuros || 0;
+                    const numPagos = (reserva.pagos && reserva.pagos.length > 0) ? reserva.pagos.length : 0;
+                    
+                    return `
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">👤 ${reserva.lider}</div>
+                                    <div class="card-meta">📍 ${reserva.ruta}</div>
+                                </div>
+                            </div>
+                            <div class="stats-row">
+                                <div class="stat">
+                                    <span class="stat-value">${reserva.cantidad}</span>
+                                    <span class="stat-label">Cupos</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-value">${precioEuros}€</span>
+                                    <span class="stat-label">Precio Ref.</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-value">${registrados}/${reserva.cantidad}</span>
+                                    <span class="stat-label">Registrados</span>
+                                </div>
+                            </div>
+                            ${totalPagado > 0 ? `
+                                <div style="margin-top: 16px; padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; border: 1px solid var(--border);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                        <span style="font-size: 13px; color: var(--text-secondary);">💰 Total Pagado:</span>
+                                        <span style="font-size: 18px; font-weight: 800; color: var(--success);">Bs ${totalPagado.toLocaleString()}</span>
+                                    </div>
+                                    ${numPagos > 0 ? `<div style="font-size: 11px; color: var(--text-secondary); text-align: right;">${numPagos} pago${numPagos !== 1 ? 's' : ''} registrado${numPagos !== 1 ? 's' : ''}</div>` : ''}
+                                </div>
+                            ` : ''}
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px;">
+                                <button class="btn btn-primary btn-small" onclick="verDetalleReserva('${reserva.lider}')">
+                                    💰 Pagos
+                                </button>
+                                <button class="btn btn-danger btn-small" onclick="eliminarReserva('${reserva.lider}')">
+                                    🗑️ Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).filter(html => html !== '').join('');
+            
+            document.getElementById('listaReservas').innerHTML = html;
+        }
+
+        // RENDER PARTICIPANTES
+        function renderParticipantes() {
+            const search = document.getElementById('searchParticipantes').value.toLowerCase();
+            const filtroRuta = document.getElementById('filtroRutaParticipantes').value;
+            
+            let filtered = data.participantes.filter(p => 
+                p.nombre.toLowerCase().includes(search) || 
+                p.lider.toLowerCase().includes(search)
+            );
+            
+            if (filtroRuta) {
+                filtered = filtered.filter(p => getRutaParticipante(p.lider) === filtroRuta);
+            }
+            
+            const html = filtered.length === 0 ?
+                `<div class="empty-state">
+                    <div class="empty-state-icon">✅</div>
+                    <h3>No hay personas registradas</h3>
+                    <p>Registra a los participantes</p>
+                </div>` :
+                `<div class="person-list-compact">
+                    ${filtered.map((p) => {
+                        const reserva = data.reservas.find(r => r.lider === p.lider);
+                        const rutaNombre = reserva ? reserva.ruta : 'Sin ruta';
+                        const ruta = data.rutas.find(r => r.nombre === rutaNombre);
+                        const rutaFecha = ruta ? new Date(ruta.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '';
+                        const globalIndex = data.participantes.indexOf(p);
+                        return `
+                            <div class="person-item-compact">
+                                <div class="person-info-compact">
+                                    <div class="person-name-compact">${p.nombre}</div>
+                                    <div class="person-meta-compact">
+                                        <span>👤 ${p.lider}</span>
+                                        <span>📍 ${rutaNombre}</span>
+                                        ${rutaFecha ? `<span>📅 ${rutaFecha}</span>` : ''}
+                                    </div>
+                                </div>
+                                <button class="person-delete-btn" onclick="eliminarParticipante(${globalIndex})" title="Eliminar">
+                                    🗑️
+                                </button>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>`;
+            
+            document.getElementById('listaParticipantes').innerHTML = html;
+        }
+
+        // RENDER ASISTENCIA
+        function renderAsistencia() {
+            const rutaFiltro = document.getElementById('filtroRuta').value;
+            
+            let filtered = data.participantes;
+            if (rutaFiltro) {
+                filtered = filtered.filter(p => getRutaParticipante(p.lider) === rutaFiltro);
+            }
+            
+            const grouped = {};
+            filtered.forEach(p => {
+                if (!grouped[p.lider]) grouped[p.lider] = [];
+                grouped[p.lider].push(p);
+            });
+            
+            const html = Object.keys(grouped).length === 0 ?
+                `<div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <h3>No hay participantes</h3>
+                    <p>Selecciona una ruta o registra personas</p>
+                </div>` :
+                Object.keys(grouped).map(lider => {
+                    const reserva = data.reservas.find(r => r.lider === lider);
+                    const rutaNombre = reserva ? reserva.ruta : 'Sin ruta';
+                    const ruta = data.rutas.find(r => r.nombre === rutaNombre);
+                    const rutaFecha = ruta ? new Date(ruta.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '';
+                    const participantes = grouped[lider];
+                    const presentes = participantes.filter(p => p.asiste).length;
+                    const porcentaje = (presentes / participantes.length * 100).toFixed(0);
+                    
+                    return `
+                        <div class="attendance-group-compact">
+                            <div class="attendance-header-compact">
+                                <div class="attendance-header-info">
+                                    <div class="attendance-title-compact">📍 ${rutaNombre}${rutaFecha ? ` - ${rutaFecha}` : ''}</div>
+                                    <div class="attendance-meta-compact">
+                                        <span>👤 ${lider}</span>
+                                    </div>
+                                </div>
+                                <span class="attendance-badge-compact">${presentes}/${participantes.length}</span>
+                            </div>
+                            <div class="attendance-progress-compact">
+                                <div class="attendance-progress-fill" style="width: ${porcentaje}%"></div>
+                            </div>
+                            <div class="attendance-list-compact">
+                                ${participantes.map(p => {
+                                    const globalIndex = data.participantes.indexOf(p);
+                                    return `
+                                        <div class="attendance-item-compact" onclick="toggleAsistencia(${globalIndex}); event.stopPropagation();">
+                                            <input type="checkbox" class="attendance-checkbox-compact" 
+                                                   ${p.asiste ? 'checked' : ''} 
+                                                   onchange="toggleAsistencia(${globalIndex})"
+                                                   onclick="event.stopPropagation();">
+                                            <span class="attendance-name-compact ${p.asiste ? 'checked' : ''}">${p.nombre}</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            
+            document.getElementById('listaAsistencia').innerHTML = html;
+        }
+
+        // RENDER ALL
+        function renderAll() {
+            renderRutas();
+            renderReservas();
+            renderParticipantes();
+            renderAsistencia();
+        }
+    </script>
+</body>
+</html>
