@@ -400,6 +400,81 @@
             color: var(--text-secondary);
             margin-top: 4px;
             display: block;
+        }
+
+        /* Cards de Reserva Compactos */
+        .reserva-card {
+            padding: 16px;
+        }
+
+        .reserva-compact {
+            padding: 0;
+        }
+
+        .btn-expand-reserva {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+        }
+
+        .btn-expand-reserva:hover {
+            background: rgba(118, 200, 147, 0.1);
+            border-color: rgba(118, 200, 147, 0.3);
+            transform: scale(1.05);
+        }
+
+        .expand-icon {
+            font-size: 14px;
+            color: var(--text-secondary);
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+
+        .reserva-expanded {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Cards de Asistencia Compactos */
+        .asistencia-card {
+            padding: 16px;
+        }
+
+        .asistencia-compact {
+            padding: 0;
+        }
+
+        .asistencia-expanded {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            animation: slideDown 0.3s ease;
+        }
+            color: var(--text-secondary);
+            margin-top: 4px;
+            display: block;
             font-weight: 600;
         }
 
@@ -1065,6 +1140,89 @@
             border: 1px solid rgba(245, 158, 11, 0.3);
         }
 
+        /* AGREGAR al final del CSS existente: */
+
+/* Check-in rápido para día de ruta */
+.checkin-rapido {
+    position: fixed;
+    top: 72px;
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    padding: 12px 16px;
+    z-index: 98;
+    border-bottom: 2px solid var(--border);
+    display: none;
+    box-shadow: 0 2px 8px var(--shadow);
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.checkin-rapido.active {
+    display: block;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.checkin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.checkin-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.checkin-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.checkin-contador {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 4px 8px;
+    background: rgba(118, 200, 147, 0.1);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.checkin-total {
+    font-weight: 700;
+    color: var(--accent);
+    margin-left: 4px;
+}
+
+/* AGREGAR al CSS para navegación minimalista */
+.nav-tab span.text {
+    display: none;
+}
+
+.nav-tab.active span.text {
+    display: inline;
+}
+
+/* Para pantallas más grandes, mostrar texto en hover */
+@media (min-width: 400px) {
+    .nav-tab:hover span.text {
+        display: inline;
+        margin-left: 4px;
+        font-size: 11px;
+    }
+}
+
         select.form-input {
             color: var(--text-primary);
         }
@@ -1084,7 +1242,7 @@
             <div class="login-form">
                 <input type="text" id="username" placeholder="Usuario" autocomplete="username">
                 <input type="password" id="password" placeholder="Contraseña" autocomplete="current-password">
-                <button class="login-btn" onclick="login()">Iniciar Sesión</button>
+                <button class="login-btn" onclick="window.login && window.login()">Iniciar Sesión</button>
             </div>
             
             <div id="errorMsg" class="error-msg">❌ Usuario o contraseña incorrectos</div>
@@ -1101,14 +1259,48 @@
             <button class="logout-btn" onclick="logout()">Salir</button>
         </div>
 
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showTab('rutas')">📍 Rutas</button>
-            <button class="nav-tab" onclick="showTab('reservas')">👥 Reservas</button>
-            <button class="nav-tab" onclick="showTab('participantes')">✅ Personas</button>
-            <button class="nav-tab" onclick="showTab('asistencia')">📋 Asistencia</button>
-            <button class="nav-tab" onclick="showTab('gastos')">💰 Gastos</button>
-            <button class="nav-tab" onclick="showTab('historial')">📚 Historial</button>
+        <!-- MODIFICAR los botones de navegación en .nav-tabs: -->
+<div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('rutas')">
+        📍 <span class="text">Rutas</span>
+    </button>
+    <button class="nav-tab" onclick="showTab('reservas')">
+        👥 <span class="text">Reservas</span>
+    </button>
+    <button class="nav-tab" onclick="showTab('participantes')">
+        ✅ <span class="text">Personas</span>
+    </button>
+    <button class="nav-tab" onclick="showTab('asistencia')">
+        📋 <span class="text">Asistencia</span>
+    </button>
+    <button class="nav-tab" onclick="showTab('gastos')">
+        💰 <span class="text">Gastos</span>
+    </button>
+    <button class="nav-tab" onclick="showTab('historial')">
+        📚 <span class="text">Historial</span>
+    </button>
+</div>
+
+        <!-- AGREGAR después de .nav-tabs (antes del primer .section): -->
+<div id="checkinRapido" class="checkin-rapido">
+    <div class="checkin-header">
+        <div class="checkin-title">
+            📋 Check-in rápido
+            <span class="checkin-contador" id="checkinContador">0/0</span>
         </div>
+        <div class="checkin-actions">
+            <button class="btn btn-success btn-small" onclick="marcarTodosPresentes()" style="padding: 6px 12px; font-size: 12px;">
+                ✅ Todos
+            </button>
+            <button class="btn btn-outline btn-small" onclick="toggleCheckinRapido(false)" style="padding: 6px 12px; font-size: 12px;">
+                ✖️
+            </button>
+        </div>
+    </div>
+    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+        Selecciona una ruta para comenzar el check-in
+    </div>
+</div>
 
         <!-- RUTAS -->
         <div id="rutas" class="section active">
@@ -1243,9 +1435,15 @@
                     <input type="number" id="reservaCantidad" class="form-input" placeholder="5" onchange="actualizarPersonasEnReserva()">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Monto Inicial (Bs)</label>
+                    <label class="form-label">Monto Inicial</label>
                     <input type="number" id="reservaMontoPagado" class="form-input" placeholder="17500" step="0.01">
                 </div>
+            </div>
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="reservaEnDolares" style="width: 18px; height: 18px; cursor: pointer;">
+                    <span>💵 Pagar en dólares efectivo</span>
+                </label>
             </div>
             <div class="form-group">
                 <label class="form-label">📎 Referencia del Pago Inicial (Opcional)</label>
@@ -1258,7 +1456,7 @@
                     <label class="form-label" style="margin: 0;">👥 Agregar Personas</label>
                 </div>
                 <div class="personas-input-group">
-                    <input type="text" id="personaNombreInput" class="form-input" placeholder="Nombre de la persona" onkeypress="if(event.key==='Enter') agregarPersonaTemporal()">
+                    <input type="text" id="personaNombreInput" class="form-input" placeholder="Ej: Juan Carlos Pérez (nombre completo)" onkeypress="if(event.key==='Enter') agregarPersonaTemporal()">
                     <button type="button" id="btnAgregarPersona" onclick="agregarPersonaTemporal()">Agregar</button>
                 </div>
                 <div id="personasTemporalesList" class="personas-list"></div>
@@ -1277,14 +1475,39 @@
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">✅ Nueva Persona</div>
             <div class="form-group">
-                <label class="form-label">Nombre Completo</label>
-                <input type="text" id="participanteNombre" class="form-input" placeholder="Ej: Juan Pérez">
+                <label class="form-label">Nombre *</label>
+                <input type="text" id="participanteNombre" class="form-input" placeholder="Ej: Juan" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Segundo Nombre (Opcional)</label>
+                <input type="text" id="participanteSegundoNombre" class="form-input" placeholder="Ej: Carlos">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Apellido *</label>
+                <input type="text" id="participanteApellido" class="form-input" placeholder="Ej: Pérez" required>
             </div>
             <div class="form-group">
                 <label class="form-label">Líder de Reserva</label>
                 <select id="participanteReserva" class="form-input">
                     <option value="">Selecciona un líder</option>
                 </select>
+            </div>
+            <div style="margin-top: 16px; padding: 12px; background: rgba(118, 200, 147, 0.05); border-radius: 8px; border: 1px dashed var(--border);">
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">💰 Pago Opcional</div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label class="form-label" style="font-size: 12px;">Monto</label>
+                    <input type="number" id="participanteMonto" class="form-input" placeholder="0.00" step="0.01" min="0">
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px;">
+                        <input type="checkbox" id="participanteEnDolares" style="width: 18px; height: 18px; cursor: pointer;">
+                        <span>💵 Pagar en dólares efectivo</span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="font-size: 12px;">Referencia de Pago</label>
+                    <input type="text" id="participanteReferencia" class="form-input" placeholder="Ej: Transferencia #12345">
+                </div>
             </div>
             <div class="btn-group">
                 <button class="btn btn-outline" onclick="closeModal('modalNuevoParticipante')">Cancelar</button>
@@ -1325,261 +1548,244 @@
             </div>
         </div>
     </div>
-
     <script>
-        // SUPABASE CONFIGURATION (debe ir primero)
-        const SUPABASE_URL = 'https://dgubxitmqegounjyeciw.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_EY4EoqiHn7om0Qf-HYpJZQ_HwDJXlan';
-       let supabaseClient = null; 
+// --- 1. CONFIGURACIÓN ---
+const SUPABASE_URL = 'https://dgubxitmqegounjyeciw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_EY4EoqiHn7om0Qf-HYpJZQ_HwDJXlan';
 
+let db = null; // Cambiamos el nombre a 'db' para evitar conflictos
+let usuariosCache = [];
+
+// --- 2. CONEXIÓN ---
 function conectarBaseDeDatos() {
-    // Verificamos si la librería externa de Supabase ya cargó en el navegador
-    if (window.supabase) {
+    // Verificamos si la librería de Supabase cargó en el navegador
+    if (typeof supabase !== 'undefined') {
         try {
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-supabase = supabaseClient;
-            console.log('✅ Supabase conectado y listo');
-            
-            // Una vez conectado, mandamos a llamar a los usuarios o la app
-            if (typeof loadUsuarios === 'function') {
-                loadUsuarios();
-            }
+            // Usamos la librería para crear el cliente en nuestra variable 'db'
+            db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('✅ Conexión establecida con Supabase');
+            loadUsuarios();
         } catch (error) {
-            console.error('❌ Error crítico al crear el cliente:', error);
+            console.error('❌ Error en la configuración:', error);
         }
     } else {
-        // Si no ha cargado, esperamos 300ms y volvemos a intentar
-        console.log('⏳ Esperando a que el motor de Supabase responda...');
-        setTimeout(conectarBaseDeDatos, 300);
+        console.log('⏳ Reintentando conexión...');
+        setTimeout(conectarBaseDeDatos, 500);
     }
 }
 
-// Arrancamos la secuencia de conexión
-conectarBaseDeDatos();
-
-
-        // 1. Primero declaramos la caja para guardar los datos
-let usuariosCache = []; 
-
-// 2. Aquí está la función actualizada
+// --- 3. CARGAR USUARIOS ---
 async function loadUsuarios() {
     try {
-        console.log("Probando conexión a tabla usuarios...");
-        
-        // Verificamos que el motor esté encendido
-        if (!supabaseClient) {
-            console.log("Esperando a que supabaseClient se inicialice...");
-            return;
-        }
-
-        const { data, error } = await supabaseClient
-            .from('usuarios')
-            .select('*');
-
+        if (!db) return;
+        const { data: users, error } = await db.from('usuarios').select('*');
         if (error) throw error;
-
-        usuariosCache = data || []; 
-        console.log("✅ Usuarios cargados desde Supabase:", usuariosCache.length);
-        
+        usuariosCache = users || [];
+        console.log("✅ Usuarios listos:", usuariosCache.length);
     } catch (err) {
-        console.error("❌ Error cargando de la nube, usando respaldo:", err.message);
-        
-        // ESTO ES TU SEGURO DE VIDA: Si falla la nube, esto te deja entrar
+        console.error("❌ Error de red, usando locales");
         usuariosCache = [
-            { usuario: 'Luifer', clave: '2612' },
-            { usuario: 'Chanti', clave: '0526' },
-            { usuario: 'test', clave: 'test' }
+            { username: 'Luifer', password: '2612' },
+            { username: 'Chanti', password: '0526' }
         ];
-        console.log("⚠️ Modo respaldo activado. Puedes entrar con Luifer o Chanti.");
     }
 }
 
-        // Función login disponible globalmente
-        window.login = async function login() {
-    try {
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value;
+    // --- 4. FUNCIÓN LOGIN ---
+    window.login = async function() {
+        const userIn = document.getElementById('username').value.trim().toLowerCase();
+        const passIn = document.getElementById('password').value.trim();
 
-        if (!username || !password) {
-            alert('❌ Ingresa usuario y contraseña');
-            return;
-        }
+        if (usuariosCache.length === 0) await loadUsuarios();
 
-        // Si por alguna razón la lista está vacía, intentamos cargar
-        if (usuariosCache.length === 0) {
-            await loadUsuarios();
-        }
-
-        // BUSCADOR CON LOS NOMBRES DE COLUMNA CORRECTOS
-        const usuarioEncontrado = usuariosCache.find(u => {
-            if (!u) return false;
-
-            // Usamos 'username' y 'password' porque así están en tu tabla
-            const nombreBD = (u.username || "").toString().trim().toLowerCase();
-            const claveBD = (u.password || "").toString().trim();
-
-            const nombreInput = username.trim().toLowerCase();
-            const claveInput = password.trim();
-
-            console.log(`Comparando: ${nombreInput} con ${nombreBD}`); // Para que lo veas en consola
-            
-            return nombreBD === nombreInput && claveBD === claveInput;
+        const usuario = usuariosCache.find(u => {
+            const dbU = (u.username || u.usuario || "").toLowerCase();
+            const dbP = (u.password || u.clave || "").toString();
+            return dbU === userIn && dbP === passIn;
         });
 
-        if (usuarioEncontrado) {
-            console.log("✅ Acceso concedido");
+        if (usuario) {
             sessionStorage.setItem('authenticated', 'true');
-            sessionStorage.setItem('currentUser', usuarioEncontrado.usuario);
-            await showApp();
+            showApp();
         } else {
-            console.log("❌ Usuario o clave no coinciden");
-            document.getElementById('errorMsg').classList.add('show');
-            setTimeout(() => {
-                document.getElementById('errorMsg').classList.remove('show');
-            }, 3000);
+            alert("❌ Usuario o contraseña incorrectos");
         }
-    } catch (error) {
-        console.error('Error en login:', error);
-        alert('❌ Error al iniciar sesión. Intenta nuevamente.');
-    }
-};
+    };
+         
 
-        function logout() {
-            sessionStorage.clear();
-            location.reload();
-        }
+    // --- DATOS DE LA APLICACIÓN ---
+    let data = {
+        rutas: [],
+        reservas: [],
+        participantes: [],
+        gastos: []
+    };
 
+    let personasTemporales = [];
+    let realtimeChannel = null;
+
+        // =============================================
+        // 5. MOSTRAR APLICACIÓN PRINCIPAL
+        // =============================================
         async function showApp() {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('app').classList.add('active');
-            await loadData();
-            updateSelects();
-            renderAll();
-        }
-
-        async function checkAuth() {
-            if (sessionStorage.getItem('authenticated') === 'true') {
-                await showApp();
+            try {
+                console.log('📱 Mostrando aplicación...');
+                
+                // Ocultar login
+                document.getElementById('loginScreen').style.display = 'none';
+                
+                // Mostrar app
+                document.getElementById('app').classList.add('active');
+                
+                // Cargar datos
+                await loadData();
+                
+                // Actualizar selects y renderizar
+                updateSelects();
+                renderAll();
+                
+                console.log('✅ Aplicación cargada correctamente');
+                
+            } catch (error) {
+                console.error('❌ Error al mostrar aplicación:', error);
+                alert('Error al cargar la aplicación. Recarga la página.');
             }
         }
 
-            // Función de arranque que se ejecuta al cargar la página
-async function iniciarApp() {
-    // 1. Conectamos a la base de datos primero
-    conectarBaseDeDatos(); 
-    
-    // 2. Revisamos si ya estaba logueado
-    checkAuth();
-    
-    // 3. Configuramos el evento de la tecla Enter en el password
-    document.getElementById('password')?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') login();
-    });
-}
-
-// Ejecutamos el arranque
-iniciarApp();
-
-        // DATOS
-        let data = {
-            rutas: [],
-            reservas: [],
-            participantes: [],
-            gastos: []
+        // =============================================
+        // 6. LOGOUT
+        // =============================================
+        window.logout = function() {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                sessionStorage.clear();
+                location.reload();
+            }
         };
 
-        // Personas temporales en el modal de reserva
-        let personasTemporales = [];
+        // =============================================
+        // 7. CONFIRMACIONES MEJORADAS
+        // =============================================
+        function confirmarAccion(mensaje, tipo = 'pregunta') {
+            const emojis = {
+                'peligro': '⚠️',
+                'pregunta': '❓',
+                'eliminar': '🗑️',
+                'archivar': '📦'
+            };
 
-        // Sincronización en tiempo real
-        let realtimeChannel = null;
-
-        // Función helper para asegurar que Supabase esté inicializado
-        function ensureSupabase() {
-            if (!supabase) {
-                initSupabase();
-            }
-            if (!supabase) {
-                console.warn('Supabase no está disponible. Usando modo offline.');
-                return null;
-            }
-            return supabase;
+            const emoji = emojis[tipo] || '❓';
+            return confirm(`${emoji} ${mensaje}`);
         }
 
-        // Normalizar datos de Supabase (snake_case a camelCase para compatibilidad)
-        function normalizeData(dataArray, type) {
-            return dataArray.map(item => {
-                const normalized = { ...item };
-                if (type === 'ruta' && item.precio_euros !== undefined) {
-                    normalized.precioEuros = item.precio_euros;
-                }
-                if (type === 'reserva' && item.monto_pagado !== undefined) {
-                    normalized.montoPagado = item.monto_pagado;
-                }
-                // Asegurar que archivada existe (por defecto false)
-                if (type === 'ruta' && normalized.archivada === undefined) {
-                    normalized.archivada = false;
-                }
-                return normalized;
-            });
-        }
-
-        // Cargar datos desde Supabase
+        // =============================================
+        // 8. CARGAR DATOS DESDE SUPABASE
+        // =============================================
         async function loadData() {
             try {
-                ensureSupabase();
-                // Cargar rutas (incluyendo archivadas)
-                const { data: rutas, error: errorRutas } = await supabase
+                console.log('📥 Cargando datos...');
+                
+                if (!db) {
+                    throw new Error('Supabase no está inicializado');
+                }
+                
+                // Cargar rutas
+                const { data: rutas, error: errorRutas } = await db
                     .from('rutas')
                     .select('*')
                     .order('fecha', { ascending: true });
+                    
                 if (errorRutas) throw errorRutas;
-                // Normalizar y asegurar que archivada existe (por defecto false si no existe)
-                data.rutas = (rutas || []).map(r => ({
+                
+                data.rutas = (rutas || []).map((r, index) => ({
                     ...r,
-                    archivada: r.archivada === true ? true : false,
-                    precioEuros: r.precio_euros || r.precioEuros || 0
+                    archivada: r.archivada === true,
+                    precioEuros: r.precio_euros || 0,
+                    numero: r.numero || (index + 1)
                 }));
 
                 // Cargar reservas
-                const { data: reservas, error: errorReservas } = await supabase
+                const { data: reservas, error: errorReservas } = await db
                     .from('reservas')
                     .select('*');
                 if (errorReservas) throw errorReservas;
-                data.reservas = normalizeData(reservas || [], 'reserva');
+                data.reservas = (reservas || []).map(r => ({
+                    ...r,
+                    ruta: r.ruta_nombre || r.ruta || '', // Normalizar: ruta_nombre (DB) → ruta (JS)
+                    montoPagado: r.monto_pagado || 0
+                }));
 
                 // Cargar participantes
-                const { data: participantes, error: errorParticipantes } = await supabase
+                const { data: participantes, error: errorParticipantes } = await db
                     .from('participantes')
                     .select('*');
                 if (errorParticipantes) throw errorParticipantes;
                 data.participantes = participantes || [];
 
                 // Cargar gastos
-                const { data: gastos, error: errorGastos } = await supabase
+                const { data: gastos, error: errorGastos } = await db
                     .from('gastos')
                     .select('*')
                     .order('fecha', { ascending: false });
                 if (errorGastos) throw errorGastos;
-                data.gastos = gastos || [];
+                data.gastos = (gastos || []).map(g => ({
+                    ...g,
+                    ruta: g.ruta_nombre || g.ruta || '' // Normalizar: ruta_nombre (DB) → ruta (JS)
+                }));
 
-                // Inicializar sincronización en tiempo real
-                initRealtimeSync();
+                console.log('✅ Datos cargados:', {
+                    rutas: data.rutas.length,
+                    reservas: data.reservas.length,
+                    participantes: data.participantes.length,
+                    gastos: data.gastos.length
+                });
+                
+                // Inicializar sincronización en tiempo real (no crítico si falla)
+                try {
+                    initRealtimeSync();
+                } catch (realtimeError) {
+                    console.warn('⚠️ Error inicializando Realtime (no crítico):', realtimeError);
+                    // No mostrar alert, los datos ya se cargaron correctamente
+                }
+                
             } catch (error) {
-                console.error('Error cargando datos:', error);
-                alert('⚠️ Error al cargar los datos. Verifica la conexión.');
+                console.error('❌ Error cargando datos:', error);
+                // Solo mostrar alert si db no está inicializado, no si es un error de red temporal
+                if (!db) {
+                    console.warn('⚠️ Base de datos no inicializada aún, reintentando...');
+                    // Reintentar después de un breve delay
+                    setTimeout(async () => {
+                        if (db) {
+                            await loadData();
+                        }
+                    }, 1000);
+                } else {
+                    // Si db está inicializado pero hay otro error, mostrar alert
+                    alert('⚠️ Error al cargar los datos. Verifica la conexión.');
+                }
             }
         }
 
-        // Sincronización en tiempo real
-        function initRealtimeSync() {
-            ensureSupabase();
-            if (realtimeChannel) {
-                supabase.removeChannel(realtimeChannel);
+        // =============================================
+        // 9. GUARDAR DATOS (función faltante)
+        // =============================================
+        async function saveData() {
+            try {
+                // Recargar todos los datos desde Supabase
+                await loadData();
+                console.log('✅ Datos sincronizados con base de datos');
+            } catch (error) {
+                console.error('❌ Error al sincronizar datos:', error);
+                throw error;
             }
+        }
 
-            realtimeChannel = supabase
+        // =============================================
+        // 10. SINCRONIZACIÓN EN TIEMPO REAL
+        // =============================================
+        function initRealtimeSync() {
+            if (!db || realtimeChannel) return;
+            
+            realtimeChannel = db
                 .channel('db-changes')
                 .on('postgres_changes', 
                     { event: '*', schema: 'public', table: 'rutas' },
@@ -1600,20 +1806,35 @@ iniciarApp();
                 .subscribe();
         }
 
-        // NAVEGACIÓN
-        function showTab(tabName) {
+        // =============================================
+        // 11. NAVEGACIÓN ENTRE PESTAÑAS - VERSIÓN CORREGIDA
+        // =============================================
+        window.showTab = function(tabName) {
+            // Obtener el evento del elemento que hizo clic
+            const event = window.event || arguments.callee.caller.arguments[0];
+            
+            // Actualizar pestañas activas
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             
-            event.target.classList.add('active');
-            document.getElementById(tabName).classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
             
+            document.getElementById(tabName).classList.add('active');
+
+            // Mostrar/ocultar check-in rápido
+            toggleCheckinRapido(tabName === 'asistencia');
+            
+            // Actualizar y renderizar
             updateSelects();
             renderAll();
-        }
+        };
 
-        // MODALES
-        function openModal(modalId) {
+        // =============================================
+        // 12. MODALES
+        // =============================================
+        window.openModal = function(modalId) {
             updateSelects();
             if (modalId === 'modalNuevaReserva') {
                 personasTemporales = [];
@@ -1623,9 +1844,9 @@ iniciarApp();
                 updateSelects();
             }
             document.getElementById(modalId).classList.add('active');
-        }
+        };
 
-        function closeModal(modalId) {
+        window.closeModal = function(modalId) {
             document.getElementById(modalId).classList.remove('active');
             if (modalId === 'modalNuevaReserva') {
                 personasTemporales = [];
@@ -1634,6 +1855,8 @@ iniciarApp();
                 document.getElementById('reservaCantidad').value = '';
                 document.getElementById('reservaMontoPagado').value = '';
                 document.getElementById('reservaReferenciaPago').value = '';
+                const reservaEnDolaresInput = document.getElementById('reservaEnDolares');
+                if (reservaEnDolaresInput) reservaEnDolaresInput.checked = false;
                 document.getElementById('personaNombreInput').value = '';
                 document.getElementById('infoPrecioRuta').style.display = 'none';
             }
@@ -1642,80 +1865,144 @@ iniciarApp();
                 document.getElementById('gastoRuta').value = '';
                 document.getElementById('gastoMonto').value = '';
             }
-        }
+        };
 
-        function closeModalOnBackdrop(event, modalId) {
+        window.closeModalOnBackdrop = function(event, modalId) {
             if (event.target.classList.contains('modal')) {
                 closeModal(modalId);
             }
+        };
+
+        // MODIFICAR updateSelects() - Actualizar TODOS los selects:
+
+function updateSelects() {
+    // Separar rutas activas y archivadas
+    const rutasActivas = data.rutas.filter(r => !r.archivada);
+    const rutasArchivadas = data.rutas.filter(r => r.archivada);
+    
+    // 🔄 SELECT PARA NUEVA RESERVA - SOLO ACTIVAS
+    const selectRuta = document.getElementById('reservaRuta');
+    if (selectRuta) {
+        selectRuta.innerHTML = '<option value="">Selecciona una ruta</option>';
+        rutasActivas.forEach(ruta => {
+            const ocupados = calcularCuposOcupados(ruta.nombre);
+            const disponibles = calcularCuposDisponibles(ruta.nombre);
+            const haySobreventa = ocupados > ruta.cupos;
+            const numeroRuta = ruta.numero ? `#${ruta.numero} ` : '';
+            const textoDisponibles = haySobreventa 
+                ? `⚠️ Sobrevendida (${ocupados}/${ruta.cupos})` 
+                : `(${disponibles} disponibles)`;
+            selectRuta.innerHTML += `<option value="${ruta.nombre}">${numeroRuta}${ruta.nombre} - ${ruta.fecha} ${textoDisponibles}</option>`;
+        });
+    }
+
+    // 🔄 SELECT PARA NUEVO GASTO - SOLO ACTIVAS
+    const gastoRuta = document.getElementById('gastoRuta');
+    if (gastoRuta) {
+        gastoRuta.innerHTML = '<option value="">Selecciona una ruta</option>';
+        rutasActivas.forEach(ruta => {
+            const numeroRuta = ruta.numero ? `#${ruta.numero} ` : '';
+            gastoRuta.innerHTML += `<option value="${ruta.nombre}">${numeroRuta}${ruta.nombre} - ${ruta.fecha}</option>`;
+        });
+    }
+
+    // 🔄 FILTRO RESERVAS - SOLO ACTIVAS
+    const filtroRutaReservas = document.getElementById('filtroRutaReservas');
+    if (filtroRutaReservas) {
+        filtroRutaReservas.innerHTML = '<option value="">Todas las rutas</option>';
+        rutasActivas.forEach(ruta => {
+            const numeroRuta = ruta.numero ? `#${ruta.numero} ` : '';
+            filtroRutaReservas.innerHTML += `<option value="${ruta.nombre}">${numeroRuta}${ruta.nombre} - ${ruta.fecha}</option>`;
+        });
+    }
+
+    // 🔄 FILTRO PARTICIPANTES - SOLO ACTIVAS
+    const filtroRutaParticipantes = document.getElementById('filtroRutaParticipantes');
+    if (filtroRutaParticipantes) {
+        filtroRutaParticipantes.innerHTML = '<option value="">Todas las rutas</option>';
+        rutasActivas.forEach(ruta => {
+            const numeroRuta = ruta.numero ? `#${ruta.numero} ` : '';
+            filtroRutaParticipantes.innerHTML += `<option value="${ruta.nombre}">${numeroRuta}${ruta.nombre} - ${ruta.fecha}</option>`;
+        });
+    }
+
+    // 🔄 FILTRO ASISTENCIA - ACTIVAS + ARCHIVADAS (marcadas)
+    const filtroRuta = document.getElementById('filtroRuta');
+    if (filtroRuta) {
+        filtroRuta.innerHTML = '<option value="">Todas las rutas</option>';
+        
+        // Primero activas
+        rutasActivas.forEach(ruta => {
+            const numeroRuta = ruta.numero ? `#${ruta.numero} ` : '';
+            filtroRuta.innerHTML += `<option value="${ruta.nombre}">${numeroRuta}${ruta.nombre} - ${ruta.fecha}</option>`;
+        });
+        
+        // Luego archivadas (separadas)
+        if (rutasArchivadas.length > 0) {
+            filtroRuta.innerHTML += '<optgroup label="--- Archivadas ---">';
+            rutasArchivadas.forEach(ruta => {
+                const numeroRuta = ruta.numero ? `#${ruta.numero} ` : '';
+                filtroRuta.innerHTML += `<option value="${ruta.nombre}" style="color: #888; font-style: italic;">${numeroRuta}${ruta.nombre} - ${ruta.fecha} [Archivada]</option>`;
+            });
         }
+    }
 
-        // SELECTS
-        function updateSelects() {
-            const selectRuta = document.getElementById('reservaRuta');
-            selectRuta.innerHTML = '<option value="">Selecciona una ruta</option>';
-            // Solo mostrar rutas no archivadas en los selects
-            data.rutas.filter(r => !r.archivada).forEach(ruta => {
-                const disponibles = calcularCuposDisponibles(ruta.nombre);
-                selectRuta.innerHTML += `<option value="${ruta.nombre}">${ruta.nombre} - ${ruta.fecha} (${disponibles} disponibles)</option>`;
+    // 🔄 FILTRO GASTOS - ACTIVAS + ARCHIVADAS
+    const filtroRutaGastos = document.getElementById('filtroRutaGastos');
+    if (filtroRutaGastos) {
+        filtroRutaGastos.innerHTML = '<option value="">Todas las rutas</option>';
+        
+        rutasActivas.forEach(ruta => {
+            const numeroRuta = ruta.numero ? `#${ruta.numero} ` : '';
+            filtroRutaGastos.innerHTML += `<option value="${ruta.nombre}">${numeroRuta}${ruta.nombre} - ${ruta.fecha}</option>`;
+        });
+        
+        if (rutasArchivadas.length > 0) {
+            filtroRutaGastos.innerHTML += '<optgroup label="--- Archivadas ---">';
+            rutasArchivadas.forEach(ruta => {
+                const numeroRuta = ruta.numero ? `#${ruta.numero} ` : '';
+                filtroRutaGastos.innerHTML += `<option value="${ruta.nombre}" style="color: #888;">${numeroRuta}${ruta.nombre} - ${ruta.fecha}</option>`;
             });
-
-            const selectReserva = document.getElementById('participanteReserva');
-            selectReserva.innerHTML = '<option value="">Selecciona un líder</option>';
-            data.reservas.forEach(reserva => {
-                selectReserva.innerHTML += `<option value="${reserva.lider}">${reserva.lider} - ${reserva.ruta}</option>`;
-            });
-
-            const filtroRuta = document.getElementById('filtroRuta');
-            filtroRuta.innerHTML = '<option value="">Todas las rutas</option>';
-            data.rutas.filter(r => !r.archivada).forEach(ruta => {
-                filtroRuta.innerHTML += `<option value="${ruta.nombre}">${ruta.nombre} - ${ruta.fecha}</option>`;
-            });
-
-            const filtroRutaReservas = document.getElementById('filtroRutaReservas');
-            filtroRutaReservas.innerHTML = '<option value="">Todas las rutas</option>';
-            data.rutas.filter(r => !r.archivada).forEach(ruta => {
-                filtroRutaReservas.innerHTML += `<option value="${ruta.nombre}">${ruta.nombre} - ${ruta.fecha}</option>`;
-            });
-
-            const filtroRutaParticipantes = document.getElementById('filtroRutaParticipantes');
-            filtroRutaParticipantes.innerHTML = '<option value="">Todas las rutas</option>';
-            data.rutas.filter(r => !r.archivada).forEach(ruta => {
-                filtroRutaParticipantes.innerHTML += `<option value="${ruta.nombre}">${ruta.nombre} - ${ruta.fecha}</option>`;
-            });
-
-            const gastoRuta = document.getElementById('gastoRuta');
-            if (gastoRuta) {
-                gastoRuta.innerHTML = '<option value="">Selecciona una ruta</option>';
-                data.rutas.filter(r => !r.archivada).forEach(ruta => {
-                    gastoRuta.innerHTML += `<option value="${ruta.nombre}">${ruta.nombre} - ${ruta.fecha}</option>`;
-                });
-            }
-
-            const filtroRutaGastos = document.getElementById('filtroRutaGastos');
-            if (filtroRutaGastos) {
-                filtroRutaGastos.innerHTML = '<option value="">Todas las rutas</option>';
-                data.rutas.filter(r => !r.archivada).forEach(ruta => {
-                    filtroRutaGastos.innerHTML += `<option value="${ruta.nombre}">${ruta.nombre} - ${ruta.fecha}</option>`;
-                });
-            }
         }
+    }
 
+    // 🔄 SELECT PARA PARTICIPANTES (líderes)
+    const selectReserva = document.getElementById('participanteReserva');
+    if (selectReserva) {
+        selectReserva.innerHTML = '<option value="">Selecciona un líder</option>';
+        // Solo mostrar líderes de reservas de rutas activas (no archivadas)
+        data.reservas.forEach(reserva => {
+            const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
+            // Excluir reservas de rutas archivadas
+            if (!ruta || ruta.archivada) return;
+            
+            const numeroRuta = ruta && ruta.numero ? `#${ruta.numero} ` : '';
+            selectReserva.innerHTML += `<option value="${reserva.lider}">${reserva.lider} - ${numeroRuta}${reserva.ruta}</option>`;
+        });
+    }
+}
         // CÁLCULOS
         function calcularCuposOcupados(nombreRuta) {
             // Solo contar reservas de rutas no archivadas
             const ruta = data.rutas.find(r => r.nombre === nombreRuta);
             if (ruta && ruta.archivada) return 0;
             
-            return data.reservas
-                .filter(r => r.ruta === nombreRuta)
-                .reduce((sum, r) => sum + r.cantidad, 0);
+            // Contar participantes REALES en lugar de cantidad de reservas (permite sobreventa)
+            const reservasDeRuta = data.reservas.filter(r => r.ruta === nombreRuta);
+            const lideresDeRuta = reservasDeRuta.map(r => r.lider);
+            
+            return data.participantes
+                .filter(p => lideresDeRuta.includes(p.lider))
+                .length;
         }
 
         function calcularCuposDisponibles(nombreRuta) {
             const ruta = data.rutas.find(r => r.nombre === nombreRuta);
             if (!ruta) return 0;
-            return ruta.cupos - calcularCuposOcupados(nombreRuta);
+            const ocupados = calcularCuposOcupados(nombreRuta);
+            const disponibles = ruta.cupos - ocupados;
+            // Permitir valores negativos (sobreventa)
+            return disponibles;
         }
 
         function contarParticipantes(lider) {
@@ -1723,14 +2010,68 @@ iniciarApp();
         }
 
         function getRutaParticipante(lider) {
+            // Buscar la primera reserva del líder (puede tener múltiples)
             const reserva = data.reservas.find(r => r.lider === lider);
-            return reserva ? reserva.ruta : 'Sin ruta';
+            if (reserva) {
+                // Usar ruta normalizada (puede ser ruta_nombre o ruta)
+                return reserva.ruta || reserva.ruta_nombre || 'Sin ruta';
+            }
+            return 'Sin ruta';
+        }
+
+        // Calcular cuántas rutas ha hecho una persona (cliente recurrente)
+        function calcularRutasPorPersona(nombrePersona) {
+            // Normalizar nombre para comparación (sin espacios extra, lowercase)
+            const nombreNormalizado = nombrePersona.toLowerCase().trim();
+            
+            // Encontrar todas las participaciones de esta persona
+            const participaciones = data.participantes.filter(p => 
+                p.nombre.toLowerCase().trim() === nombreNormalizado
+            );
+            
+            // Obtener las rutas únicas (puede haber múltiples reservas en la misma ruta)
+            const rutasUnicas = new Set();
+            participaciones.forEach(p => {
+                // Buscar TODAS las reservas del líder (ahora puede tener múltiples)
+                const reservasDelLider = data.reservas.filter(r => r.lider === p.lider);
+                reservasDelLider.forEach(reserva => {
+                    // Usar ruta normalizada (puede ser ruta_nombre o ruta)
+                    const nombreRuta = reserva.ruta || reserva.ruta_nombre;
+                    if (nombreRuta) {
+                        rutasUnicas.add(nombreRuta);
+                    }
+                });
+            });
+            
+            return {
+                totalRutas: rutasUnicas.size,
+                totalParticipaciones: participaciones.length,
+                rutas: Array.from(rutasUnicas)
+            };
         }
 
         function calcularTotalRecaudado(nombreRuta) {
+            // Solo contar pagos en Bs (los gastos son en Bs)
             return data.reservas
                 .filter(r => r.ruta === nombreRuta)
-                .reduce((sum, r) => sum + (r.monto_pagado || r.montoPagado || 0), 0);
+                .reduce((sum, r) => {
+                    const totalBs = (r.pagos || [])
+                        .filter(p => !p.enDolares)
+                        .reduce((s, p) => s + p.monto, 0);
+                    return sum + totalBs;
+                }, 0);
+        }
+        
+        function calcularTotalDolares(nombreRuta) {
+            // Calcular total en dólares efectivo
+            return data.reservas
+                .filter(r => r.ruta === nombreRuta)
+                .reduce((sum, r) => {
+                    const totalDolares = (r.pagos || [])
+                        .filter(p => p.enDolares)
+                        .reduce((s, p) => s + p.monto, 0);
+                    return sum + totalDolares;
+                }, 0);
         }
 
         function calcularTotalGastos(nombreRuta) {
@@ -1845,11 +2186,15 @@ iniciarApp();
             const totalPersonas = personasTemporales.length + (lider ? 1 : 0);
             if (cantidad > 0) {
                 const disponibles = cantidad - totalPersonas;
-                if (disponibles >= 0) {
+                const haySobreventa = totalPersonas > cantidad;
+                if (haySobreventa) {
+                    info.innerHTML = `<span style="color: var(--danger); font-weight: 700;">⚠️ Total: ${totalPersonas}/${cantidad} personas (Sobrevendido por ${Math.abs(disponibles)})</span>`;
+                    info.className = 'personas-warning';
+                } else if (disponibles >= 0) {
                     info.innerHTML = `Total: ${totalPersonas}/${cantidad} personas (${disponibles} disponibles)`;
                     info.className = 'personas-info';
                 } else {
-                    info.innerHTML = `⚠️ Has excedido los cupos. Máximo: ${cantidad} personas (incluyendo el líder)`;
+                    info.innerHTML = `<span style="color: var(--danger);">Total: ${totalPersonas}/${cantidad} personas (excede por ${Math.abs(disponibles)})</span>`;
                     info.className = 'personas-warning';
                 }
             } else {
@@ -1864,46 +2209,57 @@ iniciarApp();
         }
 
         // AGREGAR RUTA
-        async function agregarRuta() {
-            const nombre = document.getElementById('rutaNombre').value.trim();
-            const fecha = document.getElementById('rutaFecha').value;
-            const cupos = parseInt(document.getElementById('rutaCupos').value);
-            const precioEuros = parseFloat(document.getElementById('rutaPrecioEuros').value);
+async function agregarRuta() {
+    const nombre = document.getElementById('rutaNombre').value.trim();
+    const fecha = document.getElementById('rutaFecha').value;
+    const cupos = parseInt(document.getElementById('rutaCupos').value);
+    const precioEuros = parseFloat(document.getElementById('rutaPrecioEuros').value);
 
-            if (!nombre || !fecha || !cupos || !precioEuros) {
-                alert('❌ Completa todos los campos');
-                return;
-            }
+    if (!nombre || !fecha || !cupos || !precioEuros) {
+        alert('❌ Completa todos los campos');
+        return;
+    }
 
-            if (data.rutas.find(r => r.nombre === nombre && !r.archivada)) {
-                alert('❌ Ya existe una ruta activa con ese nombre');
-                return;
-            }
+    // 🔪 MODIFICACIÓN QUIRÚRGICA: generar número automático
+    const ultimaRuta = data.rutas
+        .filter(r => !r.archivada)
+        .sort((a, b) => (b.numero || 0) - (a.numero || 0))[0];
 
-            try {
-                const { data: nuevaRuta, error } = await supabase
-                    .from('rutas')
-                    .insert([{ nombre, fecha, cupos, precio_euros: precioEuros, archivada: false }])
-                    .select()
-                    .single();
+    const nuevoNumero = (ultimaRuta?.numero || 0) + 1;
 
-                if (error) throw error;
+    // Guardar solo el nombre sin el # (el número se muestra por separado en el ID)
+    try {
+        const { data: nuevaRuta, error } = await db
+            .from('rutas')
+            .insert([{
+                nombre: nombre, // Nombre limpio sin #
+                fecha,
+                cupos,
+                precio_euros: precioEuros,
+                archivada: false,
+                numero: nuevoNumero // El número se guarda en el campo separado
+            }])
+            .select()
+            .single();
 
-                document.getElementById('rutaNombre').value = '';
-                document.getElementById('rutaFecha').value = '';
-                document.getElementById('rutaCupos').value = '';
-                document.getElementById('rutaPrecioEuros').value = '';
-                
-                closeModal('modalNuevaRuta');
-                await loadData();
-                updateSelects();
-                renderRutas();
-                alert('✅ Ruta creada exitosamente');
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error al crear la ruta: ' + error.message);
-            }
-        }
+        if (error) throw error;
+
+        document.getElementById('rutaNombre').value = '';
+        document.getElementById('rutaFecha').value = '';
+        document.getElementById('rutaCupos').value = '';
+        document.getElementById('rutaPrecioEuros').value = '';
+        
+        closeModal('modalNuevaRuta');
+        await loadData();
+        updateSelects();
+        renderRutas();
+        alert(`✅ Ruta creada exitosamente: ${nombre} #${String(nuevoNumero).padStart(4, '0')}`);
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error al crear la ruta: ' + error.message);
+    }
+}
+
 
         // AGREGAR RESERVA
         async function agregarReserva() {
@@ -1917,43 +2273,64 @@ iniciarApp();
                 return;
             }
 
-            if (data.reservas.find(r => r.lider === lider)) {
-                alert('❌ Ya existe una reserva con ese líder');
+            // Permitir múltiples reservas del mismo líder, pero solo en rutas diferentes
+            const reservaExistente = data.reservas.find(r => r.lider === lider && r.ruta === ruta);
+            if (reservaExistente) {
+                alert(`❌ Ya existe una reserva de "${lider}" para la ruta "${ruta}".\n\nUn líder solo puede tener una reserva por ruta.`);
                 return;
             }
 
             const disponibles = calcularCuposDisponibles(ruta);
-            if (cantidad > disponibles) {
-                alert(`⚠️ Solo hay ${disponibles} cupos disponibles`);
-                return;
+            if (disponibles < 0) {
+                // Ya hay sobreventa, permitir continuar con advertencia
+                const continuar = confirm(
+                    `⚠️ ADVERTENCIA: Esta ruta ya está sobrevendida (${calcularCuposOcupados(ruta)}/${ruta.cupos} personas).\n\n` +
+                    `¿Deseas continuar agregando ${cantidad} cupo${cantidad > 1 ? 's' : ''} más?`
+                );
+                if (!continuar) return;
+            } else if (cantidad > disponibles) {
+                // Hay cupos pero no suficientes, permitir sobreventa con advertencia
+                const continuar = confirm(
+                    `⚠️ Solo hay ${disponibles} cupo${disponibles !== 1 ? 's' : ''} disponible${disponibles !== 1 ? 's' : ''}, pero quieres reservar ${cantidad}.\n\n` +
+                    `¿Deseas continuar y crear sobreventa?`
+                );
+                if (!continuar) return;
             }
 
-            // Validar que las personas temporales no excedan los cupos
+            // Validar que las personas temporales no excedan los cupos (permitir sobreventa con advertencia)
             const totalPersonas = personasTemporales.length + 1; // +1 por el líder
             if (totalPersonas > cantidad) {
-                alert(`⚠️ Has agregado ${totalPersonas} personas pero solo reservaste ${cantidad} cupos. El líder cuenta como uno.`);
-                return;
+                const continuar = confirm(
+                    `⚠️ Has agregado ${totalPersonas} personas pero solo reservaste ${cantidad} cupos. El líder cuenta como uno.\n\n` +
+                    `¿Deseas continuar y crear sobreventa?`
+                );
+                if (!continuar) return;
             }
 
             try {
                 // Crear la reserva
                 const referenciaPago = document.getElementById('reservaReferenciaPago').value.trim();
+                const enDolares = document.getElementById('reservaEnDolares')?.checked || false;
                 const pagosIniciales = [];
                 if (montoPagado > 0) {
                     pagosIniciales.push({
                         monto: montoPagado,
                         referencia: referenciaPago || 'Pago inicial',
-                        fecha: new Date().toISOString()
+                        fecha: new Date().toISOString(),
+                        enDolares: enDolares
                     });
                 }
+                
+                // Solo contar Bs para monto_pagado (los gastos son en Bs)
+                const montoPagadoBs = enDolares ? 0 : montoPagado;
 
-                const { data: nuevaReserva, error: errorReserva } = await supabase
+                const { data: nuevaReserva, error: errorReserva } = await db
                     .from('reservas')
                     .insert([{ 
                         lider, 
-                        ruta, 
+                        ruta_nombre: ruta, 
                         cantidad, 
-                        monto_pagado: montoPagado, 
+                        monto_pagado: montoPagadoBs, 
                         pagos: pagosIniciales 
                     }])
                     .select()
@@ -1967,7 +2344,7 @@ iniciarApp();
                 );
                 
                 if (!liderExiste) {
-                    await supabase
+                    await db
                         .from('participantes')
                         .insert([{ nombre: lider, lider: lider, asiste: false }]);
                 }
@@ -1985,7 +2362,7 @@ iniciarApp();
                 });
 
                 if (participantesInsert.length > 0) {
-                    await supabaseClient.from('participantes').insert(participantesInsert);
+                    await db.from('participantes').insert(participantesInsert);
                 }
                 
                 // Limpiar formulario
@@ -1994,6 +2371,8 @@ iniciarApp();
                 document.getElementById('reservaCantidad').value = '';
                 document.getElementById('reservaMontoPagado').value = '';
                 document.getElementById('reservaReferenciaPago').value = '';
+                const reservaEnDolaresInput2 = document.getElementById('reservaEnDolares');
+                if (reservaEnDolaresInput2) reservaEnDolaresInput2.checked = false;
                 document.getElementById('personaNombreInput').value = '';
                 document.getElementById('infoPrecioRuta').style.display = 'none';
                 personasTemporales = [];
@@ -2012,58 +2391,217 @@ iniciarApp();
             }
         }
 
-        // AGREGAR PARTICIPANTE
-        async function agregarParticipante() {
-            const nombre = document.getElementById('participanteNombre').value.trim();
-            const lider = document.getElementById('participanteReserva').value;
-
-            if (!nombre || !lider) {
-                alert('❌ Completa todos los campos');
-                return;
-            }
-
-            const reserva = data.reservas.find(r => r.lider === lider);
-            const registrados = contarParticipantes(lider);
-
-            if (registrados >= reserva.cantidad) {
-                alert(`⚠️ El líder ${lider} ya tiene ${reserva.cantidad} personas registradas`);
-                return;
-            }
-
-            // Verificar duplicados
-            const existe = data.participantes.find(p => 
-                p.nombre.toLowerCase() === nombre.toLowerCase() && p.lider === lider
-            );
+        // Primero, AGREGAR esta función para actualizar cupos de reserva:
+async function actualizarCuposReserva(lider, incremento = 1) {
+    const reserva = data.reservas.find(r => r.lider === lider);
+    if (!reserva) return false;
+    
+    const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
+    if (!ruta) return false;
+    
+    // Verificar cupos disponibles (permitir sobreventa)
+    const disponibles = calcularCuposDisponibles(reserva.ruta);
+    
+    if (disponibles < incremento) {
+        // Permitir sobreventa con advertencia
+        const ocupados = calcularCuposOcupados(reserva.ruta);
+        const continuar = confirm(
+            `⚠️ ADVERTENCIA: Solo hay ${disponibles >= 0 ? disponibles : 0} cupo${disponibles !== 1 ? 's' : ''} disponible${disponibles !== 1 ? 's' : ''}.\n\n` +
+            `Actualmente: ${ocupados}/${ruta.cupos} personas\n` +
+            `¿Deseas continuar y crear sobreventa?`
+        );
+        if (!continuar) return false;
+    }
+    
+    try {
+        const nuevaCantidad = reserva.cantidad + incremento;
+        const { error } = await db
+            .from('reservas')
+            .update({ cantidad: nuevaCantidad })
+            .eq('lider', lider)
+            .eq('ruta_nombre', reserva.ruta);
             
-            if (existe) {
-                alert('❌ Esta persona ya está registrada para este líder');
-                return;
-            }
+        if (error) throw error;
+        
+        return true;
+    } catch (error) {
+        console.error('Error actualizando cupos:', error);
+        alert('❌ Error al actualizar los cupos de la reserva');
+        return false;
+    }
+}
 
-            try {
-                const { error } = await supabase
-                    .from('participantes')
-                    .insert([{ nombre, lider, asiste: false }]);
+        // AGREGAR PARTICIPANTE
+async function agregarParticipante() {
+    const nombre = document.getElementById('participanteNombre').value.trim();
+    const segundoNombre = document.getElementById('participanteSegundoNombre').value.trim();
+    const apellido = document.getElementById('participanteApellido').value.trim();
+    const lider = document.getElementById('participanteReserva').value;
+    const monto = parseFloat(document.getElementById('participanteMonto').value) || 0;
+    const referencia = document.getElementById('participanteReferencia').value.trim();
 
-                if (error) throw error;
+    // Construir nombre completo
+    const nombreCompleto = [nombre, segundoNombre, apellido].filter(n => n).join(' ');
+    
+    if (!nombre || !apellido) {
+        alert('❌ Completa al menos el nombre y apellido');
+        return;
+    }
 
-                document.getElementById('participanteNombre').value = '';
-                
-                closeModal('modalNuevoParticipante');
-                await loadData();
-                renderParticipantes();
-                renderReservas();
-                renderAsistencia();
-                alert('✅ Persona registrada exitosamente');
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error al registrar la persona: ' + error.message);
-            }
+    if (!nombre || !lider) {
+        alert('❌ Completa todos los campos obligatorios');
+        return;
+    }
+
+    // Buscar la reserva: si hay múltiples, usar la primera (compatibilidad)
+    // En el futuro, se puede mejorar para seleccionar específicamente
+    const reserva = data.reservas.find(r => r.lider === lider);
+    if (!reserva) {
+        alert('❌ No se encontró la reserva');
+        return;
+    }
+
+    const registrados = contarParticipantes(lider);
+
+    // 🔪 MODIFICACIÓN QUIRÚRGICA INICIO - Permitir sobreventa
+    const rutaParticipante = data.rutas.find(r => r.nombre === reserva.ruta);
+    const ocupadosRuta = rutaParticipante ? calcularCuposOcupados(reserva.ruta) : 0;
+    const haySobreventaRuta = rutaParticipante && ocupadosRuta >= rutaParticipante.cupos;
+    
+    if (registrados >= reserva.cantidad) {
+        const agregarCupo = confirm(
+            `⚠️ El líder ${lider} ya tiene ${reserva.cantidad} personas registradas.\n\n` +
+            `${haySobreventaRuta ? `ADVERTENCIA: La ruta ya está sobrevendida (${ocupadosRuta}/${rutaParticipante.cupos}).\n\n` : ''}` +
+            `¿Deseas agregar un cupo adicional a su reserva?`
+        );
+
+        if (agregarCupo) {
+            const actualizado = await actualizarCuposReserva(lider, 1);
+            if (!actualizado) return;
+
+            await loadData();
+        } else {
+            return;
+        }
+    } else if (haySobreventaRuta) {
+        // Si la ruta ya está sobrevendida pero la reserva no, advertir pero permitir
+        const continuar = confirm(
+            `⚠️ ADVERTENCIA: La ruta "${reserva.ruta}" ya está sobrevendida (${ocupadosRuta}/${rutaParticipante.cupos} personas).\n\n` +
+            `¿Deseas continuar agregando esta persona?`
+        );
+        if (!continuar) return;
+    }
+    // 🔪 MODIFICACIÓN QUIRÚRGICA FIN
+
+    // Verificar duplicados (comparar nombre completo)
+    const existe = data.participantes.find(p => 
+        p.nombre.toLowerCase() === nombreCompleto.toLowerCase() && p.lider === lider
+    );
+    
+    if (existe) {
+        alert('❌ Esta persona ya está registrada para este líder');
+        return;
+    }
+
+    try {
+        // Insertar participante con nombre completo
+        const { error: errorParticipante } = await db
+            .from('participantes')
+            .insert([{ nombre: nombreCompleto, lider, asiste: false }]);
+
+        if (errorParticipante) throw errorParticipante;
+
+        // Si hay pago, actualizar la reserva
+        if (monto > 0) {
+            const enDolares = document.getElementById('participanteEnDolares')?.checked || false;
+            const pagosActuales = reserva.pagos || [];
+            pagosActuales.push({
+                monto: monto,
+                referencia: referencia || 'Pago al agregar persona',
+                fecha: new Date().toISOString(),
+                enDolares: enDolares
+            });
+            
+            // Solo contar Bs para monto_pagado (los gastos son en Bs)
+            const montoPagadoBs = pagosActuales
+                .filter(p => !p.enDolares)
+                .reduce((sum, p) => sum + p.monto, 0);
+            
+            const { error: errorPago } = await db
+                .from('reservas')
+                .update({ 
+                    pagos: pagosActuales,
+                    monto_pagado: montoPagadoBs
+                })
+                .eq('lider', lider)
+                .eq('ruta_nombre', reserva.ruta);
+
+            if (errorPago) throw errorPago;
         }
 
+        // Limpiar formulario
+        document.getElementById('participanteNombre').value = '';
+        document.getElementById('participanteSegundoNombre').value = '';
+        document.getElementById('participanteApellido').value = '';
+        document.getElementById('participanteMonto').value = '';
+        document.getElementById('participanteReferencia').value = '';
+        const participanteEnDolaresInput = document.getElementById('participanteEnDolares');
+        if (participanteEnDolaresInput) participanteEnDolaresInput.checked = false;
+        
+        closeModal('modalNuevoParticipante');
+        await loadData();
+        renderParticipantes();
+        renderReservas();
+        renderAsistencia();
+        
+        if (monto > 0) {
+            alert('✅ Persona registrada y pago agregado exitosamente');
+        } else {
+            alert('✅ Persona registrada exitosamente');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error al registrar la persona: ' + error.message);
+    }
+}
+
+        // AGREGAR PERSONA RÁPIDA DESDE CARD DE RESERVA
+async function agregarPersonaRapida(lider, ruta) {
+    const reserva = data.reservas.find(r => r.lider === lider && r.ruta === ruta);
+    if (!reserva) {
+        alert('❌ No se encontró la reserva');
+        return;
+    }
+
+    // Pre-llenar el formulario con el líder
+    document.getElementById('participanteReserva').value = lider;
+    document.getElementById('participanteNombre').value = '';
+    document.getElementById('participanteSegundoNombre').value = '';
+    document.getElementById('participanteApellido').value = '';
+    document.getElementById('participanteMonto').value = '';
+    document.getElementById('participanteReferencia').value = '';
+    const participanteEnDolaresInput = document.getElementById('participanteEnDolares');
+    if (participanteEnDolaresInput) participanteEnDolaresInput.checked = false;
+    
+    // Abrir modal
+    openModal('modalNuevoParticipante');
+    
+    // Enfocar en el campo de nombre
+    setTimeout(() => {
+        document.getElementById('participanteNombre').focus();
+    }, 100);
+}
+
+
         // ACTUALIZAR PAGOS
-        async function actualizarPagos(lider, nuevoMonto, referencia) {
-            const reserva = data.reservas.find(r => r.lider === lider);
+        async function actualizarPagos(lider, nuevoMonto, referencia, enDolares = false, ruta = null) {
+            // Si no se proporciona ruta, buscar la primera reserva del líder (compatibilidad)
+            let reserva;
+            if (ruta) {
+                reserva = data.reservas.find(r => r.lider === lider && r.ruta === ruta);
+            } else {
+                reserva = data.reservas.find(r => r.lider === lider);
+            }
             if (!reserva) return;
             
             if (!nuevoMonto || nuevoMonto < 0) {
@@ -2077,32 +2615,38 @@ iniciarApp();
                 pagosActuales.push({
                     monto: nuevoMonto,
                     referencia: referencia || '',
-                    fecha: new Date().toISOString()
+                    fecha: new Date().toISOString(),
+                    enDolares: enDolares || false
                 });
                 
-                // Actualizar monto total pagado
-                const montoPagado = pagosActuales.reduce((sum, p) => sum + p.monto, 0);
+                // Actualizar monto total pagado (solo Bs para compatibilidad)
+                const montoPagadoBs = pagosActuales
+                    .filter(p => !p.enDolares)
+                    .reduce((sum, p) => sum + p.monto, 0);
                 
-                const { error } = await supabase
+                const { error } = await db
                     .from('reservas')
                     .update({ 
                         pagos: pagosActuales,
-                        monto_pagado: montoPagado
+                        monto_pagado: montoPagadoBs // Solo Bs para cálculo de profit
                     })
-                    .eq('lider', lider);
+                    .eq('lider', lider)
+                    .eq('ruta_nombre', reserva.ruta);
 
                 if (error) throw error;
 
                 // Limpiar campos del formulario
                 const nuevoPagoInput = document.getElementById('nuevoPago');
                 const nuevoPagoRefInput = document.getElementById('nuevoPagoReferencia');
+                const nuevoPagoEnDolaresInput = document.getElementById('nuevoPagoEnDolares');
                 if (nuevoPagoInput) nuevoPagoInput.value = '';
                 if (nuevoPagoRefInput) nuevoPagoRefInput.value = '';
+                if (nuevoPagoEnDolaresInput) nuevoPagoEnDolaresInput.checked = false;
                 
                 await loadData();
                 renderReservas();
                 renderRutas();
-                verDetalleReserva(lider); // Refrescar el modal
+                verDetalleReserva(lider, ruta); // Refrescar el modal
                 alert('✅ Pago registrado exitosamente');
             } catch (error) {
                 console.error('Error:', error);
@@ -2110,25 +2654,42 @@ iniciarApp();
             }
         }
 
+
+
         // VER DETALLE RESERVA
-        function verDetalleReserva(lider) {
-            const reserva = data.reservas.find(r => r.lider === lider);
+        function verDetalleReserva(lider, nombreRuta) {
+            const reserva = data.reservas.find(r => r.lider === lider && r.ruta === nombreRuta);
             if (!reserva) return;
             
             const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
             const montoPagado = reserva.monto_pagado || reserva.montoPagado || 0;
             
-            const historialPagos = (reserva.pagos || []).map((pago, index) => `
+            // Calcular totales separados
+            const totalBs = (reserva.pagos || [])
+                .filter(p => !p.enDolares)
+                .reduce((sum, p) => sum + p.monto, 0);
+            const totalDolares = (reserva.pagos || [])
+                .filter(p => p.enDolares)
+                .reduce((sum, p) => sum + p.monto, 0);
+            
+            const historialPagos = (reserva.pagos || []).map((pago, index) => {
+                const esDolares = pago.enDolares || false;
+                const simbolo = esDolares ? '$' : 'Bs';
+                const color = esDolares ? '#f59e0b' : 'var(--success)';
+                return `
                 <div style="padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border);">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                         <div style="flex: 1;">
-                            <div style="font-weight: 700; color: var(--success); margin-bottom: 4px;">Bs ${pago.monto.toLocaleString()}</div>
+                            <div style="font-weight: 700; color: ${color}; margin-bottom: 4px;">
+                                ${simbolo} ${pago.monto.toLocaleString()} ${esDolares ? '(USD efectivo)' : ''}
+                            </div>
                             ${pago.referencia ? `<div style="font-size: 12px; color: var(--accent); margin-bottom: 4px;">📎 Ref: ${pago.referencia}</div>` : ''}
                             <div style="font-size: 12px; color: var(--text-secondary);">${new Date(pago.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
             
             const html = `
                 <div class="payment-item">
@@ -2151,8 +2712,19 @@ iniciarApp();
                     </div>
                     <div class="divider"></div>
                     <div style="margin-bottom: 12px;">
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Total Pagado</div>
-                        <div style="font-size: 24px; font-weight: 800; color: var(--success);">Bs ${montoPagado.toLocaleString()}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Total Pagado</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">Bs</div>
+                                <div style="font-size: 20px; font-weight: 800; color: var(--success);">Bs ${totalBs.toLocaleString()}</div>
+                            </div>
+                            ${totalDolares > 0 ? `
+                            <div>
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">USD Efectivo</div>
+                                <div style="font-size: 20px; font-weight: 800; color: #f59e0b;">$${totalDolares.toLocaleString()}</div>
+                            </div>
+                            ` : ''}
+                        </div>
                     </div>
                 </div>
                 
@@ -2165,91 +2737,226 @@ iniciarApp();
                 
                 <div class="divider"></div>
                 <div class="form-group">
-                    <label class="form-label">💵 Registrar Nuevo Pago (Bs)</label>
+                    <label class="form-label">💵 Registrar Nuevo Pago</label>
                     <input type="number" id="nuevoPago" class="form-input" 
-                           placeholder="Monto en bolívares" 
+                           placeholder="Monto" 
                            step="0.01">
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="nuevoPagoEnDolares" style="width: 18px; height: 18px; cursor: pointer;">
+                        <span>💵 Pagar en dólares efectivo</span>
+                    </label>
                 </div>
                 <div class="form-group">
                     <label class="form-label">📎 Referencia (Opcional)</label>
                     <input type="text" id="nuevoPagoReferencia" class="form-input" 
                            placeholder="Número de referencia del pago">
                 </div>
-                <button class="btn btn-success" onclick="actualizarPagos('${lider}', parseFloat(document.getElementById('nuevoPago').value), document.getElementById('nuevoPagoReferencia').value.trim())">
+                <button class="btn btn-success" onclick="actualizarPagos('${lider}', parseFloat(document.getElementById('nuevoPago').value), document.getElementById('nuevoPagoReferencia').value.trim(), document.getElementById('nuevoPagoEnDolares').checked, '${reserva.ruta}')">
                     ✅ Registrar Pago
                 </button>
                 
-                <button class="btn btn-outline" style="margin-top: 16px;" onclick="closeModal('modalDetalleReserva')">
-                    Cerrar
-                </button>
+                <div class="divider"></div>
+
+<button class="btn btn-primary" style="margin-top: 12px;"
+        onclick="abrirAgregarPersonaAReserva('${lider}', '${reserva.ruta}')">
+    👤 Agregar Persona a esta Reserva
+</button>
+
+<button class="btn btn-outline" style="margin-top: 16px;"
+        onclick="closeModal('modalDetalleReserva')">
+    Cerrar
+</button>
+
             `;
             
             document.getElementById('detalleReservaContent').innerHTML = html;
             openModal('modalDetalleReserva');
         }
 
-        // ARCHIVAR RUTA
-        async function archivarRuta(nombre) {
-            if (!confirm(`¿Archivar la ruta "${nombre}"? La ruta se moverá al historial y no aparecerá en la lista principal.`)) return;
-            
-            try {
-                const { error } = await supabase
-                    .from('rutas')
-                    .update({ archivada: true })
-                    .eq('nombre', nombre);
+        // AGREGAR función para abrir modal de agregar persona:
+function abrirAgregarPersonaAReserva(lider, nombreRuta) {
+    closeModal('modalDetalleReserva');
+    
+    // Verificar que la reserva existe
+    const reserva = data.reservas.find(r => r.lider === lider && r.ruta === nombreRuta);
+    if (!reserva) {
+        alert('❌ No se encontró la reserva');
+        return;
+    }
+    
+    // Llenar automáticamente el modal de nuevo participante
+    setTimeout(() => {
+        document.getElementById('participanteReserva').value = lider;
+        openModal('modalNuevoParticipante');
+        
+        // Enfocar en el campo de nombre
+        setTimeout(() => {
+            document.getElementById('participanteNombre').focus();
+        }, 100);
+    }, 300);
+}
 
-                if (error) throw error;
+        // ARCHIVAR RUTA (versión final)
+async function archivarRuta(nombre) {
+    const ruta = data.rutas.find(r => r.nombre === nombre);
+    if (!ruta) return;
 
-                await loadData();
-                updateSelects();
-                renderRutas();
-                renderReservas();
-                alert('✅ Ruta archivada exitosamente');
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error al archivar la ruta: ' + error.message);
-            }
-        }
+    if (ruta.archivada) {
+        alert('ℹ️ Esta ruta ya está archivada');
+        return;
+    }
 
-        async function eliminarReserva(lider) {
-            if (!confirm(`¿Eliminar la reserva de "${lider}"?`)) return;
-            
-            try {
-                await supabaseClient.from('reservas').delete().eq('lider', lider);
-                await supabaseClient.from('participantes').delete().eq('lider', lider);
-                
-                await loadData();
-                updateSelects();
-                renderReservas();
-                renderParticipantes();
-                renderRutas();
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error al eliminar la reserva: ' + error.message);
-            }
-        }
+    const reservas = data.reservas.filter(r => r.ruta === nombre);
+    const participantes = data.participantes.filter(p =>
+        reservas.some(r => r.lider === p.lider)
+    );
 
-        async function eliminarParticipante(id) {
-            const p = data.participantes.find(part => part.id === id);
-            if (!p) return;
-            if (!confirm(`¿Eliminar a "${p.nombre}"?`)) return;
-            
-            try {
-                const { error } = await supabase
+    const numeroRuta = ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
+    const fechaFormateada = new Date(ruta.fecha).toLocaleDateString('es-ES', { 
+        day: 'numeric', 
+        month: 'short', 
+        year: 'numeric' 
+    });
+
+    const mensaje =
+        `Archivar ruta "${nombre}"?\n\n` +
+        `${numeroRuta ? `• Número: ${numeroRuta}\n` : ''}` +
+        `• Fecha: ${fechaFormateada}\n` +
+        `• Cupos: ${ruta.cupos}\n` +
+        `• Reservas activas: ${reservas.length}\n` +
+        `• Personas registradas: ${participantes.length}\n\n` +
+        `La ruta se moverá al historial y no aparecerá en la lista principal.`;
+
+    if (!confirmarAccion(mensaje, 'archivar')) return;
+
+    try {
+        // Usar ID en lugar de nombre para evitar conflictos con rutas con mismo nombre
+        const { error } = await db
+            .from('rutas')
+            .update({ archivada: true })
+            .eq('id', ruta.id);
+
+        if (error) throw error;
+
+        await loadData();
+        updateSelects();
+        renderRutas();
+        renderReservas();
+
+        alert('📦 Ruta archivada exitosamente');
+    } catch (error) {
+        console.error('Error al archivar ruta:', error);
+        alert('❌ Error al archivar la ruta: ' + error.message);
+    }
+}
+
+        async function eliminarReserva(lider, nombreRuta) {
+    const reserva = data.reservas.find(r => r.lider === lider && r.ruta === nombreRuta);
+    if (!reserva) return;
+
+    // Solo eliminar participantes de esta reserva específica (lider + ruta)
+    const participantes = data.participantes.filter(p => {
+        const reservaParticipante = data.reservas.find(r => r.lider === p.lider);
+        return reservaParticipante && reservaParticipante.lider === lider && reservaParticipante.ruta === nombreRuta;
+    });
+
+    const mensaje =
+        `Eliminar reserva de "${lider}"?\n\n` +
+        `• Ruta: ${reserva.ruta}\n` +
+        `• Cupos: ${reserva.cantidad}\n` +
+        `• Personas registradas: ${participantes.length}\n\n` +
+        `Esta acción NO se puede deshacer.`;
+
+    if (!confirmarAccion(mensaje, 'eliminar')) return;
+
+    try {
+        // 🔥 NUEVO: Eliminar de Supabase PRIMERO
+        
+        // 1. Eliminar participantes asociados a esta reserva específica
+        // Verificar si el líder tiene otras reservas
+        const otrasReservas = data.reservas.filter(r => r.lider === lider && r.ruta !== nombreRuta);
+        
+        if (participantes.length > 0) {
+            if (otrasReservas.length > 0) {
+                // El líder tiene otras reservas, no eliminar participantes (pertenecen a otras reservas)
+                console.log(`⚠️ El líder "${lider}" tiene ${otrasReservas.length} otra(s) reserva(s). Los participantes no se eliminarán.`);
+            } else {
+                // Es la única reserva del líder, eliminar todos sus participantes
+                const { error: errorParticipantes } = await db
                     .from('participantes')
                     .delete()
-                    .eq('id', id);
-
-                if (error) throw error;
-
-                await loadData();
-                renderParticipantes();
-                renderReservas();
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error al eliminar el participante: ' + error.message);
+                    .eq('lider', lider);
+                    
+                if (errorParticipantes) throw errorParticipantes;
             }
         }
+        
+        // 2. Eliminar la reserva específica (lider + ruta)
+        const { error: errorReserva } = await db
+            .from('reservas')
+            .delete()
+            .eq('lider', lider)
+            .eq('ruta_nombre', nombreRuta);
+            
+        if (errorReserva) throw errorReserva;
+
+        // 3. Recargar datos desde BD
+        await saveData();
+        
+        // 4. Actualizar vistas
+        updateSelects();
+        renderReservas();
+        renderParticipantes();
+        renderRutas();
+        renderAsistencia();
+        
+        alert('✅ Reserva eliminada exitosamente');
+        
+    } catch (error) {
+        console.error('Error al eliminar reserva:', error);
+        alert('❌ Error al eliminar la reserva: ' + error.message);
+    }
+}
+
+
+        async function eliminarParticipante(id) {
+    const p = data.participantes.find(part => part.id === id);
+    if (!p) return;
+
+    const mensaje =
+        `Eliminar a "${p.nombre}"?\n\n` +
+        `• Líder: ${p.lider}\n` +
+        `• Asistencia: ${p.asiste ? '✅ Presente' : '❌ Ausente'}`;
+
+    if (!confirmarAccion(mensaje, 'eliminar')) return;
+
+    try {
+        // 🔥 NUEVO: Eliminar de Supabase PRIMERO
+        const { error } = await db
+            .from('participantes')
+            .delete()
+            .eq('id', id);
+            
+        if (error) throw error;
+
+        // Recargar datos desde BD
+        await saveData();
+        
+        // Actualizar vistas
+        renderParticipantes();
+        renderReservas();
+        renderAsistencia();
+        
+        alert('✅ Persona eliminada exitosamente');
+        
+    } catch (error) {
+        console.error('Error al eliminar participante:', error);
+        alert('❌ Error al eliminar la persona: ' + error.message);
+    }
+}
+
 
         // ASISTENCIA
         async function toggleAsistencia(id) {
@@ -2258,7 +2965,7 @@ iniciarApp();
             
             try {
                 const nuevoEstado = !participante.asiste;
-                const { error } = await supabase
+                const { error } = await db
                     .from('participantes')
                     .update({ asiste: nuevoEstado })
                     .eq('id', id);
@@ -2273,98 +2980,165 @@ iniciarApp();
             }
         }
 
-        // RENDER RUTAS
-        function renderRutas() {
-            const search = document.getElementById('searchRutas').value.toLowerCase();
-            // Filtrar solo rutas no archivadas
-            const filtered = data.rutas.filter(r => 
-                !r.archivada && 
-                (r.nombre.toLowerCase().includes(search) || 
-                r.fecha.includes(search))
-            );
+      // RENDER RUTAS
+function renderRutas() {
+    const search = document.getElementById('searchRutas').value.toLowerCase();
+
+    // Filtrar solo rutas no archivadas
+    const filtered = data.rutas.filter(r => 
+        !r.archivada && 
+        (r.nombre.toLowerCase().includes(search) || r.fecha.includes(search))
+    );
+    
+    const html = filtered.length === 0 ? 
+        `<div class="empty-state">
+            <div class="empty-state-icon">🏔️</div>
+            <h3>No hay rutas registradas</h3>
+            <p>Crea tu primera ruta de senderismo</p>
+        </div>` :
+        filtered.map(ruta => {
+            const ocupados = calcularCuposOcupados(ruta.nombre);
+            const disponibles = ruta.cupos - ocupados;
+            const porcentaje = (ocupados / ruta.cupos * 100).toFixed(0);
+            const recaudado = calcularTotalRecaudado(ruta.nombre);
+            const gastos = calcularTotalGastos(ruta.nombre);
+            const profitNeto = calcularProfitNeto(ruta.nombre);
+            const haySobreventa = ocupados > ruta.cupos;
+            const badgeClass = haySobreventa ? 'badge-closed' : (disponibles > 5 ? 'badge-active' : disponibles > 0 ? 'badge-warning' : 'badge-closed');
+            const badgeText = haySobreventa ? 'Sobrevendida' : (disponibles > 0 ? 'Activa' : 'Completa');
+            const precioEuros = ruta.precio_euros || ruta.precioEuros || 0;
+            const colorCupos = haySobreventa ? 'var(--danger)' : 'var(--text-primary)';
             
-            const html = filtered.length === 0 ? 
-                `<div class="empty-state">
-                    <div class="empty-state-icon">🏔️</div>
-                    <h3>No hay rutas registradas</h3>
-                    <p>Crea tu primera ruta de senderismo</p>
-                </div>` :
-                filtered.map(ruta => {
-                    const ocupados = calcularCuposOcupados(ruta.nombre);
-                    const disponibles = ruta.cupos - ocupados;
-                    const porcentaje = (ocupados / ruta.cupos * 100).toFixed(0);
-                    const recaudado = calcularTotalRecaudado(ruta.nombre);
-                    const gastos = calcularTotalGastos(ruta.nombre);
-                    const profitNeto = calcularProfitNeto(ruta.nombre);
-                    const badgeClass = disponibles > 5 ? 'badge-active' : disponibles > 0 ? 'badge-warning' : 'badge-closed';
-                    const badgeText = disponibles > 0 ? 'Activa' : 'Completa';
-                    const precioEuros = ruta.precio_euros || ruta.precioEuros || 0;
-                    
-                    return `
-                        <div class="card">
-                            <div class="card-header">
-                                <div>
-                                    <div class="card-title">🏔️ ${ruta.nombre}</div>
-                                    <div class="card-meta">📅 ${new Date(ruta.fecha).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
-                                </div>
-                                <span class="badge ${badgeClass}">${badgeText}</span>
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">
+    <div>🏔️ ${ruta.nombre}</div>
+    <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px; font-weight: normal;">
+        ID: ${ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : 'N/A'}
+    </div>
+</div>
+
+
+                            <!-- ✅ FECHA CORREGIDA -->
+                            <div class="card-meta">
+                                📅 ${formatearFechaRuta(ruta.fecha)}
                             </div>
-                            <div class="stats-row">
-                                <div class="stat">
-                                    <span class="stat-value">${ocupados}/${ruta.cupos}</span>
-                                    <span class="stat-label">Cupos</span>
-                                </div>
-                                <div class="stat">
-                                    <span class="stat-value">${disponibles}</span>
-                                    <span class="stat-label">Disponibles</span>
-                                </div>
-                                <div class="stat">
-                                    <span class="stat-value">${precioEuros}€</span>
-                                    <span class="stat-label">Precio Ref.</span>
-                                </div>
-                            </div>
-                            <div class="progress-bar" style="margin-top: 16px;">
-                                <div class="progress-fill" style="width: ${porcentaje}%"></div>
-                            </div>
-                            <div class="progress-text">
-                                <span>Precio Ref.: ${precioEuros}€/cupo</span>
-                                <span>${porcentaje}% ocupado</span>
-                            </div>
-                            <div style="margin-top: 16px; padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; border: 1px solid var(--border);">
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
-                                    <div>
-                                        <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💰 Recaudado</div>
-                                        <div style="font-size: 16px; font-weight: 800; color: var(--success);">Bs ${recaudado.toLocaleString()}</div>
-                                    </div>
-                                    <div>
-                                        <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💸 Gastos</div>
-                                        <div style="font-size: 16px; font-weight: 800; color: var(--danger);">Bs ${gastos.toLocaleString()}</div>
-                                    </div>
-                                </div>
-                                <div style="padding-top: 8px; border-top: 1px solid var(--border);">
-                                    <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">📊 Profit Neto</div>
-                                    <div style="font-size: 20px; font-weight: 800; color: ${profitNeto >= 0 ? 'var(--success)' : 'var(--danger)'};">Bs ${profitNeto.toLocaleString()}</div>
-                                </div>
-                            </div>
-                            <button class="btn btn-danger btn-small" style="margin-top: 16px;" onclick="archivarRuta('${ruta.nombre}')">
-                                📦 Archivar Ruta
-                            </button>
                         </div>
-                    `;
-                }).join('');
-            
-            document.getElementById('listaRutas').innerHTML = html;
-        }
+
+                        <span class="badge ${badgeClass}">${badgeText}</span>
+                    </div>
+
+                    <div class="stats-row">
+                        <div class="stat">
+                            <span class="stat-value" style="color: ${colorCupos};">${ocupados}/${ruta.cupos}</span>
+                            <span class="stat-label">Cupos${haySobreventa ? ' ⚠️' : ''}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value" style="color: ${haySobreventa ? 'var(--danger)' : (disponibles > 0 ? 'var(--success)' : 'var(--text-secondary)')};">${haySobreventa ? `-${Math.abs(disponibles)}` : disponibles}</span>
+                            <span class="stat-label">${haySobreventa ? 'Sobrevendidos' : 'Disponibles'}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value">${precioEuros}€</span>
+                            <span class="stat-label">Precio Ref.</span>
+                        </div>
+                    </div>
+
+                    <div class="progress-bar" style="margin-top: 16px;">
+                        <div class="progress-fill" style="width: ${porcentaje}%"></div>
+                    </div>
+
+                    <div class="progress-text">
+                        <span>Precio Ref.: ${precioEuros}€/cupo</span>
+                        <span>${porcentaje}% ocupado</span>
+                    </div>
+
+                    <div style="margin-top: 16px; padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; border: 1px solid var(--border);">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
+                            <div>
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💰 Recaudado</div>
+                                <div style="font-size: 16px; font-weight: 800; color: var(--success);">
+                                    Bs ${recaudado.toLocaleString()}
+                                </div>
+                            </div>
+                            <div>
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💸 Gastos</div>
+                                <div style="font-size: 16px; font-weight: 800; color: var(--danger);">
+                                    Bs ${gastos.toLocaleString()}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="padding-top: 8px; border-top: 1px solid var(--border);">
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">📊 Profit Neto</div>
+                            <div style="font-size: 20px; font-weight: 800; color: ${profitNeto >= 0 ? 'var(--success)' : 'var(--danger)'};">
+                                Bs ${profitNeto.toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-danger btn-small" style="margin-top: 16px;" onclick="archivarRuta('${ruta.nombre}')">
+                        📦 Archivar Ruta
+                    </button>
+                </div>
+            `;
+        }).join('');
+    
+    document.getElementById('listaRutas').innerHTML = html;
+}
+
+// FORMATEAR FECHA LARGA (RUTAS)
+function formatearFechaRuta(fechaString) {
+    try {
+        const fecha = new Date(fechaString);
+        const fechaAjustada = new Date(fecha.getTime() + fecha.getTimezoneOffset() * 60000);
+        
+        return fechaAjustada.toLocaleDateString('es-ES', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+    } catch (error) {
+        console.error('Error formateando fecha:', error);
+        return fechaString;
+    }
+}
+
+// FORMATEAR FECHA CORTA (ASISTENCIA / LISTAS)
+function formatearFechaCorta(fechaString) {
+    try {
+        const fecha = new Date(fechaString);
+        const fechaAjustada = new Date(fecha.getTime() + fecha.getTimezoneOffset() * 60000);
+        
+        return fechaAjustada.toLocaleDateString('es-ES', { 
+            day: '2-digit', 
+            month: '2-digit' 
+        });
+    } catch (error) {
+        return fechaString;
+    }
+}
+
 
         // RENDER RESERVAS
         function renderReservas() {
             const search = document.getElementById('searchReservas').value.toLowerCase();
             const filtroRuta = document.getElementById('filtroRutaReservas').value;
             
-            let filtered = data.reservas.filter(r => 
-                r.lider.toLowerCase().includes(search) || 
-                r.ruta.toLowerCase().includes(search)
-            );
+            // Filtrar reservas: excluir las de rutas archivadas
+            let filtered = data.reservas.filter(r => {
+                const ruta = data.rutas.find(rt => rt.nombre === r.ruta);
+                // Excluir reservas de rutas archivadas o que no existan
+                if (!ruta || ruta.archivada) {
+                    return false;
+                }
+                
+                // Aplicar filtro de búsqueda
+                return r.lider.toLowerCase().includes(search) || 
+                       r.ruta.toLowerCase().includes(search);
+            });
             
             if (filtroRuta) {
                 filtered = filtered.filter(r => r.ruta === filtroRuta);
@@ -2380,54 +3154,97 @@ iniciarApp();
                     const registrados = contarParticipantes(reserva.lider);
                     const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
                     
-                    // Validar que la ruta existe
+                    // Validar que la ruta existe (ya filtrado arriba, pero por seguridad)
                     if (!ruta) {
                         return '';
                     }
                     
-                    // Calcular total pagado (suma de todos los pagos)
-                    const totalPagado = reserva.monto_pagado || reserva.montoPagado || 0;
+                    // Calcular totales separados
+                    const totalBs = (reserva.pagos || [])
+                        .filter(p => !p.enDolares)
+                        .reduce((sum, p) => sum + p.monto, 0);
+                    const totalDolares = (reserva.pagos || [])
+                        .filter(p => p.enDolares)
+                        .reduce((sum, p) => sum + p.monto, 0);
                     const precioEuros = ruta.precio_euros || ruta.precioEuros || 0;
                     const numPagos = (reserva.pagos && reserva.pagos.length > 0) ? reserva.pagos.length : 0;
+                    const tienePagos = totalBs > 0 || totalDolares > 0;
+                    const cardId = `reserva-${reserva.lider.replace(/\s+/g, '-').toLowerCase()}`;
                     
                     return `
-                        <div class="card">
-                            <div class="card-header">
-                                <div>
-                                    <div class="card-title">👤 ${reserva.lider}</div>
-                                    <div class="card-meta">📍 ${reserva.ruta}</div>
-                                </div>
-                            </div>
-                            <div class="stats-row">
-                                <div class="stat">
-                                    <span class="stat-value">${reserva.cantidad}</span>
-                                    <span class="stat-label">Cupos</span>
-                                </div>
-                                <div class="stat">
-                                    <span class="stat-value">${precioEuros}€</span>
-                                    <span class="stat-label">Precio Ref.</span>
-                                </div>
-                                <div class="stat">
-                                    <span class="stat-value">${registrados}/${reserva.cantidad}</span>
-                                    <span class="stat-label">Registrados</span>
-                                </div>
-                            </div>
-                            ${totalPagado > 0 ? `
-                                <div style="margin-top: 16px; padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; border: 1px solid var(--border);">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                        <span style="font-size: 13px; color: var(--text-secondary);">💰 Total Pagado:</span>
-                                        <span style="font-size: 18px; font-weight: 800; color: var(--success);">Bs ${totalPagado.toLocaleString()}</span>
+                        <div class="card reserva-card" id="${cardId}">
+                            <!-- VISTA COMPACTA (siempre visible) -->
+                            <div class="reserva-compact">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div style="flex: 1;">
+                                        <div class="card-title" style="margin-bottom: 4px;">👤 ${reserva.lider}</div>
+                                        <div class="card-meta" style="margin-bottom: 8px;">📍 ${reserva.ruta}</div>
+                                        <div style="display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary);">
+                                            ${(function() {
+                                                const rutaReserva = data.rutas.find(r => r.nombre === reserva.ruta);
+                                                const haySobreventa = rutaReserva && registrados > rutaReserva.cupos;
+                                                const colorPersonas = haySobreventa ? 'var(--danger)' : 'var(--text-secondary)';
+                                                const cuposRuta = rutaReserva ? rutaReserva.cupos : reserva.cantidad;
+                                                return '<span style="color: ' + colorPersonas + '; font-weight: ' + (haySobreventa ? '700' : '400') + ';">📊 ' + registrados + '/' + cuposRuta + ' personas' + (haySobreventa ? ' ⚠️' : '') + '</span>';
+                                            })()}
+                                            ${tienePagos ? `<span>💰 Bs ${totalBs.toLocaleString()}${totalDolares > 0 ? ` + $${totalDolares.toLocaleString()}` : ''}</span>` : '<span style="color: var(--text-tertiary);">Sin pagos</span>'}
+                                        </div>
                                     </div>
-                                    ${numPagos > 0 ? `<div style="font-size: 11px; color: var(--text-secondary); text-align: right;">${numPagos} pago${numPagos !== 1 ? 's' : ''} registrado${numPagos !== 1 ? 's' : ''}</div>` : ''}
+                                    <button class="btn-expand-reserva" onclick="toggleReservaCard('${cardId}')" title="Ver detalles">
+                                        <span class="expand-icon">▼</span>
+                                    </button>
                                 </div>
-                            ` : ''}
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px;">
-                                <button class="btn btn-primary btn-small" onclick="verDetalleReserva('${reserva.lider}')">
-                                    💰 Pagos
-                                </button>
-                                <button class="btn btn-danger btn-small" onclick="eliminarReserva('${reserva.lider}')">
-                                    🗑️ Eliminar
-                                </button>
+                            </div>
+                            
+                            <!-- VISTA EXPANDIDA (oculta por defecto) -->
+                            <div class="reserva-expanded" style="display: none;">
+                                <div class="stats-row">
+                                    <div class="stat">
+                                        <span class="stat-value">${reserva.cantidad}</span>
+                                        <span class="stat-label">Cupos</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-value">${precioEuros}€</span>
+                                        <span class="stat-label">Precio Ref.</span>
+                                    </div>
+                                <div class="stat">
+                                    ${(function() {
+                                        const rutaReserva = data.rutas.find(r => r.nombre === reserva.ruta);
+                                        const haySobreventa = rutaReserva && registrados > rutaReserva.cupos;
+                                        const colorRegistrados = haySobreventa ? 'var(--danger)' : 'var(--accent)';
+                                        const cuposRuta = rutaReserva ? rutaReserva.cupos : reserva.cantidad;
+                                        return '<span class="stat-value" style="color: ' + colorRegistrados + ';">' + registrados + '/' + cuposRuta + (haySobreventa ? ' ⚠️' : '') + '</span><span class="stat-label">' + (haySobreventa ? 'Sobrevendidos' : 'Registrados') + '</span>';
+                                    })()}
+                                </div>
+                                </div>
+                                ${tienePagos ? `
+                                    <div style="margin-top: 16px; padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; border: 1px solid var(--border);">
+                                        <div style="display: grid; grid-template-columns: 1fr ${totalDolares > 0 ? '1fr' : ''}; gap: 12px; margin-bottom: 4px;">
+                                            <div>
+                                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">💰 Bs</div>
+                                                <div style="font-size: 16px; font-weight: 800; color: var(--success);">Bs ${totalBs.toLocaleString()}</div>
+                                            </div>
+                                            ${totalDolares > 0 ? `
+                                            <div>
+                                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">💵 USD Efectivo</div>
+                                                <div style="font-size: 16px; font-weight: 800; color: #f59e0b;">$${totalDolares.toLocaleString()}</div>
+                                            </div>
+                                            ` : ''}
+                                        </div>
+                                        ${numPagos > 0 ? `<div style="font-size: 11px; color: var(--text-secondary); text-align: right; margin-top: 4px;">${numPagos} pago${numPagos !== 1 ? 's' : ''} registrado${numPagos !== 1 ? 's' : ''}</div>` : ''}
+                                    </div>
+                                ` : ''}
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 16px;">
+                                    <button class="btn btn-success btn-small" onclick="agregarPersonaRapida('${reserva.lider}', '${reserva.ruta}')" title="Agregar persona">
+                                        +1
+                                    </button>
+                                    <button class="btn btn-primary btn-small" onclick="verDetalleReserva('${reserva.lider}', '${reserva.ruta}')">
+                                        💰 Pagos
+                                    </button>
+                                    <button class="btn btn-danger btn-small" onclick="eliminarReserva('${reserva.lider}', '${reserva.ruta}')">
+                                        🗑️ Eliminar
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -2436,15 +3253,129 @@ iniciarApp();
             document.getElementById('listaReservas').innerHTML = html;
         }
 
+        // TOGGLE EXPANDIR/COLAPSAR CARD DE RESERVA
+        function toggleReservaCard(cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            
+            const expanded = card.querySelector('.reserva-expanded');
+            const compact = card.querySelector('.reserva-compact');
+            const icon = card.querySelector('.expand-icon');
+            
+            if (!expanded || !compact || !icon) return;
+            
+            const isExpanded = expanded.style.display !== 'none';
+            
+            if (isExpanded) {
+                // Colapsar
+                expanded.style.display = 'none';
+                icon.textContent = '▼';
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                // Expandir
+                expanded.style.display = 'block';
+                icon.textContent = '▲';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // TOGGLE EXPANDIR/COLAPSAR CARD DE ASISTENCIA
+        function toggleAsistenciaCard(cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            
+            const expanded = card.querySelector('.asistencia-expanded');
+            const compact = card.querySelector('.asistencia-compact');
+            const icon = card.querySelector('.expand-icon');
+            
+            if (!expanded || !compact || !icon) return;
+            
+            const isExpanded = expanded.style.display !== 'none';
+            
+            if (isExpanded) {
+                // Colapsar
+                expanded.style.display = 'none';
+                icon.textContent = '▼';
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                // Expandir
+                expanded.style.display = 'block';
+                icon.textContent = '▲';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // VER HISTORIAL DE RUTAS DE UNA PERSONA
+        function verHistorialRutas(nombrePersona) {
+            const historial = calcularRutasPorPersona(nombrePersona);
+            
+            if (historial.totalRutas === 0) {
+                alert('Esta persona no tiene historial de rutas');
+                return;
+            }
+            
+            // Obtener detalles de cada ruta
+            const rutasDetalle = historial.rutas.map(nombreRuta => {
+                const ruta = data.rutas.find(r => r.nombre === nombreRuta);
+                // Buscar reservas usando ruta normalizada (puede ser ruta_nombre o ruta)
+                const reservasDeRuta = data.reservas.filter(r => (r.ruta || r.ruta_nombre) === nombreRuta);
+                const participacionesEnRuta = data.participantes.filter(p => 
+                    p.nombre.toLowerCase().trim() === nombrePersona.toLowerCase().trim() &&
+                    reservasDeRuta.some(r => r.lider === p.lider)
+                );
+                
+                return {
+                    nombre: nombreRuta,
+                    fecha: ruta ? ruta.fecha : null,
+                    numero: ruta ? ruta.numero : null,
+                    archivada: ruta ? ruta.archivada : false,
+                    participaciones: participacionesEnRuta.length,
+                    lideres: [...new Set(participacionesEnRuta.map(p => p.lider))]
+                };
+            }).sort((a, b) => {
+                // Ordenar por fecha (más reciente primero)
+                if (!a.fecha && !b.fecha) return 0;
+                if (!a.fecha) return 1;
+                if (!b.fecha) return -1;
+                return new Date(b.fecha) - new Date(a.fecha);
+            });
+            
+            const rutasLista = rutasDetalle.map(r => {
+                const fechaStr = r.fecha ? new Date(r.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Sin fecha';
+                const numeroStr = r.numero ? `#${String(r.numero).padStart(4, '0')}` : '';
+                const estadoStr = r.archivada ? ' (Archivada)' : '';
+                return `• ${numeroStr} ${r.nombre} - ${fechaStr}${estadoStr}\n  ${r.participaciones} participación${r.participaciones !== 1 ? 'es' : ''} con ${r.lideres.length} líder${r.lideres.length !== 1 ? 'es' : ''} diferente${r.lideres.length !== 1 ? 's' : ''}`;
+            }).join('\n\n');
+            
+            alert(
+                `⭐ CLIENTE RECURRENTE: ${nombrePersona}\n\n` +
+                `📊 Total de rutas diferentes: ${historial.totalRutas}\n` +
+                `📝 Total de participaciones: ${historial.totalParticipaciones}\n\n` +
+                `🗺️ RUTAS REALIZADAS:\n\n${rutasLista}`
+            );
+        }
+
         // RENDER PARTICIPANTES
         function renderParticipantes() {
             const search = document.getElementById('searchParticipantes').value.toLowerCase();
             const filtroRuta = document.getElementById('filtroRutaParticipantes').value;
             
-            let filtered = data.participantes.filter(p => 
-                p.nombre.toLowerCase().includes(search) || 
-                p.lider.toLowerCase().includes(search)
-            );
+            // Filtrar participantes: excluir los de rutas archivadas
+            let filtered = data.participantes.filter(p => {
+                const reserva = data.reservas.find(r => r.lider === p.lider);
+                if (!reserva) return false; // Si no hay reserva, excluir
+                
+                // Usar ruta normalizada (puede ser ruta_nombre o ruta)
+                const nombreRuta = reserva.ruta || reserva.ruta_nombre;
+                const ruta = data.rutas.find(r => r.nombre === nombreRuta);
+                if (ruta && ruta.archivada) {
+                    return false; // Excluir participantes de rutas archivadas
+                }
+                
+                // Aplicar filtro de búsqueda
+                return p.nombre.toLowerCase().includes(search) || 
+                       p.lider.toLowerCase().includes(search);
+            });
             
             if (filtroRuta) {
                 filtered = filtered.filter(p => getRutaParticipante(p.lider) === filtroRuta);
@@ -2459,13 +3390,22 @@ iniciarApp();
                 `<div class="person-list-compact">
                     ${filtered.map((p) => {
                         const reserva = data.reservas.find(r => r.lider === p.lider);
-                        const rutaNombre = reserva ? reserva.ruta : 'Sin ruta';
+                        // Usar ruta normalizada (puede ser ruta_nombre o ruta)
+                        const rutaNombre = reserva ? (reserva.ruta || reserva.ruta_nombre) : 'Sin ruta';
                         const ruta = data.rutas.find(r => r.nombre === rutaNombre);
                         const rutaFecha = ruta ? new Date(ruta.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '';
+                        
+                        // Calcular si es cliente recurrente
+                        const historialRutas = calcularRutasPorPersona(p.nombre);
+                        const esRecurrente = historialRutas.totalRutas > 1;
+                        
                         return `
                             <div class="person-item-compact">
                                 <div class="person-info-compact">
-                                    <div class="person-name-compact">${p.nombre}</div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div class="person-name-compact">${p.nombre}</div>
+                                        ${esRecurrente ? `<span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; cursor: pointer;" onclick="verHistorialRutas('${p.nombre}')" title="Ver historial de rutas">⭐ ${historialRutas.totalRutas} rutas</span>` : ''}
+                                    </div>
                                     <div class="person-meta-compact">
                                         <span>👤 ${p.lider}</span>
                                         <span>📍 ${rutaNombre}</span>
@@ -2487,7 +3427,18 @@ iniciarApp();
         function renderAsistencia() {
             const rutaFiltro = document.getElementById('filtroRuta').value;
             
-            let filtered = data.participantes;
+            // Filtrar participantes: excluir los de rutas archivadas
+            let filtered = data.participantes.filter(p => {
+                const reserva = data.reservas.find(r => r.lider === p.lider);
+                if (!reserva) return false; // Si no hay reserva, excluir
+                
+                const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
+                if (ruta && ruta.archivada) {
+                    return false; // Excluir participantes de rutas archivadas
+                }
+                return true;
+            });
+            
             if (rutaFiltro) {
                 filtered = filtered.filter(p => getRutaParticipante(p.lider) === rutaFiltro);
             }
@@ -2512,39 +3463,67 @@ iniciarApp();
                     const participantes = grouped[lider];
                     const presentes = participantes.filter(p => p.asiste).length;
                     const porcentaje = (presentes / participantes.length * 100).toFixed(0);
+                    const cardId = `asistencia-${lider.replace(/\s+/g, '-').toLowerCase()}`;
                     
                     return `
-                        <div class="attendance-group-compact">
-                            <div class="attendance-header-compact">
-                                <div class="attendance-header-info">
-                                    <div class="attendance-title-compact">📍 ${rutaNombre}${rutaFecha ? ` - ${rutaFecha}` : ''}</div>
-                                    <div class="attendance-meta-compact">
-                                        <span>👤 ${lider}</span>
-                                    </div>
-                                </div>
-                                <span class="attendance-badge-compact">${presentes}/${participantes.length}</span>
-                            </div>
-                            <div class="attendance-progress-compact">
-                                <div class="attendance-progress-fill" style="width: ${porcentaje}%"></div>
-                            </div>
-                            <div class="attendance-list-compact">
-                                ${participantes.map(p => {
-                                    return `
-                                        <div class="attendance-item-compact" onclick="toggleAsistencia('${p.id}'); event.stopPropagation();">
-                                            <input type="checkbox" class="attendance-checkbox-compact" 
-                                                   ${p.asiste ? 'checked' : ''} 
-                                                   onchange="toggleAsistencia('${p.id}')"
-                                                   onclick="event.stopPropagation();">
-                                            <span class="attendance-name-compact ${p.asiste ? 'checked' : ''}">${p.nombre}</span>
+                        <div class="attendance-group-compact asistencia-card" id="${cardId}">
+                            <!-- VISTA COMPACTA (siempre visible) -->
+                            <div class="asistencia-compact">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div style="flex: 1;">
+                                        <div class="attendance-title-compact" style="margin-bottom: 4px;">📍 ${rutaNombre}${rutaFecha ? ` - ${rutaFecha}` : ''}</div>
+                                        <div class="attendance-meta-compact" style="margin-bottom: 8px;">
+                                            <span>👤 ${lider}</span>
                                         </div>
-                                    `;
-                                }).join('')}
+                                        <div style="display: flex; align-items: center; gap: 12px; font-size: 13px;">
+                                            <span style="color: var(--text-secondary);">📊 ${presentes}/${participantes.length} presentes</span>
+                                            <div style="flex: 1; max-width: 120px; height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 999px; overflow: hidden;">
+                                                <div class="attendance-progress-fill" style="width: ${porcentaje}%; height: 100%; background: ${porcentaje >= 80 ? 'var(--success)' : porcentaje >= 50 ? '#fbbf24' : 'var(--danger)'};"></div>
+                                            </div>
+                                            <span style="color: var(--text-secondary); font-weight: 600;">${porcentaje}%</span>
+                                        </div>
+                                    </div>
+                                    <button class="btn-expand-reserva" onclick="toggleAsistenciaCard('${cardId}')" title="Ver lista completa">
+                                        <span class="expand-icon">▼</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- VISTA EXPANDIDA (oculta por defecto) -->
+                            <div class="asistencia-expanded" style="display: none;">
+                                <div class="attendance-header-compact" style="margin-bottom: 12px;">
+                                    <div class="attendance-header-info">
+                                        <div class="attendance-title-compact">📍 ${rutaNombre}${rutaFecha ? ` - ${rutaFecha}` : ''}</div>
+                                        <div class="attendance-meta-compact">
+                                            <span>👤 ${lider}</span>
+                                        </div>
+                                    </div>
+                                    <span class="attendance-badge-compact">${presentes}/${participantes.length}</span>
+                                </div>
+                                <div class="attendance-progress-compact">
+                                    <div class="attendance-progress-fill" style="width: ${porcentaje}%"></div>
+                                </div>
+                                <div class="attendance-list-compact">
+                                    ${participantes.map(p => {
+                                        return `
+                                            <div class="attendance-item-compact" onclick="toggleAsistencia('${p.id}'); event.stopPropagation();">
+                                                <input type="checkbox" class="attendance-checkbox-compact" 
+                                                       ${p.asiste ? 'checked' : ''} 
+                                                       onchange="toggleAsistencia('${p.id}')"
+                                                       onclick="event.stopPropagation();">
+                                                <span class="attendance-name-compact ${p.asiste ? 'checked' : ''}">${p.nombre}</span>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
                             </div>
                         </div>
                     `;
                 }).join('');
             
             document.getElementById('listaAsistencia').innerHTML = html;
+
+            actualizarContadorCheckin();
         }
 
         // AGREGAR GASTO
@@ -2559,11 +3538,11 @@ iniciarApp();
             }
 
             try {
-                const { error } = await supabase
+                const { error } = await db
                     .from('gastos')
                     .insert([{
                         concepto,
-                        ruta,
+                        ruta_nombre: ruta,
                         monto,
                         fecha: new Date().toISOString()
                     }]);
@@ -2586,38 +3565,137 @@ iniciarApp();
             }
         }
 
-        // ELIMINAR GASTO
         async function eliminarGasto(id) {
-            const gasto = data.gastos.find(g => g.id === id);
-            if (!gasto) return;
-            if (!confirm(`¿Eliminar el gasto "${gasto.concepto}" de Bs ${gasto.monto.toLocaleString()}?`)) return;
+    const gasto = data.gastos.find(g => g.id === id);
+    if (!gasto) return;
+
+    const mensaje =
+        `Eliminar gasto "${gasto.concepto}"?\n\n` +
+        `• Monto: Bs ${gasto.monto.toLocaleString()}\n` +
+        `• Ruta: ${gasto.ruta}`;
+
+    if (!confirmarAccion(mensaje, 'eliminar')) return;
+
+    try {
+        // 🔥 NUEVO: Eliminar de Supabase PRIMERO
+        const { error } = await db
+            .from('gastos')
+            .delete()
+            .eq('id', id);
             
-            try {
-                const { error } = await supabase
-                    .from('gastos')
-                    .delete()
-                    .eq('id', id);
+        if (error) throw error;
 
-                if (error) throw error;
+        // Recargar datos desde BD
+        await saveData();
+        
+        // Actualizar vistas
+        renderGastos();
+        renderRutas(); // Los gastos afectan el profit de las rutas
+        
+        alert('✅ Gasto eliminado exitosamente');
+        
+    } catch (error) {
+        console.error('Error al eliminar gasto:', error);
+        alert('❌ Error al eliminar el gasto: ' + error.message);
+    }
+}
 
-                await loadData();
-                renderGastos();
-                renderRutas();
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error al eliminar el gasto: ' + error.message);
-            }
+
+        // Función para mostrar/ocultar check-in rápido
+function toggleCheckinRapido(mostrar) {
+    const elemento = document.getElementById('checkinRapido');
+    const rutaFiltro = document.getElementById('filtroRuta')?.value;
+
+    if (!elemento) return;
+
+    if (mostrar && rutaFiltro) {
+        elemento.classList.add('active');
+        actualizarContadorCheckin();
+    } else {
+        elemento.classList.remove('active');
+    }
+}
+
+// Actualizar contador de check-in
+function actualizarContadorCheckin() {
+    const rutaFiltro = document.getElementById('filtroRuta')?.value;
+    if (!rutaFiltro) {
+        document.getElementById('checkinContador').textContent = "0/0";
+        return;
+    }
+
+    const participantes = data.participantes.filter(p =>
+        getRutaParticipante(p.lider) === rutaFiltro
+    );
+
+    const presentes = participantes.filter(p => p.asiste).length;
+    const total = participantes.length;
+
+    document.getElementById('checkinContador').textContent = `${presentes}/${total}`;
+
+    const checkinTitle = document.querySelector('.checkin-title');
+    if (checkinTitle) {
+        const ruta = data.rutas.find(r => r.nombre === rutaFiltro);
+        const rutaFecha = ruta
+            ? new Date(ruta.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+            : '';
+        checkinTitle.innerHTML =
+            `📋 ${rutaFiltro}${rutaFecha ? ' - ' + rutaFecha : ''} <span class="checkin-contador">${presentes}/${total}</span>`;
+    }
+}
+
+// Marcar todos como presentes
+async function marcarTodosPresentes() {
+    const rutaFiltro = document.getElementById('filtroRuta')?.value;
+    if (!rutaFiltro) {
+        alert('Selecciona una ruta primero');
+        return;
+    }
+
+    const participantes = data.participantes.filter(p =>
+        getRutaParticipante(p.lider) === rutaFiltro && !p.asiste
+    );
+
+    if (participantes.length === 0) {
+        alert('✅ Todos ya están marcados');
+        return;
+    }
+
+    if (!confirm(`¿Marcar ${participantes.length} personas como presentes?`)) return;
+
+    try {
+        for (const p of participantes) {
+            await db.from('participantes')
+                .update({ asiste: true })
+                .eq('id', p.id);
         }
+
+        await loadData();
+        renderAsistencia();
+        actualizarContadorCheckin();
+    } catch (err) {
+        console.error(err);
+        alert('❌ Error al marcar asistencia');
+    }
+}
 
         // RENDER GASTOS
         function renderGastos() {
             const search = document.getElementById('searchGastos').value.toLowerCase();
             const filtroRuta = document.getElementById('filtroRutaGastos').value;
 
-            let filtered = data.gastos.filter(g =>
-                g.concepto.toLowerCase().includes(search) ||
-                g.ruta.toLowerCase().includes(search)
-            );
+            // Filtrar gastos: excluir los de rutas archivadas
+            let filtered = data.gastos.filter(g => {
+                // Verificar si la ruta asociada está archivada
+                const ruta = data.rutas.find(r => r.nombre === g.ruta);
+                if (ruta && ruta.archivada) {
+                    return false; // Excluir gastos de rutas archivadas
+                }
+                
+                // Aplicar filtro de búsqueda
+                return g.concepto.toLowerCase().includes(search) ||
+                       g.ruta.toLowerCase().includes(search);
+            });
 
             if (filtroRuta) {
                 filtered = filtered.filter(g => g.ruta === filtroRuta);
@@ -2759,6 +3837,15 @@ iniciarApp();
             renderGastos();
             renderHistorial();
         }
+
+        // --- ARRANQUE DE LA APP ---
+    document.addEventListener('DOMContentLoaded', () => {
+        conectarBaseDeDatos();
+        if (sessionStorage.getItem('authenticated') === 'true') {
+            showApp();
+        }
+    });
+
     </script>
 </body>
 </html>
