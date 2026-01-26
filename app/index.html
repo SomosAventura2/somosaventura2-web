@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --whatsapp: #25D366;
@@ -71,7 +72,7 @@
         .login-card {
             background: var(--bg-card);
             border-radius: 32px;
-            padding: 48px 32px;
+            padding: 40px 32px 48px;
             max-width: 400px;
             width: 100%;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
@@ -84,6 +85,21 @@
         .logo {
             font-size: 48px;
             margin-bottom: 16px;
+        }
+
+        .logo-img {
+            max-width: 280px;
+            width: 100%;
+            height: auto;
+            margin-bottom: 0;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+        }
+
+        .app-header-logo {
+            max-height: 50px;
+            height: auto;
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
         }
 
         .login-card h1 {
@@ -186,7 +202,14 @@
         .app-header .logo-text {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
+        }
+
+        .app-header .logo-text img {
+            max-height: 40px;
+            height: auto;
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
         }
 
         .app-header h1 {
@@ -215,21 +238,21 @@
         /* Tabs */
         .nav-tabs {
             background: var(--bg-card);
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
             border-bottom: 2px solid var(--border);
             position: sticky;
             top: 72px;
             z-index: 99;
-            overflow-x: auto;
             box-shadow: 0 2px 8px var(--shadow);
+            width: 100%;
         }
 
         .nav-tab {
-            flex: 1;
-            padding: 18px 12px;
+            padding: 14px 8px;
             text-align: center;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 700;
             color: var(--text-secondary);
             border: none;
@@ -237,6 +260,22 @@
             white-space: nowrap;
             border-bottom: 3px solid transparent;
             transition: all 0.3s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (min-width: 360px) {
+            .nav-tab {
+                font-size: 12px;
+                padding: 16px 10px;
+            }
+        }
+
+        @media (min-width: 400px) {
+            .nav-tab {
+                font-size: 13px;
+                padding: 18px 12px;
+            }
         }
 
         .nav-tab:hover {
@@ -1040,9 +1079,7 @@
     <!-- LOGIN -->
     <div id="loginScreen" class="login-screen">
         <div class="login-card">
-            <div class="logo">🏔️</div>
-            <h1>SomosAventura2</h1>
-            <p>Gestión de Rutas y Reservas</p>
+            <img src="../logo.png" alt="SomosAventura2" class="logo-img">
             
             <div class="login-form">
                 <input type="text" id="username" placeholder="Usuario" autocomplete="username">
@@ -1058,8 +1095,8 @@
     <div id="app" class="app">
         <div class="app-header">
             <div class="logo-text">
-                <span>🏔️</span>
-                <h1>SomosAventura2</h1>
+                <img src="../logo.png" alt="SomosAventura2" class="app-header-logo">
+                <h1>Gestión de Rutas</h1>
             </div>
             <button class="logout-btn" onclick="logout()">Salir</button>
         </div>
@@ -1069,6 +1106,8 @@
             <button class="nav-tab" onclick="showTab('reservas')">👥 Reservas</button>
             <button class="nav-tab" onclick="showTab('participantes')">✅ Personas</button>
             <button class="nav-tab" onclick="showTab('asistencia')">📋 Asistencia</button>
+            <button class="nav-tab" onclick="showTab('gastos')">💰 Gastos</button>
+            <button class="nav-tab" onclick="showTab('historial')">📚 Historial</button>
         </div>
 
         <!-- RUTAS -->
@@ -1125,6 +1164,29 @@
                 </div>
             </div>
             <div id="listaAsistencia"></div>
+        </div>
+
+        <!-- GASTOS -->
+        <div id="gastos" class="section">
+            <div class="filter-compact">
+                <div class="filter-compact-wrapper">
+                    <span class="filter-compact-label">🔍 Ruta:</span>
+                    <select id="filtroRutaGastos" class="filter-compact-select" onchange="renderGastos()">
+                        <option value="">Todas las rutas</option>
+                    </select>
+                </div>
+            </div>
+            <input type="text" class="search-box" id="searchGastos" placeholder="Buscar gastos..." oninput="renderGastos()">
+            <div id="listaGastos"></div>
+            <div class="bottom-action">
+                <button class="btn btn-primary" onclick="openModal('modalNuevoGasto')">+ Nuevo Gasto</button>
+            </div>
+        </div>
+
+        <!-- HISTORIAL -->
+        <div id="historial" class="section">
+            <input type="text" class="search-box" id="searchHistorial" placeholder="Buscar en historial..." oninput="renderHistorial()">
+            <div id="listaHistorial"></div>
         </div>
     </div>
 
@@ -1239,73 +1301,301 @@
         </div>
     </div>
 
-    <script>
-        // AUTENTICACIÓN
-        const USUARIOS = {
-            'Chanti': '0526',
-            'Luifer': '2612',
-            'test': 'test'
-        };
+    <!-- MODAL: NUEVO GASTO -->
+    <div id="modalNuevoGasto" class="modal" onclick="closeModalOnBackdrop(event, 'modalNuevoGasto')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">💰 Nuevo Gasto</div>
+            <div class="form-group">
+                <label class="form-label">Concepto</label>
+                <input type="text" id="gastoConcepto" class="form-input" placeholder="Ej: Combustible, Alimentos, Guía">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Ruta</label>
+                <select id="gastoRuta" class="form-input">
+                    <option value="">Selecciona una ruta</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Monto (Bs)</label>
+                <input type="number" id="gastoMonto" class="form-input" placeholder="0.00" step="0.01">
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-outline" onclick="closeModal('modalNuevoGasto')">Cancelar</button>
+                <button class="btn btn-primary" onclick="agregarGasto()">Guardar</button>
+            </div>
+        </div>
+    </div>
 
-        function login() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
+    <script>
+        // SUPABASE CONFIGURATION (debe ir primero)
+        const SUPABASE_URL = 'https://dgubxitmqegounjyeciw.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_EY4EoqiHn7om0Qf-HYpJZQ_HwDJXlan';
+       let supabaseClient = null; 
+
+function conectarBaseDeDatos() {
+    // Verificamos si la librería externa de Supabase ya cargó en el navegador
+    if (window.supabase) {
+        try {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('✅ Supabase conectado y listo');
             
-            if (USUARIOS[username] && USUARIOS[username] === password) {
-                sessionStorage.setItem('authenticated', 'true');
-                sessionStorage.setItem('currentUser', username);
-                showApp();
-            } else {
-                document.getElementById('errorMsg').classList.add('show');
-                setTimeout(() => {
-                    document.getElementById('errorMsg').classList.remove('show');
-                }, 3000);
+            // Una vez conectado, mandamos a llamar a los usuarios o la app
+            if (typeof loadUsuarios === 'function') {
+                loadUsuarios();
             }
+        } catch (error) {
+            console.error('❌ Error crítico al crear el cliente:', error);
         }
+    } else {
+        // Si no ha cargado, esperamos 300ms y volvemos a intentar
+        console.log('⏳ Esperando a que el motor de Supabase responda...');
+        setTimeout(conectarBaseDeDatos, 300);
+    }
+}
+
+// Arrancamos la secuencia de conexión
+conectarBaseDeDatos();
+
+
+        // 1. Primero declaramos la caja para guardar los datos
+let usuariosCache = []; 
+
+// 2. Aquí está la función actualizada
+async function loadUsuarios() {
+    try {
+        console.log("Probando conexión a tabla usuarios...");
+        
+        // Verificamos que el motor esté encendido
+        if (!supabaseClient) {
+            console.log("Esperando a que supabaseClient se inicialice...");
+            return;
+        }
+
+        const { data, error } = await supabaseClient
+            .from('usuarios')
+            .select('*');
+
+        if (error) throw error;
+
+        usuariosCache = data || []; 
+        console.log("✅ Usuarios cargados desde Supabase:", usuariosCache.length);
+        
+    } catch (err) {
+        console.error("❌ Error cargando de la nube, usando respaldo:", err.message);
+        
+        // ESTO ES TU SEGURO DE VIDA: Si falla la nube, esto te deja entrar
+        usuariosCache = [
+            { usuario: 'Luifer', clave: '2612' },
+            { usuario: 'Chanti', clave: '0526' },
+            { usuario: 'test', clave: 'test' }
+        ];
+        console.log("⚠️ Modo respaldo activado. Puedes entrar con Luifer o Chanti.");
+    }
+}
+
+        // Función login disponible globalmente
+        window.login = async function login() {
+    try {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) {
+            alert('❌ Ingresa usuario y contraseña');
+            return;
+        }
+
+        // Si por alguna razón la lista está vacía, intentamos cargar
+        if (usuariosCache.length === 0) {
+            await loadUsuarios();
+        }
+
+        // BUSCADOR CON LOS NOMBRES DE COLUMNA CORRECTOS
+        const usuarioEncontrado = usuariosCache.find(u => {
+            if (!u) return false;
+
+            // Usamos 'username' y 'password' porque así están en tu tabla
+            const nombreBD = (u.username || "").toString().trim().toLowerCase();
+            const claveBD = (u.password || "").toString().trim();
+
+            const nombreInput = username.trim().toLowerCase();
+            const claveInput = password.trim();
+
+            console.log(`Comparando: ${nombreInput} con ${nombreBD}`); // Para que lo veas en consola
+            
+            return nombreBD === nombreInput && claveBD === claveInput;
+        });
+
+        if (usuarioEncontrado) {
+            console.log("✅ Acceso concedido");
+            sessionStorage.setItem('authenticated', 'true');
+            sessionStorage.setItem('currentUser', usuarioEncontrado.usuario);
+            await showApp();
+        } else {
+            console.log("❌ Usuario o clave no coinciden");
+            document.getElementById('errorMsg').classList.add('show');
+            setTimeout(() => {
+                document.getElementById('errorMsg').classList.remove('show');
+            }, 3000);
+        }
+    } catch (error) {
+        console.error('Error en login:', error);
+        alert('❌ Error al iniciar sesión. Intenta nuevamente.');
+    }
+};
 
         function logout() {
             sessionStorage.clear();
             location.reload();
         }
 
-        function showApp() {
+        async function showApp() {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('app').classList.add('active');
-            loadData();
+            await loadData();
             updateSelects();
             renderAll();
         }
 
-        function checkAuth() {
+        async function checkAuth() {
             if (sessionStorage.getItem('authenticated') === 'true') {
-                showApp();
+                await showApp();
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuth();
-            document.getElementById('password')?.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') login();
-            });
-        });
+            // Función de arranque que se ejecuta al cargar la página
+async function iniciarApp() {
+    // 1. Conectamos a la base de datos primero
+    conectarBaseDeDatos(); 
+    
+    // 2. Revisamos si ya estaba logueado
+    checkAuth();
+    
+    // 3. Configuramos el evento de la tecla Enter en el password
+    document.getElementById('password')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') login();
+    });
+}
+
+// Ejecutamos el arranque
+iniciarApp();
 
         // DATOS
         let data = {
             rutas: [],
             reservas: [],
-            participantes: []
+            participantes: [],
+            gastos: []
         };
 
         // Personas temporales en el modal de reserva
         let personasTemporales = [];
 
-        function loadData() {
-            const saved = localStorage.getItem('somosAventura2Data');
-            if (saved) data = JSON.parse(saved);
+        // Sincronización en tiempo real
+        let realtimeChannel = null;
+
+        // Función helper para asegurar que Supabase esté inicializado
+        function ensureSupabase() {
+            if (!supabase) {
+                initSupabase();
+            }
+            if (!supabase) {
+                console.warn('Supabase no está disponible. Usando modo offline.');
+                return null;
+            }
+            return supabase;
         }
 
-        function saveData() {
-            localStorage.setItem('somosAventura2Data', JSON.stringify(data));
+        // Normalizar datos de Supabase (snake_case a camelCase para compatibilidad)
+        function normalizeData(dataArray, type) {
+            return dataArray.map(item => {
+                const normalized = { ...item };
+                if (type === 'ruta' && item.precio_euros !== undefined) {
+                    normalized.precioEuros = item.precio_euros;
+                }
+                if (type === 'reserva' && item.monto_pagado !== undefined) {
+                    normalized.montoPagado = item.monto_pagado;
+                }
+                // Asegurar que archivada existe (por defecto false)
+                if (type === 'ruta' && normalized.archivada === undefined) {
+                    normalized.archivada = false;
+                }
+                return normalized;
+            });
+        }
+
+        // Cargar datos desde Supabase
+        async function loadData() {
+            try {
+                ensureSupabase();
+                // Cargar rutas (incluyendo archivadas)
+                const { data: rutas, error: errorRutas } = await supabase
+                    .from('rutas')
+                    .select('*')
+                    .order('fecha', { ascending: true });
+                if (errorRutas) throw errorRutas;
+                // Normalizar y asegurar que archivada existe (por defecto false si no existe)
+                data.rutas = (rutas || []).map(r => ({
+                    ...r,
+                    archivada: r.archivada === true ? true : false,
+                    precioEuros: r.precio_euros || r.precioEuros || 0
+                }));
+
+                // Cargar reservas
+                const { data: reservas, error: errorReservas } = await supabase
+                    .from('reservas')
+                    .select('*');
+                if (errorReservas) throw errorReservas;
+                data.reservas = normalizeData(reservas || [], 'reserva');
+
+                // Cargar participantes
+                const { data: participantes, error: errorParticipantes } = await supabase
+                    .from('participantes')
+                    .select('*');
+                if (errorParticipantes) throw errorParticipantes;
+                data.participantes = participantes || [];
+
+                // Cargar gastos
+                const { data: gastos, error: errorGastos } = await supabase
+                    .from('gastos')
+                    .select('*')
+                    .order('fecha', { ascending: false });
+                if (errorGastos) throw errorGastos;
+                data.gastos = gastos || [];
+
+                // Inicializar sincronización en tiempo real
+                initRealtimeSync();
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                alert('⚠️ Error al cargar los datos. Verifica la conexión.');
+            }
+        }
+
+        // Sincronización en tiempo real
+        function initRealtimeSync() {
+            ensureSupabase();
+            if (realtimeChannel) {
+                supabase.removeChannel(realtimeChannel);
+            }
+
+            realtimeChannel = supabase
+                .channel('db-changes')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'rutas' },
+                    () => { loadData().then(() => renderAll()); }
+                )
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'reservas' },
+                    () => { loadData().then(() => renderAll()); }
+                )
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'participantes' },
+                    () => { loadData().then(() => renderAll()); }
+                )
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'gastos' },
+                    () => { loadData().then(() => renderAll()); }
+                )
+                .subscribe();
         }
 
         // NAVEGACIÓN
@@ -1327,6 +1617,9 @@
                 personasTemporales = [];
                 renderPersonasTemporales();
             }
+            if (modalId === 'modalNuevoGasto') {
+                updateSelects();
+            }
             document.getElementById(modalId).classList.add('active');
         }
 
@@ -1342,6 +1635,11 @@
                 document.getElementById('personaNombreInput').value = '';
                 document.getElementById('infoPrecioRuta').style.display = 'none';
             }
+            if (modalId === 'modalNuevoGasto') {
+                document.getElementById('gastoConcepto').value = '';
+                document.getElementById('gastoRuta').value = '';
+                document.getElementById('gastoMonto').value = '';
+            }
         }
 
         function closeModalOnBackdrop(event, modalId) {
@@ -1354,7 +1652,8 @@
         function updateSelects() {
             const selectRuta = document.getElementById('reservaRuta');
             selectRuta.innerHTML = '<option value="">Selecciona una ruta</option>';
-            data.rutas.forEach(ruta => {
+            // Solo mostrar rutas no archivadas en los selects
+            data.rutas.filter(r => !r.archivada).forEach(ruta => {
                 const disponibles = calcularCuposDisponibles(ruta.nombre);
                 selectRuta.innerHTML += `<option value="${ruta.nombre}">${ruta.nombre} - ${ruta.fecha} (${disponibles} disponibles)</option>`;
             });
@@ -1367,25 +1666,45 @@
 
             const filtroRuta = document.getElementById('filtroRuta');
             filtroRuta.innerHTML = '<option value="">Todas las rutas</option>';
-            data.rutas.forEach(ruta => {
+            data.rutas.filter(r => !r.archivada).forEach(ruta => {
                 filtroRuta.innerHTML += `<option value="${ruta.nombre}">${ruta.nombre} - ${ruta.fecha}</option>`;
             });
 
             const filtroRutaReservas = document.getElementById('filtroRutaReservas');
             filtroRutaReservas.innerHTML = '<option value="">Todas las rutas</option>';
-            data.rutas.forEach(ruta => {
+            data.rutas.filter(r => !r.archivada).forEach(ruta => {
                 filtroRutaReservas.innerHTML += `<option value="${ruta.nombre}">${ruta.nombre} - ${ruta.fecha}</option>`;
             });
 
             const filtroRutaParticipantes = document.getElementById('filtroRutaParticipantes');
             filtroRutaParticipantes.innerHTML = '<option value="">Todas las rutas</option>';
-            data.rutas.forEach(ruta => {
+            data.rutas.filter(r => !r.archivada).forEach(ruta => {
                 filtroRutaParticipantes.innerHTML += `<option value="${ruta.nombre}">${ruta.nombre} - ${ruta.fecha}</option>`;
             });
+
+            const gastoRuta = document.getElementById('gastoRuta');
+            if (gastoRuta) {
+                gastoRuta.innerHTML = '<option value="">Selecciona una ruta</option>';
+                data.rutas.filter(r => !r.archivada).forEach(ruta => {
+                    gastoRuta.innerHTML += `<option value="${ruta.nombre}">${ruta.nombre} - ${ruta.fecha}</option>`;
+                });
+            }
+
+            const filtroRutaGastos = document.getElementById('filtroRutaGastos');
+            if (filtroRutaGastos) {
+                filtroRutaGastos.innerHTML = '<option value="">Todas las rutas</option>';
+                data.rutas.filter(r => !r.archivada).forEach(ruta => {
+                    filtroRutaGastos.innerHTML += `<option value="${ruta.nombre}">${ruta.nombre} - ${ruta.fecha}</option>`;
+                });
+            }
         }
 
         // CÁLCULOS
         function calcularCuposOcupados(nombreRuta) {
+            // Solo contar reservas de rutas no archivadas
+            const ruta = data.rutas.find(r => r.nombre === nombreRuta);
+            if (ruta && ruta.archivada) return 0;
+            
             return data.reservas
                 .filter(r => r.ruta === nombreRuta)
                 .reduce((sum, r) => sum + r.cantidad, 0);
@@ -1409,7 +1728,19 @@
         function calcularTotalRecaudado(nombreRuta) {
             return data.reservas
                 .filter(r => r.ruta === nombreRuta)
-                .reduce((sum, r) => sum + (r.montoPagado || 0), 0);
+                .reduce((sum, r) => sum + (r.monto_pagado || r.montoPagado || 0), 0);
+        }
+
+        function calcularTotalGastos(nombreRuta) {
+            return data.gastos
+                .filter(g => g.ruta === nombreRuta)
+                .reduce((sum, g) => sum + (g.monto || 0), 0);
+        }
+
+        function calcularProfitNeto(nombreRuta) {
+            const recaudado = calcularTotalRecaudado(nombreRuta);
+            const gastos = calcularTotalGastos(nombreRuta);
+            return recaudado - gastos;
         }
 
         function calcularMontoEsperado(nombreRuta) {
@@ -1425,7 +1756,7 @@
             if (rutaNombre) {
                 const ruta = data.rutas.find(r => r.nombre === rutaNombre);
                 if (ruta) {
-                    const precioEuros = ruta.precioEuros || 0;
+                    const precioEuros = ruta.precio_euros || ruta.precioEuros || 0;
                     document.getElementById('infoPrecioRuta').style.display = 'block';
                     document.getElementById('precioReferencialRuta').textContent = `${precioEuros}€ por cupo`;
                 } else {
@@ -1531,7 +1862,7 @@
         }
 
         // AGREGAR RUTA
-        function agregarRuta() {
+        async function agregarRuta() {
             const nombre = document.getElementById('rutaNombre').value.trim();
             const fecha = document.getElementById('rutaFecha').value;
             const cupos = parseInt(document.getElementById('rutaCupos').value);
@@ -1542,27 +1873,38 @@
                 return;
             }
 
-            if (data.rutas.find(r => r.nombre === nombre)) {
-                alert('❌ Ya existe una ruta con ese nombre');
+            if (data.rutas.find(r => r.nombre === nombre && !r.archivada)) {
+                alert('❌ Ya existe una ruta activa con ese nombre');
                 return;
             }
 
-            data.rutas.push({ nombre, fecha, cupos, precioEuros });
-            saveData();
-            
-            document.getElementById('rutaNombre').value = '';
-            document.getElementById('rutaFecha').value = '';
-            document.getElementById('rutaCupos').value = '';
-            document.getElementById('rutaPrecioEuros').value = '';
-            
-            closeModal('modalNuevaRuta');
-            updateSelects();
-            renderRutas();
-            alert('✅ Ruta creada exitosamente');
+            try {
+                const { data: nuevaRuta, error } = await supabase
+                    .from('rutas')
+                    .insert([{ nombre, fecha, cupos, precio_euros: precioEuros, archivada: false }])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                document.getElementById('rutaNombre').value = '';
+                document.getElementById('rutaFecha').value = '';
+                document.getElementById('rutaCupos').value = '';
+                document.getElementById('rutaPrecioEuros').value = '';
+                
+                closeModal('modalNuevaRuta');
+                await loadData();
+                updateSelects();
+                renderRutas();
+                alert('✅ Ruta creada exitosamente');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error al crear la ruta: ' + error.message);
+            }
         }
 
         // AGREGAR RESERVA
-        function agregarReserva() {
+        async function agregarReserva() {
             const lider = document.getElementById('reservaLider').value.trim();
             const ruta = document.getElementById('reservaRuta').value;
             const cantidad = parseInt(document.getElementById('reservaCantidad').value);
@@ -1591,73 +1933,85 @@
                 return;
             }
 
-            // Crear la reserva
-            // Si hay monto inicial, agregarlo como primer pago
-            const referenciaPago = document.getElementById('reservaReferenciaPago').value.trim();
-            const pagosIniciales = [];
-            if (montoPagado > 0) {
-                pagosIniciales.push({
-                    monto: montoPagado,
-                    referencia: referenciaPago || 'Pago inicial',
-                    fecha: new Date().toISOString()
-                });
-            }
-            
-            data.reservas.push({ lider, ruta, cantidad, montoPagado, pagos: pagosIniciales });
-            
-            // AUTO-REGISTRO DEL LÍDER
-            // Verificar si el líder ya existe como participante
-            const liderExiste = data.participantes.find(p => 
-                p.nombre.toLowerCase() === lider.toLowerCase() && p.lider === lider
-            );
-            
-            if (!liderExiste) {
-                data.participantes.push({ 
-                    nombre: lider, 
-                    lider: lider, 
-                    asiste: false 
-                });
-            }
-            
-            // Agregar las personas temporales
-            personasTemporales.forEach(nombre => {
-                // Verificar que no exista ya
-                const existe = data.participantes.find(p => 
-                    p.nombre.toLowerCase() === nombre.toLowerCase() && p.lider === lider
-                );
-                
-                if (!existe) {
-                    data.participantes.push({ 
-                        nombre: nombre, 
-                        lider: lider, 
-                        asiste: false 
+            try {
+                // Crear la reserva
+                const referenciaPago = document.getElementById('reservaReferenciaPago').value.trim();
+                const pagosIniciales = [];
+                if (montoPagado > 0) {
+                    pagosIniciales.push({
+                        monto: montoPagado,
+                        referencia: referenciaPago || 'Pago inicial',
+                        fecha: new Date().toISOString()
                     });
                 }
-            });
-            
-            saveData();
-            
-            // Limpiar formulario
-            document.getElementById('reservaLider').value = '';
-            document.getElementById('reservaRuta').value = '';
-            document.getElementById('reservaCantidad').value = '';
-            document.getElementById('reservaMontoPagado').value = '';
-            document.getElementById('reservaReferenciaPago').value = '';
-            document.getElementById('personaNombreInput').value = '';
-            document.getElementById('infoPrecioRuta').style.display = 'none';
-            personasTemporales = [];
-            renderPersonasTemporales();
-            
-            closeModal('modalNuevaReserva');
-            updateSelects();
-            renderReservas();
-            renderRutas();
-            renderParticipantes();
-            alert('✅ Reserva creada exitosamente. El líder y las personas agregadas han sido registradas automáticamente.');
+
+                const { data: nuevaReserva, error: errorReserva } = await supabase
+                    .from('reservas')
+                    .insert([{ 
+                        lider, 
+                        ruta, 
+                        cantidad, 
+                        monto_pagado: montoPagado, 
+                        pagos: pagosIniciales 
+                    }])
+                    .select()
+                    .single();
+
+                if (errorReserva) throw errorReserva;
+
+                // AUTO-REGISTRO DEL LÍDER
+                const liderExiste = data.participantes.find(p => 
+                    p.nombre.toLowerCase() === lider.toLowerCase() && p.lider === lider
+                );
+                
+                if (!liderExiste) {
+                    await supabase
+                        .from('participantes')
+                        .insert([{ nombre: lider, lider: lider, asiste: false }]);
+                }
+                
+                // Agregar las personas temporales
+                const participantesInsert = [];
+                personasTemporales.forEach(nombre => {
+                    const existe = data.participantes.find(p => 
+                        p.nombre.toLowerCase() === nombre.toLowerCase() && p.lider === lider
+                    );
+                    
+                    if (!existe) {
+                        participantesInsert.push({ nombre: nombre, lider: lider, asiste: false });
+                    }
+                });
+
+                if (participantesInsert.length > 0) {
+                    await supabaseClient.from('participantes').insert(participantesInsert);
+                }
+                
+                // Limpiar formulario
+                document.getElementById('reservaLider').value = '';
+                document.getElementById('reservaRuta').value = '';
+                document.getElementById('reservaCantidad').value = '';
+                document.getElementById('reservaMontoPagado').value = '';
+                document.getElementById('reservaReferenciaPago').value = '';
+                document.getElementById('personaNombreInput').value = '';
+                document.getElementById('infoPrecioRuta').style.display = 'none';
+                personasTemporales = [];
+                renderPersonasTemporales();
+                
+                closeModal('modalNuevaReserva');
+                await loadData();
+                updateSelects();
+                renderReservas();
+                renderRutas();
+                renderParticipantes();
+                alert('✅ Reserva creada exitosamente. El líder y las personas agregadas han sido registradas automáticamente.');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error al crear la reserva: ' + error.message);
+            }
         }
 
         // AGREGAR PARTICIPANTE
-        function agregarParticipante() {
+        async function agregarParticipante() {
             const nombre = document.getElementById('participanteNombre').value.trim();
             const lider = document.getElementById('participanteReserva').value;
 
@@ -1684,20 +2038,29 @@
                 return;
             }
 
-            data.participantes.push({ nombre, lider, asiste: false });
-            saveData();
-            
-            document.getElementById('participanteNombre').value = '';
-            
-            closeModal('modalNuevoParticipante');
-            renderParticipantes();
-            renderReservas();
-            renderAsistencia();
-            alert('✅ Persona registrada exitosamente');
+            try {
+                const { error } = await supabase
+                    .from('participantes')
+                    .insert([{ nombre, lider, asiste: false }]);
+
+                if (error) throw error;
+
+                document.getElementById('participanteNombre').value = '';
+                
+                closeModal('modalNuevoParticipante');
+                await loadData();
+                renderParticipantes();
+                renderReservas();
+                renderAsistencia();
+                alert('✅ Persona registrada exitosamente');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error al registrar la persona: ' + error.message);
+            }
         }
 
         // ACTUALIZAR PAGOS
-        function actualizarPagos(lider, nuevoMonto, referencia) {
+        async function actualizarPagos(lider, nuevoMonto, referencia) {
             const reserva = data.reservas.find(r => r.lider === lider);
             if (!reserva) return;
             
@@ -1706,26 +2069,43 @@
                 return;
             }
             
-            // Agregar el nuevo pago al historial
-            if (!reserva.pagos) reserva.pagos = [];
-            reserva.pagos.push({
-                monto: nuevoMonto,
-                referencia: referencia || '',
-                fecha: new Date().toISOString()
-            });
-            
-            // Actualizar monto total pagado
-            reserva.montoPagado = reserva.pagos.reduce((sum, p) => sum + p.monto, 0);
-            
-            saveData();
-            renderReservas();
-            renderRutas();
-            // Limpiar campos del formulario
-            document.getElementById('nuevoPago').value = '';
-            document.getElementById('nuevoPagoReferencia').value = '';
-            
-            verDetalleReserva(lider); // Refrescar el modal
-            alert('✅ Pago registrado exitosamente');
+            try {
+                // Agregar el nuevo pago al historial
+                const pagosActuales = reserva.pagos || [];
+                pagosActuales.push({
+                    monto: nuevoMonto,
+                    referencia: referencia || '',
+                    fecha: new Date().toISOString()
+                });
+                
+                // Actualizar monto total pagado
+                const montoPagado = pagosActuales.reduce((sum, p) => sum + p.monto, 0);
+                
+                const { error } = await supabase
+                    .from('reservas')
+                    .update({ 
+                        pagos: pagosActuales,
+                        monto_pagado: montoPagado
+                    })
+                    .eq('lider', lider);
+
+                if (error) throw error;
+
+                // Limpiar campos del formulario
+                const nuevoPagoInput = document.getElementById('nuevoPago');
+                const nuevoPagoRefInput = document.getElementById('nuevoPagoReferencia');
+                if (nuevoPagoInput) nuevoPagoInput.value = '';
+                if (nuevoPagoRefInput) nuevoPagoRefInput.value = '';
+                
+                await loadData();
+                renderReservas();
+                renderRutas();
+                verDetalleReserva(lider); // Refrescar el modal
+                alert('✅ Pago registrado exitosamente');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error al registrar el pago: ' + error.message);
+            }
         }
 
         // VER DETALLE RESERVA
@@ -1734,7 +2114,7 @@
             if (!reserva) return;
             
             const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
-            const montoPagado = reserva.montoPagado || 0;
+            const montoPagado = reserva.monto_pagado || reserva.montoPagado || 0;
             
             const historialPagos = (reserva.pagos || []).map((pago, index) => `
                 <div style="padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border);">
@@ -1764,7 +2144,7 @@
                         </div>
                         <div>
                             <div style="font-size: 12px; color: var(--text-secondary);">Precio Referencial</div>
-                            <div style="font-size: 20px; font-weight: 800; color: var(--text-primary);">${ruta ? ruta.precioEuros : 0}€</div>
+                            <div style="font-size: 20px; font-weight: 800; color: var(--text-primary);">${ruta ? (ruta.precio_euros || ruta.precioEuros || 0) : 0}€</div>
                         </div>
                     </div>
                     <div class="divider"></div>
@@ -1806,50 +2186,99 @@
             openModal('modalDetalleReserva');
         }
 
-        // ELIMINAR
-        function eliminarRuta(nombre) {
-            if (!confirm(`¿Eliminar la ruta "${nombre}"?`)) return;
-            data.rutas = data.rutas.filter(r => r.nombre !== nombre);
-            data.reservas = data.reservas.filter(r => r.ruta !== nombre);
-            saveData();
-            updateSelects();
-            renderRutas();
-            renderReservas();
+        // ARCHIVAR RUTA
+        async function archivarRuta(nombre) {
+            if (!confirm(`¿Archivar la ruta "${nombre}"? La ruta se moverá al historial y no aparecerá en la lista principal.`)) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('rutas')
+                    .update({ archivada: true })
+                    .eq('nombre', nombre);
+
+                if (error) throw error;
+
+                await loadData();
+                updateSelects();
+                renderRutas();
+                renderReservas();
+                alert('✅ Ruta archivada exitosamente');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error al archivar la ruta: ' + error.message);
+            }
         }
 
-        function eliminarReserva(lider) {
+        async function eliminarReserva(lider) {
             if (!confirm(`¿Eliminar la reserva de "${lider}"?`)) return;
-            data.reservas = data.reservas.filter(r => r.lider !== lider);
-            data.participantes = data.participantes.filter(p => p.lider !== lider);
-            saveData();
-            updateSelects();
-            renderReservas();
-            renderParticipantes();
-            renderRutas();
+            
+            try {
+                await supabaseClient.from('reservas').delete().eq('lider', lider);
+                await supabaseClient.from('participantes').delete().eq('lider', lider);
+                
+                await loadData();
+                updateSelects();
+                renderReservas();
+                renderParticipantes();
+                renderRutas();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error al eliminar la reserva: ' + error.message);
+            }
         }
 
-        function eliminarParticipante(index) {
-            const p = data.participantes[index];
+        async function eliminarParticipante(id) {
+            const p = data.participantes.find(part => part.id === id);
+            if (!p) return;
             if (!confirm(`¿Eliminar a "${p.nombre}"?`)) return;
-            data.participantes.splice(index, 1);
-            saveData();
-            renderParticipantes();
-            renderReservas();
+            
+            try {
+                const { error } = await supabase
+                    .from('participantes')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                await loadData();
+                renderParticipantes();
+                renderReservas();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error al eliminar el participante: ' + error.message);
+            }
         }
 
         // ASISTENCIA
-        function toggleAsistencia(index) {
-            data.participantes[index].asiste = !data.participantes[index].asiste;
-            saveData();
-            renderAsistencia();
+        async function toggleAsistencia(id) {
+            const participante = data.participantes.find(p => p.id === id);
+            if (!participante) return;
+            
+            try {
+                const nuevoEstado = !participante.asiste;
+                const { error } = await supabase
+                    .from('participantes')
+                    .update({ asiste: nuevoEstado })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                await loadData();
+                renderAsistencia();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error al actualizar la asistencia: ' + error.message);
+            }
         }
 
         // RENDER RUTAS
         function renderRutas() {
             const search = document.getElementById('searchRutas').value.toLowerCase();
+            // Filtrar solo rutas no archivadas
             const filtered = data.rutas.filter(r => 
-                r.nombre.toLowerCase().includes(search) || 
-                r.fecha.includes(search)
+                !r.archivada && 
+                (r.nombre.toLowerCase().includes(search) || 
+                r.fecha.includes(search))
             );
             
             const html = filtered.length === 0 ? 
@@ -1863,9 +2292,11 @@
                     const disponibles = ruta.cupos - ocupados;
                     const porcentaje = (ocupados / ruta.cupos * 100).toFixed(0);
                     const recaudado = calcularTotalRecaudado(ruta.nombre);
+                    const gastos = calcularTotalGastos(ruta.nombre);
+                    const profitNeto = calcularProfitNeto(ruta.nombre);
                     const badgeClass = disponibles > 5 ? 'badge-active' : disponibles > 0 ? 'badge-warning' : 'badge-closed';
                     const badgeText = disponibles > 0 ? 'Activa' : 'Completa';
-                    const precioEuros = ruta.precioEuros || 0;
+                    const precioEuros = ruta.precio_euros || ruta.precioEuros || 0;
                     
                     return `
                         <div class="card">
@@ -1886,8 +2317,8 @@
                                     <span class="stat-label">Disponibles</span>
                                 </div>
                                 <div class="stat">
-                                    <span class="stat-value">Bs ${recaudado.toLocaleString()}</span>
-                                    <span class="stat-label">Recaudado</span>
+                                    <span class="stat-value">${precioEuros}€</span>
+                                    <span class="stat-label">Precio Ref.</span>
                                 </div>
                             </div>
                             <div class="progress-bar" style="margin-top: 16px;">
@@ -1897,8 +2328,24 @@
                                 <span>Precio Ref.: ${precioEuros}€/cupo</span>
                                 <span>${porcentaje}% ocupado</span>
                             </div>
-                            <button class="btn btn-danger btn-small" style="margin-top: 16px;" onclick="eliminarRuta('${ruta.nombre}')">
-                                🗑️ Eliminar Ruta
+                            <div style="margin-top: 16px; padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; border: 1px solid var(--border);">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
+                                    <div>
+                                        <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💰 Recaudado</div>
+                                        <div style="font-size: 16px; font-weight: 800; color: var(--success);">Bs ${recaudado.toLocaleString()}</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💸 Gastos</div>
+                                        <div style="font-size: 16px; font-weight: 800; color: var(--danger);">Bs ${gastos.toLocaleString()}</div>
+                                    </div>
+                                </div>
+                                <div style="padding-top: 8px; border-top: 1px solid var(--border);">
+                                    <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">📊 Profit Neto</div>
+                                    <div style="font-size: 20px; font-weight: 800; color: ${profitNeto >= 0 ? 'var(--success)' : 'var(--danger)'};">Bs ${profitNeto.toLocaleString()}</div>
+                                </div>
+                            </div>
+                            <button class="btn btn-danger btn-small" style="margin-top: 16px;" onclick="archivarRuta('${ruta.nombre}')">
+                                📦 Archivar Ruta
                             </button>
                         </div>
                     `;
@@ -1937,8 +2384,8 @@
                     }
                     
                     // Calcular total pagado (suma de todos los pagos)
-                    const totalPagado = reserva.montoPagado || 0;
-                    const precioEuros = ruta.precioEuros || 0;
+                    const totalPagado = reserva.monto_pagado || reserva.montoPagado || 0;
+                    const precioEuros = ruta.precio_euros || ruta.precioEuros || 0;
                     const numPagos = (reserva.pagos && reserva.pagos.length > 0) ? reserva.pagos.length : 0;
                     
                     return `
@@ -2013,7 +2460,6 @@
                         const rutaNombre = reserva ? reserva.ruta : 'Sin ruta';
                         const ruta = data.rutas.find(r => r.nombre === rutaNombre);
                         const rutaFecha = ruta ? new Date(ruta.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '';
-                        const globalIndex = data.participantes.indexOf(p);
                         return `
                             <div class="person-item-compact">
                                 <div class="person-info-compact">
@@ -2024,7 +2470,7 @@
                                         ${rutaFecha ? `<span>📅 ${rutaFecha}</span>` : ''}
                                     </div>
                                 </div>
-                                <button class="person-delete-btn" onclick="eliminarParticipante(${globalIndex})" title="Eliminar">
+                                <button class="person-delete-btn" onclick="eliminarParticipante('${p.id}')" title="Eliminar">
                                     🗑️
                                 </button>
                             </div>
@@ -2081,12 +2527,11 @@
                             </div>
                             <div class="attendance-list-compact">
                                 ${participantes.map(p => {
-                                    const globalIndex = data.participantes.indexOf(p);
                                     return `
-                                        <div class="attendance-item-compact" onclick="toggleAsistencia(${globalIndex}); event.stopPropagation();">
+                                        <div class="attendance-item-compact" onclick="toggleAsistencia('${p.id}'); event.stopPropagation();">
                                             <input type="checkbox" class="attendance-checkbox-compact" 
                                                    ${p.asiste ? 'checked' : ''} 
-                                                   onchange="toggleAsistencia(${globalIndex})"
+                                                   onchange="toggleAsistencia('${p.id}')"
                                                    onclick="event.stopPropagation();">
                                             <span class="attendance-name-compact ${p.asiste ? 'checked' : ''}">${p.nombre}</span>
                                         </div>
@@ -2100,12 +2545,217 @@
             document.getElementById('listaAsistencia').innerHTML = html;
         }
 
+        // AGREGAR GASTO
+        async function agregarGasto() {
+            const concepto = document.getElementById('gastoConcepto').value.trim();
+            const ruta = document.getElementById('gastoRuta').value;
+            const monto = parseFloat(document.getElementById('gastoMonto').value);
+
+            if (!concepto || !ruta || !monto || monto <= 0) {
+                alert('❌ Completa todos los campos con valores válidos');
+                return;
+            }
+
+            try {
+                const { error } = await supabase
+                    .from('gastos')
+                    .insert([{
+                        concepto,
+                        ruta,
+                        monto,
+                        fecha: new Date().toISOString()
+                    }]);
+
+                if (error) throw error;
+
+                document.getElementById('gastoConcepto').value = '';
+                document.getElementById('gastoRuta').value = '';
+                document.getElementById('gastoMonto').value = '';
+
+                closeModal('modalNuevoGasto');
+                await loadData();
+                updateSelects();
+                renderGastos();
+                renderRutas();
+                alert('✅ Gasto registrado exitosamente');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error al registrar el gasto: ' + error.message);
+            }
+        }
+
+        // ELIMINAR GASTO
+        async function eliminarGasto(id) {
+            const gasto = data.gastos.find(g => g.id === id);
+            if (!gasto) return;
+            if (!confirm(`¿Eliminar el gasto "${gasto.concepto}" de Bs ${gasto.monto.toLocaleString()}?`)) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('gastos')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                await loadData();
+                renderGastos();
+                renderRutas();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error al eliminar el gasto: ' + error.message);
+            }
+        }
+
+        // RENDER GASTOS
+        function renderGastos() {
+            const search = document.getElementById('searchGastos').value.toLowerCase();
+            const filtroRuta = document.getElementById('filtroRutaGastos').value;
+
+            let filtered = data.gastos.filter(g =>
+                g.concepto.toLowerCase().includes(search) ||
+                g.ruta.toLowerCase().includes(search)
+            );
+
+            if (filtroRuta) {
+                filtered = filtered.filter(g => g.ruta === filtroRuta);
+            }
+
+            const html = filtered.length === 0 ?
+                `<div class="empty-state">
+                    <div class="empty-state-icon">💰</div>
+                    <h3>No hay gastos registrados</h3>
+                    <p>Registra los gastos de las rutas</p>
+                </div>` :
+                `<div class="person-list-compact">
+                    ${filtered.map((gasto) => {
+                        const fecha = new Date(gasto.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+                        return `
+                            <div class="person-item-compact">
+                                <div class="person-info-compact">
+                                    <div class="person-name-compact">${gasto.concepto}</div>
+                                    <div class="person-meta-compact">
+                                        <span>📍 ${gasto.ruta}</span>
+                                        <span>📅 ${fecha}</span>
+                                        <span style="color: var(--danger); font-weight: 700;">Bs ${gasto.monto.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                                <button class="person-delete-btn" onclick="eliminarGasto('${gasto.id}')" title="Eliminar">
+                                    🗑️
+                                </button>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>`;
+
+            document.getElementById('listaGastos').innerHTML = html;
+        }
+
+        // RENDER HISTORIAL
+        function renderHistorial() {
+            const search = document.getElementById('searchHistorial').value.toLowerCase();
+            
+            // Filtrar solo rutas archivadas
+            const rutasArchivadas = data.rutas
+                .filter(r => r.archivada)
+                .filter(r => 
+                    r.nombre.toLowerCase().includes(search) || 
+                    r.fecha.includes(search)
+                )
+                .sort((a, b) => new Date(b.fecha) - new Date(a.fecha)); // Más recientes primero
+
+            const html = rutasArchivadas.length === 0 ?
+                `<div class="empty-state">
+                    <div class="empty-state-icon">📚</div>
+                    <h3>No hay rutas archivadas</h3>
+                    <p>Las rutas archivadas aparecerán aquí</p>
+                </div>` :
+                rutasArchivadas.map(ruta => {
+                    const reservasRuta = data.reservas.filter(r => r.ruta === ruta.nombre);
+                    const recaudado = calcularTotalRecaudado(ruta.nombre);
+                    const gastos = calcularTotalGastos(ruta.nombre);
+                    const profitNeto = calcularProfitNeto(ruta.nombre);
+                    const precioEuros = ruta.precio_euros || ruta.precioEuros || 0;
+                    
+                    return `
+                        <div class="card" style="margin-bottom: 24px;">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">🏔️ ${ruta.nombre}</div>
+                                    <div class="card-meta">📅 ${new Date(ruta.fecha).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                                </div>
+                                <span class="badge badge-closed">Archivada</span>
+                            </div>
+                            
+                            <div style="margin-top: 16px; padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; border: 1px solid var(--border);">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
+                                    <div>
+                                        <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💰 Recaudado</div>
+                                        <div style="font-size: 16px; font-weight: 800; color: var(--success);">Bs ${recaudado.toLocaleString()}</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💸 Gastos</div>
+                                        <div style="font-size: 16px; font-weight: 800; color: var(--danger);">Bs ${gastos.toLocaleString()}</div>
+                                    </div>
+                                </div>
+                                <div style="padding-top: 8px; border-top: 1px solid var(--border);">
+                                    <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">📊 Profit Neto</div>
+                                    <div style="font-size: 20px; font-weight: 800; color: ${profitNeto >= 0 ? 'var(--success)' : 'var(--danger)'};">Bs ${profitNeto.toLocaleString()}</div>
+                                </div>
+                            </div>
+
+                            ${reservasRuta.length > 0 ? `
+                                <div style="margin-top: 20px;">
+                                    <div style="font-weight: 700; margin-bottom: 16px; color: var(--accent); font-size: 16px;">👥 Reservas y Participantes</div>
+                                    ${reservasRuta.map(reserva => {
+                                        const participantesReserva = data.participantes.filter(p => p.lider === reserva.lider);
+                                        const presentes = participantesReserva.filter(p => p.asiste).length;
+                                        const totalPagado = reserva.monto_pagado || reserva.montoPagado || 0;
+                                        
+                                        return `
+                                            <div style="background: rgba(118, 200, 147, 0.05); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                                    <div>
+                                                        <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">👤 ${reserva.lider}</div>
+                                                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                                            Cupos: ${reserva.cantidad} | Pagado: Bs ${totalPagado.toLocaleString()}
+                                                        </div>
+                                                    </div>
+                                                    <span class="badge badge-active">${presentes}/${participantesReserva.length} presentes</span>
+                                                </div>
+                                                
+                                                ${participantesReserva.length > 0 ? `
+                                                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+                                                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">Participantes:</div>
+                                                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                                            ${participantesReserva.map(p => `
+                                                                <span style="padding: 6px 12px; background: ${p.asiste ? 'rgba(16, 185, 129, 0.2)' : 'rgba(118, 200, 147, 0.1)'}; border-radius: 8px; font-size: 12px; border: 1px solid ${p.asiste ? 'rgba(16, 185, 129, 0.3)' : 'var(--border)'};">
+                                                                    ${p.asiste ? '✅' : '⭕'} ${p.nombre}
+                                                                </span>
+                                                            `).join('')}
+                                                        </div>
+                                                    </div>
+                                                ` : '<div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">Sin participantes registrados</div>'}
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            ` : '<div style="margin-top: 16px; padding: 12px; background: rgba(118, 200, 147, 0.05); border-radius: 12px; text-align: center; color: var(--text-secondary);">No hay reservas para esta ruta</div>'}
+                        </div>
+                    `;
+                }).join('');
+            
+            document.getElementById('listaHistorial').innerHTML = html;
+        }
+
         // RENDER ALL
         function renderAll() {
             renderRutas();
             renderReservas();
             renderParticipantes();
             renderAsistencia();
+            renderGastos();
+            renderHistorial();
         }
     </script>
 </body>
