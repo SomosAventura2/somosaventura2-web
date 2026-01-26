@@ -1621,6 +1621,9 @@ async function loadUsuarios() {
         gastos: []
     };
 
+    // --- ESTADO DE CARDS EXPANDIDOS (para mantener estado al actualizar) ---
+    let cardsAsistenciaExpandidos = new Set();
+
     let personasTemporales = [];
     let realtimeChannel = null;
 
@@ -1711,7 +1714,8 @@ async function loadUsuarios() {
                 data.reservas = (reservas || []).map(r => ({
                     ...r,
                     ruta: r.ruta_nombre || r.ruta || '', // Normalizar: ruta_nombre (DB) → ruta (JS)
-                    montoPagado: r.monto_pagado || 0
+                    montoPagado: r.monto_pagado || 0,
+                    pagos: r.pagos || [] // Asegurar que pagos siempre sea un array (compatibilidad con datos antiguos)
                 }));
 
                 // Cargar participantes
@@ -2963,6 +2967,22 @@ async function archivarRuta(nombre) {
             const participante = data.participantes.find(p => p.id === id);
             if (!participante) return;
             
+            // Guardar el estado de expansión del card ANTES de actualizar
+            const reserva = data.reservas.find(r => r.lider === participante.lider);
+            const cardId = reserva ? `asistencia-${participante.lider.replace(/\s+/g, '-').toLowerCase()}` : null;
+            
+            // Si el card está expandido, asegurarse de que esté en el Set
+            // Esto es importante porque renderAsistencia() restaurará el estado desde el Set
+            if (cardId) {
+                const card = document.getElementById(cardId);
+                if (card) {
+                    const expanded = card.querySelector('.asistencia-expanded');
+                    if (expanded && expanded.style.display !== 'none') {
+                        cardsAsistenciaExpandidos.add(cardId);
+                    }
+                }
+            }
+            
             try {
                 const nuevoEstado = !participante.asiste;
                 const { error } = await db
@@ -2973,6 +2993,7 @@ async function archivarRuta(nombre) {
                 if (error) throw error;
 
                 await loadData();
+                // renderAsistencia() ahora restaurará automáticamente el estado expandido
                 renderAsistencia();
             } catch (error) {
                 console.error('Error:', error);
@@ -3003,11 +3024,21 @@ function renderRutas() {
             const recaudado = calcularTotalRecaudado(ruta.nombre);
             const gastos = calcularTotalGastos(ruta.nombre);
             const profitNeto = calcularProfitNeto(ruta.nombre);
+            const totalDolares = calcularTotalDolares(ruta.nombre);
             const haySobreventa = ocupados > ruta.cupos;
             const badgeClass = haySobreventa ? 'badge-closed' : (disponibles > 5 ? 'badge-active' : disponibles > 0 ? 'badge-warning' : 'badge-closed');
             const badgeText = haySobreventa ? 'Sobrevendida' : (disponibles > 0 ? 'Activa' : 'Completa');
             const precioEuros = ruta.precio_euros || ruta.precioEuros || 0;
             const colorCupos = haySobreventa ? 'var(--danger)' : 'var(--text-primary)';
+            
+            // Calcular asistencia (presentes vs cupos reservados)
+            const reservasRuta = data.reservas.filter(r => r.ruta === ruta.nombre);
+            const participantesRuta = data.participantes.filter(p => 
+                reservasRuta.some(r => r.lider === p.lider)
+            );
+            const presentes = participantesRuta.filter(p => p.asiste).length;
+            const cuposReservados = reservasRuta.reduce((sum, r) => sum + r.cantidad, 0);
+            const porcentajeAsistencia = cuposReservados > 0 ? (presentes / cuposReservados * 100).toFixed(0) : 0;
             
             return `
                 <div class="card">
@@ -3053,15 +3084,35 @@ function renderRutas() {
                         <span>Precio Ref.: ${precioEuros}€/cupo</span>
                         <span>${porcentaje}% ocupado</span>
                     </div>
+                    
+                    ${cuposReservados > 0 ? `
+                    <div style="margin-top: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="font-size: 12px; color: var(--text-secondary);">📋 Asistencia: ${presentes}/${cuposReservados} presentes</span>
+                            <span style="font-size: 12px; color: var(--text-secondary); font-weight: 600;">${porcentajeAsistencia}%</span>
+                        </div>
+                        <div class="progress-bar" style="height: 6px;">
+                            <div class="progress-fill" style="width: ${porcentajeAsistencia}%; background: ${porcentajeAsistencia >= 80 ? 'var(--success)' : porcentajeAsistencia >= 50 ? '#fbbf24' : 'var(--danger)'};"></div>
+                        </div>
+                    </div>
+                    ` : ''}
 
                     <div style="margin-top: 16px; padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; border: 1px solid var(--border);">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
                             <div>
-                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💰 Recaudado</div>
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💰 Recaudado (Bs)</div>
                                 <div style="font-size: 16px; font-weight: 800; color: var(--success);">
                                     Bs ${recaudado.toLocaleString()}
                                 </div>
                             </div>
+                            <div>
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💵 USD Efectivo</div>
+                                <div style="font-size: 16px; font-weight: 800; color: #f59e0b;">
+                                    $${calcularTotalDolares(ruta.nombre).toLocaleString()}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
                             <div>
                                 <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💸 Gastos</div>
                                 <div style="font-size: 16px; font-weight: 800; color: var(--danger);">
@@ -3297,6 +3348,33 @@ function formatearFechaCorta(fechaString) {
                 expanded.style.display = 'none';
                 icon.textContent = '▼';
                 icon.style.transform = 'rotate(0deg)';
+                cardsAsistenciaExpandidos.delete(cardId); // Remover del Set cuando se colapsa
+            } else {
+                // Expandir
+                expanded.style.display = 'block';
+                icon.textContent = '▲';
+                icon.style.transform = 'rotate(0deg)';
+                cardsAsistenciaExpandidos.add(cardId); // Agregar al Set cuando se expande
+            }
+        }
+        
+        // TOGGLE EXPANDIR/COLAPSAR CARD DE RUTA ARCHIVADA
+        function toggleRutaArchivadaCard(cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            
+            const expanded = card.querySelector('.reserva-expanded');
+            const icon = card.querySelector('.expand-icon');
+            
+            if (!expanded || !icon) return;
+            
+            const isExpanded = expanded.style.display !== 'none';
+            
+            if (isExpanded) {
+                // Colapsar
+                expanded.style.display = 'none';
+                icon.textContent = '▼';
+                icon.style.transform = 'rotate(0deg)';
             } else {
                 // Expandir
                 expanded.style.display = 'block';
@@ -3491,27 +3569,15 @@ function formatearFechaCorta(fechaString) {
                             
                             <!-- VISTA EXPANDIDA (oculta por defecto) -->
                             <div class="asistencia-expanded" style="display: none;">
-                                <div class="attendance-header-compact" style="margin-bottom: 12px;">
-                                    <div class="attendance-header-info">
-                                        <div class="attendance-title-compact">📍 ${rutaNombre}${rutaFecha ? ` - ${rutaFecha}` : ''}</div>
-                                        <div class="attendance-meta-compact">
-                                            <span>👤 ${lider}</span>
-                                        </div>
-                                    </div>
-                                    <span class="attendance-badge-compact">${presentes}/${participantes.length}</span>
-                                </div>
-                                <div class="attendance-progress-compact">
-                                    <div class="attendance-progress-fill" style="width: ${porcentaje}%"></div>
-                                </div>
                                 <div class="attendance-list-compact">
                                     ${participantes.map(p => {
                                         return `
-                                            <div class="attendance-item-compact" onclick="toggleAsistencia('${p.id}'); event.stopPropagation();">
+                                            <div class="attendance-item-compact">
                                                 <input type="checkbox" class="attendance-checkbox-compact" 
                                                        ${p.asiste ? 'checked' : ''} 
                                                        onchange="toggleAsistencia('${p.id}')"
                                                        onclick="event.stopPropagation();">
-                                                <span class="attendance-name-compact ${p.asiste ? 'checked' : ''}">${p.nombre}</span>
+                                                <span class="attendance-name-compact ${p.asiste ? 'checked' : ''}" onclick="toggleAsistencia('${p.id}'); event.stopPropagation();">${p.nombre}</span>
                                             </div>
                                         `;
                                     }).join('')}
@@ -3522,6 +3588,20 @@ function formatearFechaCorta(fechaString) {
                 }).join('');
             
             document.getElementById('listaAsistencia').innerHTML = html;
+
+            // Restaurar el estado expandido de todos los cards que estaban expandidos
+            cardsAsistenciaExpandidos.forEach(cardId => {
+                const card = document.getElementById(cardId);
+                if (card) {
+                    const expanded = card.querySelector('.asistencia-expanded');
+                    const icon = card.querySelector('.expand-icon');
+                    if (expanded && icon) {
+                        expanded.style.display = 'block';
+                        icon.textContent = '▲';
+                        icon.style.transform = 'rotate(0deg)';
+                    }
+                }
+            });
 
             actualizarContadorCheckin();
         }
@@ -3755,72 +3835,125 @@ async function marcarTodosPresentes() {
                     const recaudado = calcularTotalRecaudado(ruta.nombre);
                     const gastos = calcularTotalGastos(ruta.nombre);
                     const profitNeto = calcularProfitNeto(ruta.nombre);
+                    const totalDolares = calcularTotalDolares(ruta.nombre);
                     const precioEuros = ruta.precio_euros || ruta.precioEuros || 0;
                     
+                    // Calcular asistencia (presentes vs cupos reservados)
+                    const participantesRuta = data.participantes.filter(p => 
+                        reservasRuta.some(r => r.lider === p.lider)
+                    );
+                    const presentes = participantesRuta.filter(p => p.asiste).length;
+                    const cuposReservados = reservasRuta.reduce((sum, r) => sum + r.cantidad, 0);
+                    const porcentajeAsistencia = cuposReservados > 0 ? (presentes / cuposReservados * 100).toFixed(0) : 0;
+                    const ocupados = calcularCuposOcupados(ruta.nombre);
+                    const cardId = `ruta-archivada-${ruta.id || ruta.nombre.replace(/\s+/g, '-').toLowerCase()}`;
+                    
                     return `
-                        <div class="card" style="margin-bottom: 24px;">
-                            <div class="card-header">
-                                <div>
-                                    <div class="card-title">🏔️ ${ruta.nombre}</div>
-                                    <div class="card-meta">📅 ${new Date(ruta.fecha).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                        <div class="card" style="margin-bottom: 16px;" id="${cardId}">
+                            <!-- VISTA COMPACTA (siempre visible) -->
+                            <div class="reserva-compact">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div style="flex: 1;">
+                                        <div class="card-title" style="margin-bottom: 4px;">🏔️ ${ruta.nombre}</div>
+                                        <div class="card-meta" style="margin-bottom: 8px;">
+                                            📅 ${formatearFechaRuta(ruta.fecha)}
+                                            <span class="badge badge-closed" style="margin-left: 8px; font-size: 10px;">Archivada</span>
+                                        </div>
+                                        <div style="display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary);">
+                                            <span>💰 Bs ${recaudado.toLocaleString()}${totalDolares > 0 ? ` + $${totalDolares.toLocaleString()}` : ''}</span>
+                                            <span style="color: var(--danger);">💸 Bs ${gastos.toLocaleString()}</span>
+                                            <span style="color: ${profitNeto >= 0 ? 'var(--success)' : 'var(--danger)'}; font-weight: 600;">📊 Bs ${profitNeto.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                    <button class="btn-expand-reserva" onclick="toggleRutaArchivadaCard('${cardId}')" title="Ver detalles">
+                                        <span class="expand-icon">▼</span>
+                                    </button>
                                 </div>
-                                <span class="badge badge-closed">Archivada</span>
                             </div>
                             
-                            <div style="margin-top: 16px; padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; border: 1px solid var(--border);">
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
-                                    <div>
-                                        <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💰 Recaudado</div>
-                                        <div style="font-size: 16px; font-weight: 800; color: var(--success);">Bs ${recaudado.toLocaleString()}</div>
+                            <!-- VISTA EXPANDIDA (oculta por defecto) -->
+                            <div class="reserva-expanded" style="display: none;">
+                                <div style="margin-top: 16px; padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; border: 1px solid var(--border);">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
+                                        <div>
+                                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💰 Recaudado (Bs)</div>
+                                            <div style="font-size: 16px; font-weight: 800; color: var(--success);">Bs ${recaudado.toLocaleString()}</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💵 USD Efectivo</div>
+                                            <div style="font-size: 16px; font-weight: 800; color: #f59e0b;">$${totalDolares.toLocaleString()}</div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💸 Gastos</div>
-                                        <div style="font-size: 16px; font-weight: 800; color: var(--danger);">Bs ${gastos.toLocaleString()}</div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
+                                        <div>
+                                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">💸 Gastos</div>
+                                            <div style="font-size: 16px; font-weight: 800; color: var(--danger);">Bs ${gastos.toLocaleString()}</div>
+                                        </div>
+                                    </div>
+                                    <div style="padding-top: 8px; border-top: 1px solid var(--border);">
+                                        <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">📊 Profit Neto</div>
+                                        <div style="font-size: 20px; font-weight: 800; color: ${profitNeto >= 0 ? 'var(--success)' : 'var(--danger)'};">Bs ${profitNeto.toLocaleString()}</div>
                                     </div>
                                 </div>
-                                <div style="padding-top: 8px; border-top: 1px solid var(--border);">
-                                    <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">📊 Profit Neto</div>
-                                    <div style="font-size: 20px; font-weight: 800; color: ${profitNeto >= 0 ? 'var(--success)' : 'var(--danger)'};">Bs ${profitNeto.toLocaleString()}</div>
+                                
+                                ${cuposReservados > 0 ? `
+                                <div style="margin-top: 16px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                        <span style="font-size: 12px; color: var(--text-secondary);">📋 Asistencia: ${presentes}/${cuposReservados} presentes</span>
+                                        <span style="font-size: 12px; color: var(--text-secondary); font-weight: 600;">${porcentajeAsistencia}%</span>
+                                    </div>
+                                    <div class="progress-bar" style="height: 6px;">
+                                        <div class="progress-fill" style="width: ${porcentajeAsistencia}%; background: ${porcentajeAsistencia >= 80 ? 'var(--success)' : porcentajeAsistencia >= 50 ? '#fbbf24' : 'var(--danger)'};"></div>
+                                    </div>
                                 </div>
-                            </div>
+                                ` : ''}
 
-                            ${reservasRuta.length > 0 ? `
-                                <div style="margin-top: 20px;">
-                                    <div style="font-weight: 700; margin-bottom: 16px; color: var(--accent); font-size: 16px;">👥 Reservas y Participantes</div>
-                                    ${reservasRuta.map(reserva => {
-                                        const participantesReserva = data.participantes.filter(p => p.lider === reserva.lider);
-                                        const presentes = participantesReserva.filter(p => p.asiste).length;
-                                        const totalPagado = reserva.monto_pagado || reserva.montoPagado || 0;
-                                        
-                                        return `
-                                            <div style="background: rgba(118, 200, 147, 0.05); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
-                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                                    <div>
-                                                        <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">👤 ${reserva.lider}</div>
-                                                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
-                                                            Cupos: ${reserva.cantidad} | Pagado: Bs ${totalPagado.toLocaleString()}
+                                ${reservasRuta.length > 0 ? `
+                                    <div style="margin-top: 20px;">
+                                        <div style="font-weight: 700; margin-bottom: 16px; color: var(--accent); font-size: 16px;">👥 Reservas y Participantes</div>
+                                        ${reservasRuta.map(reserva => {
+                                            const participantesReserva = data.participantes.filter(p => p.lider === reserva.lider);
+                                            const presentes = participantesReserva.filter(p => p.asiste).length;
+                                            const totalPagado = reserva.monto_pagado || reserva.montoPagado || 0;
+                                            
+                                            // Calcular totales de pagos
+                                            const totalBs = (reserva.pagos || [])
+                                                .filter(p => !p.enDolares)
+                                                .reduce((sum, p) => sum + p.monto, 0);
+                                            const totalDolaresReserva = (reserva.pagos || [])
+                                                .filter(p => p.enDolares)
+                                                .reduce((sum, p) => sum + p.monto, 0);
+                                            
+                                            return `
+                                                <div style="background: rgba(118, 200, 147, 0.05); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                                        <div>
+                                                            <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">👤 ${reserva.lider}</div>
+                                                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                                                Cupos: ${reserva.cantidad} | Pagado: Bs ${totalBs.toLocaleString()}${totalDolaresReserva > 0 ? ` + $${totalDolaresReserva.toLocaleString()}` : ''}
+                                                            </div>
                                                         </div>
+                                                        <span class="badge badge-active">${presentes}/${participantesReserva.length} presentes</span>
                                                     </div>
-                                                    <span class="badge badge-active">${presentes}/${participantesReserva.length} presentes</span>
+                                                    
+                                                    ${participantesReserva.length > 0 ? `
+                                                        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+                                                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">Participantes:</div>
+                                                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                                                ${participantesReserva.map(p => `
+                                                                    <span style="padding: 6px 12px; background: ${p.asiste ? 'rgba(16, 185, 129, 0.2)' : 'rgba(118, 200, 147, 0.1)'}; border-radius: 8px; font-size: 12px; border: 1px solid ${p.asiste ? 'rgba(16, 185, 129, 0.3)' : 'var(--border)'};">
+                                                                        ${p.asiste ? '✅' : '⭕'} ${p.nombre}
+                                                                    </span>
+                                                                `).join('')}
+                                                            </div>
+                                                        </div>
+                                                    ` : '<div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">Sin participantes registrados</div>'}
                                                 </div>
-                                                
-                                                ${participantesReserva.length > 0 ? `
-                                                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
-                                                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">Participantes:</div>
-                                                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                                            ${participantesReserva.map(p => `
-                                                                <span style="padding: 6px 12px; background: ${p.asiste ? 'rgba(16, 185, 129, 0.2)' : 'rgba(118, 200, 147, 0.1)'}; border-radius: 8px; font-size: 12px; border: 1px solid ${p.asiste ? 'rgba(16, 185, 129, 0.3)' : 'var(--border)'};">
-                                                                    ${p.asiste ? '✅' : '⭕'} ${p.nombre}
-                                                                </span>
-                                                            `).join('')}
-                                                        </div>
-                                                    </div>
-                                                ` : '<div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">Sin participantes registrados</div>'}
-                                            </div>
-                                        `;
-                                    }).join('')}
-                                </div>
-                            ` : '<div style="margin-top: 16px; padding: 12px; background: rgba(118, 200, 147, 0.05); border-radius: 12px; text-align: center; color: var(--text-secondary);">No hay reservas para esta ruta</div>'}
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                ` : '<div style="margin-top: 16px; padding: 12px; background: rgba(118, 200, 147, 0.05); border-radius: 12px; text-align: center; color: var(--text-secondary);">No hay reservas para esta ruta</div>'}
+                            </div>
                         </div>
                     `;
                 }).join('');
