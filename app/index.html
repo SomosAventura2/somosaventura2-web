@@ -1231,6 +1231,160 @@
             background: var(--bg-card);
             color: var(--text-primary);
         }
+        /* LOADER/SPINNER */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(4px);
+        }
+
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(118, 200, 147, 0.3);
+            border-top-color: var(--green-mountain);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loader-text {
+            margin-top: 16px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* TOAST NOTIFICATIONS */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            min-width: 300px;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: slideInRight 0.3s ease;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .toast.warning {
+            border-left: 4px solid #fbbf24;
+        }
+
+        .toast.info {
+            border-left: 4px solid var(--accent);
+        }
+
+        .toast-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .toast-message {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .toast.fade-out {
+            animation: slideOutRight 0.3s ease forwards;
+        }
+
+        /* RESPONSIVE - iPhone */
+        @media (max-width: 375px) {
+            .toast-container {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+            }
+
+            .toast {
+                min-width: auto;
+                max-width: 100%;
+            }
+
+            .reserva-compact {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .person-meta-compact {
+                flex-wrap: wrap;
+                font-size: 11px;
+            }
+
+            .modal-content {
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1251,6 +1405,15 @@
 
     <!-- APP -->
     <div id="app" class="app">
+        <!-- LOADER/SPINNER -->
+        <div id="loader" class="loader" style="display: none;">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Cargando datos...</div>
+        </div>
+        
+        <!-- TOAST NOTIFICATIONS -->
+        <div id="toastContainer" class="toast-container"></div>
+        
         <div class="app-header">
             <div class="logo-text">
                 <img src="../logo.png" alt="SomosAventura2" class="app-header-logo">
@@ -1456,8 +1619,13 @@
                     <label class="form-label" style="margin: 0;">👥 Agregar Personas</label>
                 </div>
                 <div class="personas-input-group">
-                    <input type="text" id="personaNombreInput" class="form-input" placeholder="Ej: Juan Carlos Pérez (nombre completo)" onkeypress="if(event.key==='Enter') agregarPersonaTemporal()">
-                    <button type="button" id="btnAgregarPersona" onclick="agregarPersonaTemporal()">Agregar</button>
+                    <input type="text" id="personaNombreInput" class="form-input" placeholder="Ej: Juan Carlos Pérez (nombre completo)" 
+                           onkeypress="if(event.key==='Enter') { event.preventDefault(); agregarPersonaTemporal(); }"
+                           oninput="actualizarPersonasEnReserva()">
+                    <button type="button" id="btnAgregarPersona" onclick="agregarPersonaTemporal()">+ Agregar</button>
+                </div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px; margin-bottom: 8px;">
+                    💡 Presiona Enter para agregar rápidamente
                 </div>
                 <div id="personasTemporalesList" class="personas-list"></div>
                 <div id="personasInfo" class="personas-info"></div>
@@ -1475,16 +1643,14 @@
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">✅ Nueva Persona</div>
             <div class="form-group">
-                <label class="form-label">Nombre *</label>
-                <input type="text" id="participanteNombre" class="form-input" placeholder="Ej: Juan" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Segundo Nombre (Opcional)</label>
-                <input type="text" id="participanteSegundoNombre" class="form-input" placeholder="Ej: Carlos">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Apellido *</label>
-                <input type="text" id="participanteApellido" class="form-input" placeholder="Ej: Pérez" required>
+                <label class="form-label">Nombre Completo *</label>
+                <input type="text" id="participanteNombreCompleto" class="form-input" 
+                       placeholder="Ej: Juan Carlos Pérez (o Juan Pérez)" 
+                       required
+                       onkeypress="if(event.key==='Enter') { event.preventDefault(); document.getElementById('participanteReserva').focus(); }">
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+                    💡 Escribe el nombre completo. Si hay 3 palabras, la del medio será el segundo nombre.
+                </div>
             </div>
             <div class="form-group">
                 <label class="form-label">Líder de Reserva</label>
@@ -1608,7 +1774,7 @@ async function loadUsuarios() {
             sessionStorage.setItem('authenticated', 'true');
             showApp();
         } else {
-            alert("❌ Usuario o contraseña incorrectos");
+            showToast('Usuario o contraseña incorrectos', 'error', 'Error de Login');
         }
     };
          
@@ -1626,6 +1792,68 @@ async function loadUsuarios() {
 
     let personasTemporales = [];
     let realtimeChannel = null;
+
+        // =============================================
+        // 4.5. UTILIDADES - TOAST Y LOADER
+        // =============================================
+        
+        // Mostrar/Ocultar Loader
+        function showLoader(text = 'Cargando datos...') {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                const loaderText = loader.querySelector('.loader-text');
+                if (loaderText) loaderText.textContent = text;
+                loader.style.display = 'flex';
+            }
+        }
+
+        function hideLoader() {
+            const loader = document.getElementById('loader');
+            if (loader) loader.style.display = 'none';
+        }
+
+        // Toast Notifications
+        function showToast(message, type = 'info', title = null) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+
+            const titlesDefault = {
+                success: 'Éxito',
+                error: 'Error',
+                warning: 'Advertencia',
+                info: 'Información'
+            };
+
+            toast.innerHTML = `
+                <div class="toast-icon">${icons[type] || icons.info}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${title || titlesDefault[type] || 'Información'}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            // Auto-remover después de 4 segundos
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, 4000);
+        }
 
         // =============================================
         // 5. MOSTRAR APLICACIÓN PRINCIPAL
@@ -1651,7 +1879,7 @@ async function loadUsuarios() {
                 
             } catch (error) {
                 console.error('❌ Error al mostrar aplicación:', error);
-                alert('Error al cargar la aplicación. Recarga la página.');
+                showToast('Error al cargar la aplicación. Recarga la página.', 'error', 'Error');
             }
         }
 
@@ -1681,59 +1909,76 @@ async function loadUsuarios() {
         }
 
         // =============================================
-        // 8. CARGAR DATOS DESDE SUPABASE
+        // 8. CARGAR DATOS DESDE SUPABASE (OPTIMIZADO)
         // =============================================
+        
+        // Función auxiliar para retry con exponential backoff
+        async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    return await fn();
+                } catch (error) {
+                    if (attempt === maxRetries - 1) throw error;
+                    const delay = baseDelay * Math.pow(2, attempt);
+                    console.warn(`⚠️ Intento ${attempt + 1} fallido, reintentando en ${delay}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+
         async function loadData() {
+            showLoader('Cargando datos...');
+            
             try {
-                console.log('📥 Cargando datos...');
-                
                 if (!db) {
                     throw new Error('Supabase no está inicializado');
                 }
                 
-                // Cargar rutas
-                const { data: rutas, error: errorRutas } = await db
-                    .from('rutas')
-                    .select('*')
-                    .order('fecha', { ascending: true });
-                    
-                if (errorRutas) throw errorRutas;
-                
-                data.rutas = (rutas || []).map((r, index) => ({
+                // Cargar todas las tablas en paralelo para mejor performance
+                const [rutasResult, reservasResult, participantesResult, gastosResult] = await Promise.all([
+                    retryWithBackoff(() => db
+                        .from('rutas')
+                        .select('*')
+                        .order('fecha', { ascending: true })),
+                    retryWithBackoff(() => db
+                        .from('reservas')
+                        .select('*')),
+                    retryWithBackoff(() => db
+                        .from('participantes')
+                        .select('*')),
+                    retryWithBackoff(() => db
+                        .from('gastos')
+                        .select('*')
+                        .order('fecha', { ascending: false }))
+                ]);
+
+                // Procesar rutas
+                if (rutasResult.error) throw rutasResult.error;
+                data.rutas = (rutasResult.data || []).map((r, index) => ({
                     ...r,
                     archivada: r.archivada === true,
                     precioEuros: r.precio_euros || 0,
                     numero: r.numero || (index + 1)
                 }));
 
-                // Cargar reservas
-                const { data: reservas, error: errorReservas } = await db
-                    .from('reservas')
-                    .select('*');
-                if (errorReservas) throw errorReservas;
-                data.reservas = (reservas || []).map(r => ({
+                // Procesar reservas
+                if (reservasResult.error) throw reservasResult.error;
+                data.reservas = (reservasResult.data || []).map(r => ({
                     ...r,
-                    ruta: r.ruta_nombre || r.ruta || '', // Normalizar: ruta_nombre (DB) → ruta (JS)
+                    ruta: r.ruta_nombre || r.ruta || '',
                     montoPagado: r.monto_pagado || 0,
-                    pagos: r.pagos || [] // Asegurar que pagos siempre sea un array (compatibilidad con datos antiguos)
+                    pagos: r.pagos || []
                 }));
 
-                // Cargar participantes
-                const { data: participantes, error: errorParticipantes } = await db
-                    .from('participantes')
-                    .select('*');
-                if (errorParticipantes) throw errorParticipantes;
-                data.participantes = participantes || [];
+                // Procesar participantes
+                if (participantesResult.error) throw participantesResult.error;
+                data.participantes = participantesResult.data || [];
 
-                // Cargar gastos
-                const { data: gastos, error: errorGastos } = await db
-                    .from('gastos')
-                    .select('*')
-                    .order('fecha', { ascending: false });
-                if (errorGastos) throw errorGastos;
-                data.gastos = (gastos || []).map(g => ({
+                // Procesar gastos
+                if (gastosResult.error) throw gastosResult.error;
+                data.gastos = (gastosResult.data || []).map(g => ({
                     ...g,
-                    ruta: g.ruta_nombre || g.ruta || '' // Normalizar: ruta_nombre (DB) → ruta (JS)
+                    ruta: g.ruta_nombre || g.ruta || ''
                 }));
 
                 console.log('✅ Datos cargados:', {
@@ -1748,23 +1993,24 @@ async function loadUsuarios() {
                     initRealtimeSync();
                 } catch (realtimeError) {
                     console.warn('⚠️ Error inicializando Realtime (no crítico):', realtimeError);
-                    // No mostrar alert, los datos ya se cargaron correctamente
                 }
+                
+                hideLoader();
+                showToast('Datos cargados correctamente', 'success', 'Éxito');
                 
             } catch (error) {
                 console.error('❌ Error cargando datos:', error);
-                // Solo mostrar alert si db no está inicializado, no si es un error de red temporal
+                hideLoader();
+                
                 if (!db) {
-                    console.warn('⚠️ Base de datos no inicializada aún, reintentando...');
-                    // Reintentar después de un breve delay
+                    showToast('Base de datos no inicializada. Reintentando...', 'warning');
                     setTimeout(async () => {
                         if (db) {
                             await loadData();
                         }
                     }, 1000);
                 } else {
-                    // Si db está inicializado pero hay otro error, mostrar alert
-                    alert('⚠️ Error al cargar los datos. Verifica la conexión.');
+                    showToast('Error al cargar los datos. Verifica la conexión.', 'error', 'Error de Conexión');
                 }
             }
         }
@@ -2121,33 +2367,37 @@ function updateSelects() {
             const lider = document.getElementById('reservaLider').value.trim();
             
             if (!nombre) {
-                alert('❌ Ingresa un nombre');
+                showToast('Ingresa un nombre', 'warning');
+                document.getElementById('personaNombreInput').focus();
                 return;
             }
             
             if (!lider) {
-                alert('❌ Primero ingresa el nombre del líder');
+                showToast('Primero ingresa el nombre del líder', 'warning');
+                document.getElementById('reservaLider').focus();
                 return;
             }
             
             // Verificar duplicados
             if (personasTemporales.includes(nombre)) {
-                alert('❌ Esta persona ya está agregada');
+                showToast('Esta persona ya está agregada', 'warning');
                 document.getElementById('personaNombreInput').value = '';
+                document.getElementById('personaNombreInput').focus();
                 return;
             }
             
             // Verificar si el líder ya está agregado
             if (nombre.toLowerCase() === lider.toLowerCase()) {
-                alert('⚠️ El líder se agregará automáticamente al guardar');
+                showToast('El líder se agregará automáticamente al guardar', 'info');
                 document.getElementById('personaNombreInput').value = '';
+                document.getElementById('personaNombreInput').focus();
                 return;
             }
             
             // Verificar cupos (incluyendo el líder que se agregará automáticamente)
             const totalPersonas = personasTemporales.length + 1; // +1 por el líder
             if (cantidad > 0 && totalPersonas >= cantidad) {
-                alert(`⚠️ Ya has agregado el máximo de personas (${cantidad} cupos reservados). El líder cuenta como uno.`);
+                showToast(`Ya has agregado el máximo de personas (${cantidad} cupos). El líder cuenta como uno.`, 'warning');
                 document.getElementById('personaNombreInput').value = '';
                 return;
             }
@@ -2155,6 +2405,11 @@ function updateSelects() {
             personasTemporales.push(nombre);
             document.getElementById('personaNombreInput').value = '';
             renderPersonasTemporales();
+            
+            // Enfocar de nuevo en el input para agregar más personas rápidamente
+            setTimeout(() => {
+                document.getElementById('personaNombreInput').focus();
+            }, 50);
         }
 
         function eliminarPersonaTemporal(index) {
@@ -2220,7 +2475,7 @@ async function agregarRuta() {
     const precioEuros = parseFloat(document.getElementById('rutaPrecioEuros').value);
 
     if (!nombre || !fecha || !cupos || !precioEuros) {
-        alert('❌ Completa todos los campos');
+        showToast('Completa todos los campos', 'warning', 'Campos Incompletos');
         return;
     }
 
@@ -2257,10 +2512,10 @@ async function agregarRuta() {
         await loadData();
         updateSelects();
         renderRutas();
-        alert(`✅ Ruta creada exitosamente: ${nombre} #${String(nuevoNumero).padStart(4, '0')}`);
+        showToast(`Ruta creada: ${nombre} #${String(nuevoNumero).padStart(4, '0')}`, 'success', 'Éxito');
     } catch (error) {
         console.error('Error:', error);
-        alert('❌ Error al crear la ruta: ' + error.message);
+        showToast('Error al crear la ruta: ' + error.message, 'error', 'Error');
     }
 }
 
@@ -2273,14 +2528,14 @@ async function agregarRuta() {
             const montoPagado = parseFloat(document.getElementById('reservaMontoPagado').value) || 0;
 
             if (!lider || !ruta || !cantidad) {
-                alert('❌ Completa todos los campos obligatorios');
+                showToast('Completa todos los campos obligatorios', 'warning', 'Campos Incompletos');
                 return;
             }
 
             // Permitir múltiples reservas del mismo líder, pero solo en rutas diferentes
             const reservaExistente = data.reservas.find(r => r.lider === lider && r.ruta === ruta);
             if (reservaExistente) {
-                alert(`❌ Ya existe una reserva de "${lider}" para la ruta "${ruta}".\n\nUn líder solo puede tener una reserva por ruta.`);
+                showToast(`Ya existe una reserva de "${lider}" para la ruta "${ruta}". Un líder solo puede tener una reserva por ruta.`, 'error', 'Reserva Duplicada');
                 return;
             }
 
@@ -2388,10 +2643,10 @@ async function agregarRuta() {
                 renderReservas();
                 renderRutas();
                 renderParticipantes();
-                alert('✅ Reserva creada exitosamente. El líder y las personas agregadas han sido registradas automáticamente.');
+                showToast('Reserva creada exitosamente. El líder y las personas agregadas han sido registradas automáticamente.', 'success', 'Éxito');
             } catch (error) {
                 console.error('Error:', error);
-                alert('❌ Error al crear la reserva: ' + error.message);
+                showToast('Error al crear la reserva: ' + error.message, 'error', 'Error');
             }
         }
 
@@ -2430,38 +2685,62 @@ async function actualizarCuposReserva(lider, incremento = 1) {
         return true;
     } catch (error) {
         console.error('Error actualizando cupos:', error);
-        alert('❌ Error al actualizar los cupos de la reserva');
+        showToast('Error al actualizar los cupos de la reserva', 'error', 'Error');
         return false;
     }
 }
 
+        // FUNCIÓN AUXILIAR: Separar nombre completo en partes
+        function separarNombreCompleto(nombreCompleto) {
+            const palabras = nombreCompleto.trim().split(/\s+/).filter(p => p);
+            
+            if (palabras.length === 0) {
+                return { nombre: '', segundoNombre: '', apellido: '' };
+            } else if (palabras.length === 1) {
+                return { nombre: palabras[0], segundoNombre: '', apellido: '' };
+            } else if (palabras.length === 2) {
+                return { nombre: palabras[0], segundoNombre: '', apellido: palabras[1] };
+            } else if (palabras.length === 3) {
+                return { nombre: palabras[0], segundoNombre: palabras[1], apellido: palabras[2] };
+            } else {
+                // 4+ palabras: primera = nombre, segunda = segundo nombre, resto = apellido
+                return { 
+                    nombre: palabras[0], 
+                    segundoNombre: palabras[1], 
+                    apellido: palabras.slice(2).join(' ') 
+                };
+            }
+        }
+
         // AGREGAR PARTICIPANTE
 async function agregarParticipante() {
-    const nombre = document.getElementById('participanteNombre').value.trim();
-    const segundoNombre = document.getElementById('participanteSegundoNombre').value.trim();
-    const apellido = document.getElementById('participanteApellido').value.trim();
+    const nombreCompletoInput = document.getElementById('participanteNombreCompleto').value.trim();
     const lider = document.getElementById('participanteReserva').value;
     const monto = parseFloat(document.getElementById('participanteMonto').value) || 0;
     const referencia = document.getElementById('participanteReferencia').value.trim();
 
-    // Construir nombre completo
-    const nombreCompleto = [nombre, segundoNombre, apellido].filter(n => n).join(' ');
-    
-    if (!nombre || !apellido) {
-        alert('❌ Completa al menos el nombre y apellido');
+    if (!nombreCompletoInput) {
+        showToast('Ingresa el nombre completo', 'warning', 'Campo Requerido');
         return;
     }
 
-    if (!nombre || !lider) {
-        alert('❌ Completa todos los campos obligatorios');
+    // Separar el nombre completo automáticamente
+    const { nombre, segundoNombre, apellido } = separarNombreCompleto(nombreCompletoInput);
+    
+    // Validar que tenga al menos nombre y apellido (mínimo 2 palabras)
+    if (!nombre || !apellido) {
+        showToast('Ingresa al menos nombre y apellido', 'warning', 'Nombre Incompleto');
         return;
     }
+    
+    // Construir nombre completo para guardar en BD
+    const nombreCompleto = [nombre, segundoNombre, apellido].filter(n => n).join(' ');
 
     // Buscar la reserva: si hay múltiples, usar la primera (compatibilidad)
     // En el futuro, se puede mejorar para seleccionar específicamente
     const reserva = data.reservas.find(r => r.lider === lider);
     if (!reserva) {
-        alert('❌ No se encontró la reserva');
+        showToast('No se encontró la reserva', 'error', 'Error');
         return;
     }
 
@@ -2503,7 +2782,7 @@ async function agregarParticipante() {
     );
     
     if (existe) {
-        alert('❌ Esta persona ya está registrada para este líder');
+        showToast('Esta persona ya está registrada para este líder', 'warning', 'Duplicado');
         return;
     }
 
@@ -2544,9 +2823,7 @@ async function agregarParticipante() {
         }
 
         // Limpiar formulario
-        document.getElementById('participanteNombre').value = '';
-        document.getElementById('participanteSegundoNombre').value = '';
-        document.getElementById('participanteApellido').value = '';
+        document.getElementById('participanteNombreCompleto').value = '';
         document.getElementById('participanteMonto').value = '';
         document.getElementById('participanteReferencia').value = '';
         const participanteEnDolaresInput = document.getElementById('participanteEnDolares');
@@ -2559,13 +2836,13 @@ async function agregarParticipante() {
         renderAsistencia();
         
         if (monto > 0) {
-            alert('✅ Persona registrada y pago agregado exitosamente');
+            showToast('Persona registrada y pago agregado exitosamente', 'success', 'Éxito');
         } else {
-            alert('✅ Persona registrada exitosamente');
+            showToast('Persona registrada exitosamente', 'success', 'Éxito');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('❌ Error al registrar la persona: ' + error.message);
+        showToast('Error al registrar la persona: ' + error.message, 'error', 'Error');
     }
 }
 
@@ -2573,15 +2850,13 @@ async function agregarParticipante() {
 async function agregarPersonaRapida(lider, ruta) {
     const reserva = data.reservas.find(r => r.lider === lider && r.ruta === ruta);
     if (!reserva) {
-        alert('❌ No se encontró la reserva');
+        showToast('No se encontró la reserva', 'error', 'Error');
         return;
     }
 
     // Pre-llenar el formulario con el líder
     document.getElementById('participanteReserva').value = lider;
-    document.getElementById('participanteNombre').value = '';
-    document.getElementById('participanteSegundoNombre').value = '';
-    document.getElementById('participanteApellido').value = '';
+    document.getElementById('participanteNombreCompleto').value = '';
     document.getElementById('participanteMonto').value = '';
     document.getElementById('participanteReferencia').value = '';
     const participanteEnDolaresInput = document.getElementById('participanteEnDolares');
@@ -2590,9 +2865,9 @@ async function agregarPersonaRapida(lider, ruta) {
     // Abrir modal
     openModal('modalNuevoParticipante');
     
-    // Enfocar en el campo de nombre
+    // Enfocar en el campo de nombre completo
     setTimeout(() => {
-        document.getElementById('participanteNombre').focus();
+        document.getElementById('participanteNombreCompleto').focus();
     }, 100);
 }
 
@@ -2609,7 +2884,7 @@ async function agregarPersonaRapida(lider, ruta) {
             if (!reserva) return;
             
             if (!nuevoMonto || nuevoMonto < 0) {
-                alert('❌ Ingresa un monto válido');
+                showToast('Ingresa un monto válido', 'warning', 'Monto Inválido');
                 return;
             }
             
@@ -2651,10 +2926,10 @@ async function agregarPersonaRapida(lider, ruta) {
                 renderReservas();
                 renderRutas();
                 verDetalleReserva(lider, ruta); // Refrescar el modal
-                alert('✅ Pago registrado exitosamente');
+                showToast('Pago registrado exitosamente', 'success', 'Éxito');
             } catch (error) {
                 console.error('Error:', error);
-                alert('❌ Error al registrar el pago: ' + error.message);
+                showToast('Error al registrar el pago: ' + error.message, 'error', 'Error');
             }
         }
 
@@ -2763,12 +3038,17 @@ async function agregarPersonaRapida(lider, ruta) {
                 
                 <div class="divider"></div>
 
-<button class="btn btn-primary" style="margin-top: 12px;"
+<button class="btn btn-primary" style="margin-top: 12px; width: 100%;"
         onclick="abrirAgregarPersonaAReserva('${lider}', '${reserva.ruta}')">
     👤 Agregar Persona a esta Reserva
 </button>
 
-<button class="btn btn-outline" style="margin-top: 16px;"
+<button class="btn btn-success" style="margin-top: 12px; width: 100%; background: #25D366; border-color: #25D366; color: white; display: flex; align-items: center; justify-content: center; gap: 6px;"
+        onclick="compartirReservaWhatsApp('${lider}')">
+    <span style="font-size: 16px;">📱</span> Compartir por WhatsApp
+</button>
+
+<button class="btn btn-outline" style="margin-top: 12px; width: 100%;"
         onclick="closeModal('modalDetalleReserva')">
     Cerrar
 </button>
@@ -2779,6 +3059,88 @@ async function agregarPersonaRapida(lider, ruta) {
             openModal('modalDetalleReserva');
         }
 
+        // COMPARTIR RESERVA POR WHATSAPP (Versión con Unicode para emojis)
+        function compartirReservaWhatsApp(lider) {
+            // Constantes Unicode para emojis (evita problemas de codificación en URL)
+            const eReserva = '\ud83d\udccb'; // 📋
+            const eLider = '\ud83d\udc64'; // 👤
+            const eRuta = '\ud83c\udfd4\ufe0f'; // 🏔️
+            const eFecha = '\ud83d\udcc5'; // 📅
+            const eCupos = '\ud83c\udfab'; // 🎫
+            const ePrecio = '\ud83d\udcb0'; // 💰
+            const eGente = '\ud83d\udc65'; // 👥
+            const ePagos = '\ud83d\udcb5'; // 💵
+            
+            // Buscar la reserva por líder (si hay múltiples, usar la primera)
+            const reserva = data.reservas.find(r => r.lider === lider);
+            if (!reserva) {
+                showToast('No se encontró la reserva para este líder', 'error', 'Error');
+                return;
+            }
+            
+            // Obtener datos de la ruta
+            const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
+            if (!ruta) {
+                showToast('No se encontró la información de la ruta', 'error', 'Error');
+                return;
+            }
+            
+            // Obtener lista de participantes del líder
+            const participantes = data.participantes.filter(p => p.lider === lider);
+            
+            // Calcular monto total pagado (solo Bs)
+            const montoTotalPagado = (reserva.pagos || [])
+                .filter(p => !p.enDolares)
+                .reduce((sum, p) => sum + (p.monto || 0), 0);
+            
+            // Formatear fecha de la ruta usando formatearFechaRuta para evitar timezone issues
+            const fechaFormateada = formatearFechaRuta(ruta.fecha);
+            
+            // Construir mensaje con formato exacto
+            let mensaje = `${eReserva} *DETALLES DE RESERVA*\n\n`;
+            mensaje += `${eLider} *Líder:* ${lider}\n`;
+            mensaje += `${eRuta} *Ruta:* ${reserva.ruta}\n`;
+            mensaje += `${eFecha} *Fecha:* ${fechaFormateada}\n`;
+            mensaje += `${eCupos} *Cupos Reservados:* ${reserva.cantidad}\n`;
+            mensaje += `${ePrecio} *Precio Referencial:* ${ruta.precio_euros || ruta.precioEuros || 0}€\n`;
+            
+            // Agregar participantes
+            if (participantes.length > 0) {
+                mensaje += `\n${eGente} *Participantes:*\n`;
+                participantes.forEach(p => {
+                    mensaje += `• ${p.nombre}\n`;
+                });
+            }
+            
+            // Agregar historial de pagos
+            if (reserva.pagos && reserva.pagos.length > 0) {
+                mensaje += `\n${ePagos} *Pagos:*\n`;
+                reserva.pagos.forEach((pago, index) => {
+                    const simbolo = pago.enDolares ? '$' : 'Bs';
+                    const fecha = new Date(pago.fecha).toLocaleDateString('es-ES', { 
+                        day: 'numeric', 
+                        month: 'short' 
+                    });
+                    mensaje += `${index + 1}. ${simbolo} ${pago.monto.toLocaleString()} - ${fecha}`;
+                    if (pago.referencia) {
+                        mensaje += ` (Ref: ${pago.referencia})`;
+                    }
+                    mensaje += `\n`;
+                });
+            } else {
+                mensaje += `\n${ePagos} *Pagos:* Bs ${montoTotalPagado.toLocaleString()}`;
+            }
+            
+            // Codificar mensaje para URL
+            const mensajeCodificado = encodeURIComponent(mensaje);
+            const urlWhatsApp = 'https://wa.me/?text=' + mensajeCodificado;
+            
+            // Abrir WhatsApp
+            window.open(urlWhatsApp, '_blank');
+            
+            showToast('Abriendo WhatsApp...', 'info');
+        }
+
         // AGREGAR función para abrir modal de agregar persona:
 function abrirAgregarPersonaAReserva(lider, nombreRuta) {
     closeModal('modalDetalleReserva');
@@ -2786,18 +3148,19 @@ function abrirAgregarPersonaAReserva(lider, nombreRuta) {
     // Verificar que la reserva existe
     const reserva = data.reservas.find(r => r.lider === lider && r.ruta === nombreRuta);
     if (!reserva) {
-        alert('❌ No se encontró la reserva');
+        showToast('No se encontró la reserva', 'error', 'Error');
         return;
     }
     
     // Llenar automáticamente el modal de nuevo participante
     setTimeout(() => {
         document.getElementById('participanteReserva').value = lider;
+        document.getElementById('participanteNombreCompleto').value = '';
         openModal('modalNuevoParticipante');
         
-        // Enfocar en el campo de nombre
+        // Enfocar en el campo de nombre completo
         setTimeout(() => {
-            document.getElementById('participanteNombre').focus();
+            document.getElementById('participanteNombreCompleto').focus();
         }, 100);
     }, 300);
 }
@@ -2808,7 +3171,7 @@ async function archivarRuta(nombre) {
     if (!ruta) return;
 
     if (ruta.archivada) {
-        alert('ℹ️ Esta ruta ya está archivada');
+        showToast('Esta ruta ya está archivada', 'info', 'Información');
         return;
     }
 
@@ -2818,11 +3181,7 @@ async function archivarRuta(nombre) {
     );
 
     const numeroRuta = ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
-    const fechaFormateada = new Date(ruta.fecha).toLocaleDateString('es-ES', { 
-        day: 'numeric', 
-        month: 'short', 
-        year: 'numeric' 
-    });
+    const fechaFormateada = formatearFechaCorta(ruta.fecha);
 
     const mensaje =
         `Archivar ruta "${nombre}"?\n\n` +
@@ -2849,10 +3208,10 @@ async function archivarRuta(nombre) {
         renderRutas();
         renderReservas();
 
-        alert('📦 Ruta archivada exitosamente');
+        showToast('Ruta archivada exitosamente', 'success', 'Éxito');
     } catch (error) {
         console.error('Error al archivar ruta:', error);
-        alert('❌ Error al archivar la ruta: ' + error.message);
+        showToast('Error al archivar la ruta: ' + error.message, 'error', 'Error');
     }
 }
 
@@ -2916,11 +3275,11 @@ async function archivarRuta(nombre) {
         renderRutas();
         renderAsistencia();
         
-        alert('✅ Reserva eliminada exitosamente');
+        showToast('Reserva eliminada exitosamente', 'success', 'Éxito');
         
     } catch (error) {
         console.error('Error al eliminar reserva:', error);
-        alert('❌ Error al eliminar la reserva: ' + error.message);
+        showToast('Error al eliminar la reserva: ' + error.message, 'error', 'Error');
     }
 }
 
@@ -2953,11 +3312,11 @@ async function archivarRuta(nombre) {
         renderReservas();
         renderAsistencia();
         
-        alert('✅ Persona eliminada exitosamente');
+        showToast('Persona eliminada exitosamente', 'success', 'Éxito');
         
     } catch (error) {
         console.error('Error al eliminar participante:', error);
-        alert('❌ Error al eliminar la persona: ' + error.message);
+        showToast('Error al eliminar la persona: ' + error.message, 'error', 'Error');
     }
 }
 
@@ -2997,7 +3356,7 @@ async function archivarRuta(nombre) {
                 renderAsistencia();
             } catch (error) {
                 console.error('Error:', error);
-                alert('❌ Error al actualizar la asistencia: ' + error.message);
+                showToast('Error al actualizar la asistencia: ' + error.message, 'error', 'Error');
             }
         }
 
@@ -3139,12 +3498,28 @@ function renderRutas() {
     document.getElementById('listaRutas').innerHTML = html;
 }
 
-// FORMATEAR FECHA LARGA (RUTAS)
+// FORMATEAR FECHA LARGA (RUTAS) - Con parseo manual para evitar timezone issues
 function formatearFechaRuta(fechaString) {
     try {
+        // Parseo manual para evitar problemas de timezone
+        const fechaStr = fechaString.split('T')[0]; // Obtener solo la parte de fecha (YYYY-MM-DD)
+        const partes = fechaStr.split('-');
+        if (partes.length === 3) {
+            const año = parseInt(partes[0], 10);
+            const mes = parseInt(partes[1], 10) - 1; // Mes es 0-indexed
+            const dia = parseInt(partes[2], 10);
+            const fecha = new Date(año, mes, dia);
+            
+            return fecha.toLocaleDateString('es-ES', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+        // Fallback si no es formato ISO
         const fecha = new Date(fechaString);
         const fechaAjustada = new Date(fecha.getTime() + fecha.getTimezoneOffset() * 60000);
-        
         return fechaAjustada.toLocaleDateString('es-ES', { 
             weekday: 'long', 
             year: 'numeric', 
@@ -3157,15 +3532,29 @@ function formatearFechaRuta(fechaString) {
     }
 }
 
-// FORMATEAR FECHA CORTA (ASISTENCIA / LISTAS)
+// FORMATEAR FECHA CORTA (ASISTENCIA / LISTAS) - Con parseo manual para evitar timezone issues
 function formatearFechaCorta(fechaString) {
     try {
+        // Parseo manual para evitar problemas de timezone
+        const fechaStr = fechaString.split('T')[0]; // Obtener solo la parte de fecha (YYYY-MM-DD)
+        const partes = fechaStr.split('-');
+        if (partes.length === 3) {
+            const año = parseInt(partes[0], 10);
+            const mes = parseInt(partes[1], 10) - 1; // Mes es 0-indexed
+            const dia = parseInt(partes[2], 10);
+            const fecha = new Date(año, mes, dia);
+            
+            return fecha.toLocaleDateString('es-ES', { 
+                day: 'numeric', 
+                month: 'short' 
+            });
+        }
+        // Fallback si no es formato ISO
         const fecha = new Date(fechaString);
         const fechaAjustada = new Date(fecha.getTime() + fecha.getTimezoneOffset() * 60000);
-        
         return fechaAjustada.toLocaleDateString('es-ES', { 
-            day: '2-digit', 
-            month: '2-digit' 
+            day: 'numeric', 
+            month: 'short' 
         });
     } catch (error) {
         return fechaString;
@@ -3296,6 +3685,10 @@ function formatearFechaCorta(fechaString) {
                                         🗑️ Eliminar
                                     </button>
                                 </div>
+                                <button class="btn btn-success btn-small" style="margin-top: 8px; width: 100%; background: #25D366; border-color: #25D366; color: white; display: flex; align-items: center; justify-content: center; gap: 6px;" 
+                                        onclick="compartirReservaWhatsApp('${reserva.lider}')">
+                                    <span style="font-size: 16px;">📱</span> Compartir por WhatsApp
+                                </button>
                             </div>
                         </div>
                     `;
@@ -3388,7 +3781,7 @@ function formatearFechaCorta(fechaString) {
             const historial = calcularRutasPorPersona(nombrePersona);
             
             if (historial.totalRutas === 0) {
-                alert('Esta persona no tiene historial de rutas');
+                showToast('Esta persona no tiene historial de rutas', 'info', 'Información');
                 return;
             }
             
@@ -3471,7 +3864,7 @@ function formatearFechaCorta(fechaString) {
                         // Usar ruta normalizada (puede ser ruta_nombre o ruta)
                         const rutaNombre = reserva ? (reserva.ruta || reserva.ruta_nombre) : 'Sin ruta';
                         const ruta = data.rutas.find(r => r.nombre === rutaNombre);
-                        const rutaFecha = ruta ? new Date(ruta.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '';
+                        const rutaFecha = ruta ? formatearFechaCorta(ruta.fecha) : '';
                         
                         // Calcular si es cliente recurrente
                         const historialRutas = calcularRutasPorPersona(p.nombre);
@@ -3537,7 +3930,7 @@ function formatearFechaCorta(fechaString) {
                     const reserva = data.reservas.find(r => r.lider === lider);
                     const rutaNombre = reserva ? reserva.ruta : 'Sin ruta';
                     const ruta = data.rutas.find(r => r.nombre === rutaNombre);
-                    const rutaFecha = ruta ? new Date(ruta.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '';
+                    const rutaFecha = ruta ? formatearFechaCorta(ruta.fecha) : '';
                     const participantes = grouped[lider];
                     const presentes = participantes.filter(p => p.asiste).length;
                     const porcentaje = (presentes / participantes.length * 100).toFixed(0);
@@ -3613,7 +4006,7 @@ function formatearFechaCorta(fechaString) {
             const monto = parseFloat(document.getElementById('gastoMonto').value);
 
             if (!concepto || !ruta || !monto || monto <= 0) {
-                alert('❌ Completa todos los campos con valores válidos');
+                showToast('Completa todos los campos con valores válidos', 'warning', 'Campos Incompletos');
                 return;
             }
 
@@ -3638,10 +4031,10 @@ function formatearFechaCorta(fechaString) {
                 updateSelects();
                 renderGastos();
                 renderRutas();
-                alert('✅ Gasto registrado exitosamente');
+                showToast('Gasto registrado exitosamente', 'success', 'Éxito');
             } catch (error) {
                 console.error('Error:', error);
-                alert('❌ Error al registrar el gasto: ' + error.message);
+                showToast('Error al registrar el gasto: ' + error.message, 'error', 'Error');
             }
         }
 
@@ -3672,11 +4065,11 @@ function formatearFechaCorta(fechaString) {
         renderGastos();
         renderRutas(); // Los gastos afectan el profit de las rutas
         
-        alert('✅ Gasto eliminado exitosamente');
+        showToast('Gasto eliminado exitosamente', 'success', 'Éxito');
         
     } catch (error) {
         console.error('Error al eliminar gasto:', error);
-        alert('❌ Error al eliminar el gasto: ' + error.message);
+        showToast('Error al eliminar el gasto: ' + error.message, 'error', 'Error');
     }
 }
 
@@ -3716,9 +4109,7 @@ function actualizarContadorCheckin() {
     const checkinTitle = document.querySelector('.checkin-title');
     if (checkinTitle) {
         const ruta = data.rutas.find(r => r.nombre === rutaFiltro);
-        const rutaFecha = ruta
-            ? new Date(ruta.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
-            : '';
+        const rutaFecha = ruta ? formatearFechaCorta(ruta.fecha) : '';
         checkinTitle.innerHTML =
             `📋 ${rutaFiltro}${rutaFecha ? ' - ' + rutaFecha : ''} <span class="checkin-contador">${presentes}/${total}</span>`;
     }
@@ -3728,7 +4119,7 @@ function actualizarContadorCheckin() {
 async function marcarTodosPresentes() {
     const rutaFiltro = document.getElementById('filtroRuta')?.value;
     if (!rutaFiltro) {
-        alert('Selecciona una ruta primero');
+        showToast('Selecciona una ruta primero', 'warning', 'Selección Requerida');
         return;
     }
 
@@ -3737,7 +4128,7 @@ async function marcarTodosPresentes() {
     );
 
     if (participantes.length === 0) {
-        alert('✅ Todos ya están marcados');
+        showToast('Todos ya están marcados', 'info', 'Información');
         return;
     }
 
@@ -3755,7 +4146,7 @@ async function marcarTodosPresentes() {
         actualizarContadorCheckin();
     } catch (err) {
         console.error(err);
-        alert('❌ Error al marcar asistencia');
+        showToast('Error al marcar asistencia', 'error', 'Error');
     }
 }
 
