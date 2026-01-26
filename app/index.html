@@ -1337,6 +1337,8 @@ function conectarBaseDeDatos() {
     if (window.supabase) {
         try {
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+supabase = supabaseClient;
             console.log('✅ Supabase conectado y listo');
             
             // Una vez conectado, mandamos a llamar a los usuarios o la app
