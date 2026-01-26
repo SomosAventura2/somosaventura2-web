@@ -1231,6 +1231,12 @@
             background: var(--bg-card);
             color: var(--text-primary);
         }
+        
+        /* Ocultar grupo de reserva cuando viene de una reserva */
+        #participanteReservaGroup.hidden-from-reserva {
+            display: none !important;
+        }
+        
         /* LOADER/SPINNER */
         .loader {
             position: fixed;
@@ -1280,38 +1286,42 @@
         }
 
         .toast {
-            background: var(--bg-secondary);
+            background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px 20px;
+            border-radius: 10px;
+            padding: 12px 16px;
             min-width: 300px;
             max-width: 400px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
             animation: slideInRight 0.3s ease;
             pointer-events: auto;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .toast.success {
             border-left: 4px solid var(--success);
+            background: rgba(16, 185, 129, 0.15);
         }
 
         .toast.error {
             border-left: 4px solid var(--danger);
+            background: rgba(239, 68, 68, 0.15);
         }
 
         .toast.warning {
             border-left: 4px solid #fbbf24;
+            background: rgba(251, 191, 36, 0.15);
         }
 
         .toast.info {
             border-left: 4px solid var(--accent);
+            background: rgba(59, 130, 246, 0.15);
         }
 
         .toast-icon {
-            font-size: 24px;
+            font-size: 20px;
             flex-shrink: 0;
         }
 
@@ -1321,14 +1331,15 @@
 
         .toast-title {
             font-weight: 700;
-            font-size: 14px;
-            margin-bottom: 4px;
+            font-size: 13px;
+            margin-bottom: 2px;
             color: var(--text-primary);
         }
 
         .toast-message {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-secondary);
+            line-height: 1.4;
         }
 
         @keyframes slideInRight {
@@ -1363,11 +1374,27 @@
                 top: 10px;
                 right: 10px;
                 left: 10px;
+                gap: 8px;
             }
 
             .toast {
                 min-width: auto;
                 max-width: 100%;
+                padding: 10px 12px;
+                gap: 8px;
+            }
+            
+            .toast-icon {
+                font-size: 18px;
+            }
+            
+            .toast-title {
+                font-size: 12px;
+                margin-bottom: 2px;
+            }
+            
+            .toast-message {
+                font-size: 11px;
             }
 
             .reserva-compact {
@@ -1647,12 +1674,12 @@
                 <input type="text" id="participanteNombreCompleto" class="form-input" 
                        placeholder="Ej: Juan Carlos Pérez (o Juan Pérez)" 
                        required
-                       onkeypress="if(event.key==='Enter') { event.preventDefault(); document.getElementById('participanteReserva').focus(); }">
+                       onkeypress="if(event.key==='Enter') { event.preventDefault(); const reservaGroup = document.getElementById('participanteReservaGroup'); if (reservaGroup && reservaGroup.style.display !== 'none') { document.getElementById('participanteReserva').focus(); } else { agregarParticipante(); } }">
                 <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
                     💡 Escribe el nombre completo. Si hay 3 palabras, la del medio será el segundo nombre.
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group" id="participanteReservaGroup">
                 <label class="form-label">Líder de Reserva</label>
                 <select id="participanteReserva" class="form-input">
                     <option value="">Selecciona un líder</option>
@@ -2093,6 +2120,19 @@ async function loadUsuarios() {
             if (modalId === 'modalNuevoGasto') {
                 updateSelects();
             }
+            if (modalId === 'modalNuevoParticipante') {
+                // Mostrar el select de líder cuando se abre normalmente (no desde una reserva)
+                const reservaGroup = document.getElementById('participanteReservaGroup');
+                if (reservaGroup) {
+                    // Si NO viene de una reserva, remover la clase que lo oculta
+                    if (!reservaGroup.dataset.fromReserva) {
+                        reservaGroup.classList.remove('hidden-from-reserva');
+                    } else {
+                        // Si viene de una reserva, asegurar que esté oculto
+                        reservaGroup.classList.add('hidden-from-reserva');
+                    }
+                }
+            }
             document.getElementById(modalId).classList.add('active');
         };
 
@@ -2114,6 +2154,23 @@ async function loadUsuarios() {
                 document.getElementById('gastoConcepto').value = '';
                 document.getElementById('gastoRuta').value = '';
                 document.getElementById('gastoMonto').value = '';
+            }
+            if (modalId === 'modalNuevoParticipante') {
+                // Restaurar la visibilidad del select cuando se cierra el modal
+                const reservaGroup = document.getElementById('participanteReservaGroup');
+                if (reservaGroup) {
+                    // Remover la clase que lo oculta
+                    reservaGroup.classList.remove('hidden-from-reserva');
+                    // Limpiar el atributo data
+                    delete reservaGroup.dataset.fromReserva;
+                }
+                // Limpiar campos
+                document.getElementById('participanteNombreCompleto').value = '';
+                document.getElementById('participanteReserva').value = '';
+                document.getElementById('participanteMonto').value = '';
+                document.getElementById('participanteReferencia').value = '';
+                const participanteEnDolaresInput = document.getElementById('participanteEnDolares');
+                if (participanteEnDolaresInput) participanteEnDolaresInput.checked = false;
             }
         };
 
@@ -3043,11 +3100,6 @@ async function agregarPersonaRapida(lider, ruta) {
     👤 Agregar Persona a esta Reserva
 </button>
 
-<button class="btn btn-success" style="margin-top: 12px; width: 100%; background: #25D366; border-color: #25D366; color: white; display: flex; align-items: center; justify-content: center; gap: 6px;"
-        onclick="compartirReservaWhatsApp('${lider}')">
-    <span style="font-size: 16px;">📱</span> Compartir por WhatsApp
-</button>
-
 <button class="btn btn-outline" style="margin-top: 12px; width: 100%;"
         onclick="closeModal('modalDetalleReserva')">
     Cerrar
@@ -3152,17 +3204,33 @@ function abrirAgregarPersonaAReserva(lider, nombreRuta) {
         return;
     }
     
-    // Llenar automáticamente el modal de nuevo participante
+    // Obtener el grupo del select
+    const reservaGroup = document.getElementById('participanteReservaGroup');
+    
+    // Agregar clase CSS para ocultar el select (más robusto que solo style.display)
+    if (reservaGroup) {
+        reservaGroup.classList.add('hidden-from-reserva');
+        reservaGroup.dataset.fromReserva = 'true';
+    }
+    
+    // Establecer el líder automáticamente y limpiar campos
+    document.getElementById('participanteReserva').value = lider;
+    document.getElementById('participanteNombreCompleto').value = '';
+    document.getElementById('participanteMonto').value = '';
+    document.getElementById('participanteReferencia').value = '';
+    document.getElementById('participanteEnDolares').checked = false;
+    
+    // Abrir el modal
+    openModal('modalNuevoParticipante');
+    
+    // Asegurar que el select siga oculto después de abrir el modal
     setTimeout(() => {
-        document.getElementById('participanteReserva').value = lider;
-        document.getElementById('participanteNombreCompleto').value = '';
-        openModal('modalNuevoParticipante');
-        
+        if (reservaGroup) {
+            reservaGroup.classList.add('hidden-from-reserva');
+        }
         // Enfocar en el campo de nombre completo
-        setTimeout(() => {
-            document.getElementById('participanteNombreCompleto').focus();
-        }, 100);
-    }, 300);
+        document.getElementById('participanteNombreCompleto').focus();
+    }, 50);
 }
 
         // ARCHIVAR RUTA (versión final)
