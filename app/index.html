@@ -654,18 +654,21 @@
             gap: 16px;
         }
 
-        /* Search */
-        /* Barra de búsqueda integrada con filtro */
+        /* =============================================
+           BARRAS DE BÚSQUEDA CON FILTRO INTEGRADO
+           ============================================= */
+        
         .search-filter-container {
             position: relative;
             display: flex;
-            align-items: center;
+            align-items: stretch;
             width: 100%;
             margin-bottom: 20px;
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid var(--border);
-            border-radius: 999px;
-            transition: all 0.3s;
+            border-radius: 14px;
+            transition: all 0.3s ease;
+            overflow: hidden;
         }
 
         .search-filter-container:focus-within {
@@ -674,20 +677,20 @@
             background: rgba(255, 255, 255, 0.15);
         }
 
+        /* Campo de búsqueda */
         .search-box {
             flex: 1;
-            width: 100%;
-            padding: 14px 20px 14px 44px;
-            min-height: 44px; /* Touch target mínimo para iPhone */
+            min-width: 0;
+            padding: 14px 16px 14px 44px;
+            min-height: 44px;
             border: none;
-            border-radius: 999px;
-            font-size: 16px; /* Mínimo 16px para evitar zoom en iOS */
+            border-radius: 0;
+            font-size: 16px;
             background: transparent;
-            transition: all 0.3s;
             color: var(--text-primary);
-            /* Prevenir zoom en iOS */
             -webkit-appearance: none;
             touch-action: manipulation;
+            transition: all 0.3s;
         }
 
         .search-box::placeholder {
@@ -698,52 +701,78 @@
             outline: none;
         }
 
-        /* Icono de búsqueda dentro del contenedor */
+        /* Icono de búsqueda */
         .search-filter-container::before {
             content: '';
             position: absolute;
             left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
             width: 20px;
             height: 20px;
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23b8c5be" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>') no-repeat center;
             pointer-events: none;
             transition: all 0.3s;
+            z-index: 1;
         }
 
         .search-filter-container:focus-within::before {
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%2376c893" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>') no-repeat center;
         }
 
-        /* Separador entre búsqueda y filtro */
+        /* Separador visual */
         .search-filter-separator {
             width: 1px;
-            height: 24px;
+            height: 28px;
             background: var(--border);
+            flex-shrink: 0;
+            align-self: center;
+            margin: 0 4px;
+        }
+
+        /* Contenedor del filtro */
+        .search-filter-wrapper {
+            display: flex;
+            align-items: center;
+            position: relative;
             flex-shrink: 0;
         }
 
-        /* Select del filtro integrado */
+        /* Select del filtro - diseño compacto */
         .search-filter-select {
-            padding: 14px 16px 14px 12px;
-            min-height: 44px; /* Touch target mínimo para iPhone */
+            padding: 14px 36px 14px 12px;
+            min-height: 44px;
             border: none;
-            border-radius: 0 999px 999px 0;
-            font-size: 16px; /* Mínimo 16px para evitar zoom en iOS */
+            border-radius: 0;
+            font-size: 16px;
             background: transparent;
             color: var(--text-primary);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             appearance: none;
             -webkit-appearance: none;
             background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23b8c5be" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>');
             background-repeat: no-repeat;
             background-position: right 12px center;
-            padding-right: 36px;
-            min-width: 140px;
+            min-width: 50px;
+            width: 50px;
+            max-width: 50px;
             flex-shrink: 0;
-            /* Touch optimizado para iOS */
             -webkit-tap-highlight-color: rgba(118, 200, 147, 0.2);
             touch-action: manipulation;
+            overflow: hidden;
+            text-indent: -9999px;
+        }
+
+        /* Cuando hay valor seleccionado o está enfocado */
+        .search-filter-select.has-value,
+        .search-filter-select:focus {
+            text-indent: 0;
+            min-width: 150px;
+            width: auto;
+            max-width: 200px;
+            padding-right: 36px;
+            padding-left: 12px;
         }
 
         .search-filter-select:focus {
@@ -753,30 +782,52 @@
         .search-filter-select option {
             background: var(--bg-card);
             color: var(--text-primary);
+            padding: 8px;
         }
 
-        /* Responsive: En pantallas pequeñas, el filtro puede ser más compacto */
+        /* Responsive */
         @media (max-width: 480px) {
             .search-filter-container {
-                flex-wrap: wrap;
-            }
-
-            .search-filter-select {
-                min-width: 120px;
-                font-size: 12px;
-                padding: 14px 32px 14px 10px;
+                border-radius: 12px;
             }
 
             .search-box {
-                padding-right: 12px;
+                padding: 12px 12px 12px 40px;
+                font-size: 16px;
+            }
+
+            .search-filter-container::before {
+                left: 12px;
+                width: 18px;
+                height: 18px;
+            }
+
+            .search-filter-select {
+                min-width: 44px;
+                width: 44px;
+                max-width: 44px;
+                padding: 12px 32px 12px 8px;
+            }
+
+            .search-filter-select.has-value,
+            .search-filter-select:focus {
+                min-width: 120px;
+                max-width: 150px;
+                padding-right: 32px;
+                padding-left: 10px;
+            }
+
+            .search-filter-separator {
+                height: 24px;
+                margin: 0 2px;
             }
         }
 
         @media (max-width: 375px) {
-            .search-filter-select {
+            .search-filter-select.has-value,
+            .search-filter-select:focus {
                 min-width: 100px;
-                font-size: 11px;
-                padding: 14px 28px 14px 8px;
+                max-width: 130px;
             }
         }
 
@@ -1791,10 +1842,10 @@
         📍 <span class="text">Rutas</span>
     </button>
     <button class="nav-tab" onclick="showTab('reservas')">
-        🎫 <span class="text">Reservas</span>
+        👥 <span class="text">Reservas</span>
     </button>
     <button class="nav-tab" onclick="showTab('participantes')">
-        👥 <span class="text">Personas</span>
+        ✅ <span class="text">Personas</span>
     </button>
     <button class="nav-tab" onclick="showTab('asistencia')">
         📋 <span class="text">Asistencia</span>
@@ -1842,9 +1893,11 @@
             <div class="search-filter-container">
                 <input type="text" class="search-box" id="searchReservas" placeholder="Buscar reservas..." oninput="renderReservas()">
                 <div class="search-filter-separator"></div>
-                <select id="filtroRutaReservas" class="search-filter-select" onchange="renderReservas()">
-                    <option value="">Todas las rutas</option>
-                </select>
+                <div class="search-filter-wrapper">
+                    <select id="filtroRutaReservas" class="search-filter-select" onchange="renderReservas(); ajustarSelectFiltro(this);">
+                        <option value="">Todas las rutas</option>
+                    </select>
+                </div>
             </div>
             <div id="listaReservas"></div>
             <div class="bottom-action">
@@ -1857,9 +1910,11 @@
             <div class="search-filter-container">
                 <input type="text" class="search-box" id="searchParticipantes" placeholder="Buscar personas..." oninput="renderParticipantes()">
                 <div class="search-filter-separator"></div>
-                <select id="filtroRutaParticipantes" class="search-filter-select" onchange="renderParticipantes()">
-                    <option value="">Todas las rutas</option>
-                </select>
+                <div class="search-filter-wrapper">
+                    <select id="filtroRutaParticipantes" class="search-filter-select" onchange="renderParticipantes(); ajustarSelectFiltro(this);">
+                        <option value="">Todas las rutas</option>
+                    </select>
+                </div>
             </div>
             <div id="listaParticipantes"></div>
         </div>
@@ -1869,9 +1924,11 @@
             <div class="search-filter-container">
                 <input type="text" class="search-box" id="searchAsistencia" placeholder="Buscar por líder..." oninput="renderAsistencia()">
                 <div class="search-filter-separator"></div>
-                <select id="filtroLiderAsistencia" class="search-filter-select" onchange="renderAsistencia()">
-                    <option value="">Todos los líderes</option>
-                </select>
+                <div class="search-filter-wrapper">
+                    <select id="filtroLiderAsistencia" class="search-filter-select" onchange="renderAsistencia(); ajustarSelectFiltro(this);">
+                        <option value="">Todos los líderes</option>
+                    </select>
+                </div>
             </div>
             <div id="listaAsistencia"></div>
         </div>
@@ -1881,9 +1938,11 @@
             <div class="search-filter-container">
                 <input type="text" class="search-box" id="searchGastos" placeholder="Buscar gastos..." oninput="renderGastos()">
                 <div class="search-filter-separator"></div>
-                <select id="filtroRutaGastos" class="search-filter-select" onchange="renderGastos()">
-                    <option value="">Todas las rutas</option>
-                </select>
+                <div class="search-filter-wrapper">
+                    <select id="filtroRutaGastos" class="search-filter-select" onchange="renderGastos(); ajustarSelectFiltro(this);">
+                        <option value="">Todas las rutas</option>
+                    </select>
+                </div>
             </div>
             <div id="listaGastos"></div>
             <div class="bottom-action">
@@ -2700,6 +2759,9 @@ function updateSelects() {
             selectReserva.innerHTML += `<option value="${reserva.lider}">${reserva.lider} - ${numeroRuta}${reserva.ruta}</option>`;
         });
     }
+    
+    // Ajustar estilos de selects de filtro después de actualizar
+    setTimeout(ajustarSelectsFiltro, 50);
 }
         // CÁLCULOS
         /**
@@ -4232,7 +4294,7 @@ function formatearFechaCorta(fechaString) {
             
             const html = filtered.length === 0 ?
                 `<div class="empty-state">
-                    <div class="empty-state-icon">🎫</div>
+                    <div class="empty-state-icon">👥</div>
                     <h3>No hay reservas</h3>
                     <p>Crea tu primera reserva grupal</p>
                 </div>` :
@@ -4507,7 +4569,7 @@ function formatearFechaCorta(fechaString) {
             // Filtrar participantes de rutas archivadas (solo mostrar participantes de rutas activas)
             filtered = filtered.filter(p => {
                 const rutaNombre = p.ruta_nombre || p.ruta || '';
-                if (!rutaNombre) return true; // Si no tiene ruta asociada, lo mostramos
+                if (!rutaNombre) return true; // Si no tiene ruta, mostrarlo (por si acaso)
                 const ruta = data.rutas.find(r => r.nombre === rutaNombre);
                 return !ruta || !ruta.archivada; // Mostrar solo si la ruta no existe o no está archivada
             });
@@ -4527,7 +4589,7 @@ function formatearFechaCorta(fechaString) {
             
             const html = filtered.length === 0 ?
                 `<div class="empty-state">
-                    <div class="empty-state-icon">👥</div>
+                    <div class="empty-state-icon">✅</div>
                     <h3>No hay personas registradas</h3>
                     <p>Registra a los participantes</p>
                 </div>` :
@@ -5073,8 +5135,40 @@ async function marcarTodosPresentes() {
             renderAsistencia();
             renderGastos();
             renderHistorial();
+            // Ajustar estilos de selects de filtro después de renderizar
+            setTimeout(ajustarSelectsFiltro, 100);
         }
 
+        // --- FUNCIÓN PARA AJUSTAR ESTILO DE SELECTS DE FILTRO ---
+        function ajustarSelectFiltro(selectElement) {
+            if (!selectElement) return;
+            
+            if (selectElement.value === '' || selectElement.value === null) {
+                // Estado por defecto: solo flecha
+                selectElement.classList.remove('has-value');
+            } else {
+                // Hay valor seleccionado: mostrar texto
+                selectElement.classList.add('has-value');
+            }
+        }
+        
+        function ajustarSelectsFiltro() {
+            const selects = document.querySelectorAll('.search-filter-select');
+            selects.forEach(select => {
+                ajustarSelectFiltro(select);
+                
+                // Ajustar al enfocar (para mostrar opciones)
+                select.addEventListener('focus', () => {
+                    select.classList.add('has-value');
+                });
+                
+                // Ajustar al perder foco (volver al estado según valor)
+                select.addEventListener('blur', () => {
+                    ajustarSelectFiltro(select);
+                });
+            });
+        }
+        
         // --- ARRANQUE DE LA APP ---
     document.addEventListener('DOMContentLoaded', () => {
         conectarBaseDeDatos();
