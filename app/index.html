@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>SomosAventura - Gestión</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,9 +36,16 @@
             font-family: 'Poppins', sans-serif;
             background: var(--bg-dark);
             color: var(--text-primary);
-            padding-bottom: 80px;
+            /* Safe area para iPhone con notch */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
             -webkit-font-smoothing: antialiased;
             line-height: 1.6;
+            /* Scroll optimizado para iOS */
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
 
         /* ===== LOGIN ===== */
@@ -118,13 +125,17 @@
         .login-form input {
             width: 100%;
             padding: 16px 20px;
+            min-height: 44px; /* Touch target mínimo para iPhone */
             border: 2px solid var(--border);
             border-radius: 16px;
-            font-size: 16px;
+            font-size: 16px; /* Mínimo 16px para evitar zoom en iOS */
             margin-bottom: 16px;
             transition: all 0.3s;
             background: rgba(255, 255, 255, 0.1);
             color: var(--text-primary);
+            /* Prevenir zoom en iOS */
+            -webkit-appearance: none;
+            touch-action: manipulation;
         }
 
         .login-form input::placeholder {
@@ -141,6 +152,7 @@
         .login-btn {
             width: 100%;
             padding: 18px;
+            min-height: 44px; /* Touch target mínimo para iPhone */
             background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-mountain) 100%);
             color: white;
             border: none;
@@ -150,6 +162,9 @@
             cursor: pointer;
             transition: all 0.3s;
             box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+            /* Touch optimizado para iOS */
+            -webkit-tap-highlight-color: rgba(76, 175, 80, 0.3);
+            touch-action: manipulation;
         }
 
         .login-btn:hover {
@@ -190,6 +205,10 @@
             background: linear-gradient(135deg, var(--green-mountain) 0%, var(--green-dark) 100%);
             color: white;
             padding: 24px 20px;
+            /* Safe area para iPhone con notch */
+            padding-top: calc(24px + env(safe-area-inset-top));
+            padding-left: calc(20px + env(safe-area-inset-left));
+            padding-right: calc(20px + env(safe-area-inset-right));
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -223,11 +242,16 @@
             border: 2px solid white;
             color: white;
             padding: 10px 18px;
+            min-height: 44px; /* Touch target mínimo para iPhone */
+            min-width: 44px;
             border-radius: 12px;
             font-size: 14px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
+            /* Touch optimizado para iOS */
+            -webkit-tap-highlight-color: rgba(255, 255, 255, 0.3);
+            touch-action: manipulation;
         }
 
         .logout-btn:hover {
@@ -243,13 +267,19 @@
             border-bottom: 2px solid var(--border);
             position: sticky;
             top: 72px;
+            top: calc(72px + env(safe-area-inset-top));
             z-index: 99;
             box-shadow: 0 2px 8px var(--shadow);
             width: 100%;
+            /* Safe area para iPhone */
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
         }
 
         .nav-tab {
             padding: 14px 8px;
+            min-height: 44px; /* Touch target mínimo para iPhone */
+            min-width: 44px;
             text-align: center;
             cursor: pointer;
             font-size: 11px;
@@ -262,6 +292,9 @@
             transition: all 0.3s;
             overflow: hidden;
             text-overflow: ellipsis;
+            /* Touch optimizado para iOS */
+            -webkit-tap-highlight-color: rgba(118, 200, 147, 0.2);
+            touch-action: manipulation;
         }
 
         @media (min-width: 360px) {
@@ -293,6 +326,12 @@
         .section {
             display: none;
             padding: 20px 16px;
+            /* Safe area para iPhone */
+            padding-left: calc(16px + env(safe-area-inset-left));
+            padding-right: calc(16px + env(safe-area-inset-right));
+            /* Scroll optimizado para iOS */
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
 
         .section.active {
@@ -416,14 +455,17 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 6px 10px;
+            min-width: 44px; /* Touch target mínimo para iPhone */
+            min-height: 44px;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-width: 32px;
-            height: 32px;
             flex-shrink: 0;
+            /* Touch optimizado para iOS */
+            -webkit-tap-highlight-color: rgba(118, 200, 147, 0.2);
+            touch-action: manipulation;
         }
 
         .btn-expand-reserva:hover {
@@ -510,6 +552,7 @@
             display: block;
             width: 100%;
             padding: 16px;
+            min-height: 44px; /* Touch target mínimo para iPhone */
             border-radius: 16px;
             border: none;
             font-size: 16px;
@@ -518,6 +561,9 @@
             text-align: center;
             text-decoration: none;
             transition: all 0.3s;
+            /* Touch optimizado para iOS */
+            -webkit-tap-highlight-color: rgba(118, 200, 147, 0.2);
+            touch-action: manipulation;
         }
 
         .btn-primary {
@@ -554,6 +600,10 @@
 
         .btn-small {
             padding: 10px 18px;
+            min-height: 44px; /* Touch target mínimo para iPhone */
+            /* Touch optimizado para iOS */
+            -webkit-tap-highlight-color: rgba(118, 200, 147, 0.2);
+            touch-action: manipulation;
             font-size: 14px;
             border-radius: 12px;
             display: inline-block;
@@ -575,12 +625,16 @@
         .form-input {
             width: 100%;
             padding: 14px 16px;
+            min-height: 44px; /* Touch target mínimo para iPhone */
             border: 2px solid var(--border);
             border-radius: 14px;
-            font-size: 16px;
+            font-size: 16px; /* Mínimo 16px para evitar zoom en iOS */
             transition: all 0.3s;
             background: rgba(255, 255, 255, 0.1);
             color: var(--text-primary);
+            /* Prevenir zoom en iOS */
+            -webkit-appearance: none;
+            touch-action: manipulation;
         }
 
         .form-input::placeholder {
@@ -624,12 +678,16 @@
             flex: 1;
             width: 100%;
             padding: 14px 20px 14px 44px;
+            min-height: 44px; /* Touch target mínimo para iPhone */
             border: none;
             border-radius: 999px;
-            font-size: 15px;
+            font-size: 16px; /* Mínimo 16px para evitar zoom en iOS */
             background: transparent;
             transition: all 0.3s;
             color: var(--text-primary);
+            /* Prevenir zoom en iOS */
+            -webkit-appearance: none;
+            touch-action: manipulation;
         }
 
         .search-box::placeholder {
@@ -667,20 +725,25 @@
         /* Select del filtro integrado */
         .search-filter-select {
             padding: 14px 16px 14px 12px;
+            min-height: 44px; /* Touch target mínimo para iPhone */
             border: none;
             border-radius: 0 999px 999px 0;
-            font-size: 13px;
+            font-size: 16px; /* Mínimo 16px para evitar zoom en iOS */
             background: transparent;
             color: var(--text-primary);
             cursor: pointer;
             transition: all 0.2s;
             appearance: none;
+            -webkit-appearance: none;
             background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23b8c5be" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>');
             background-repeat: no-repeat;
             background-position: right 12px center;
             padding-right: 36px;
             min-width: 140px;
             flex-shrink: 0;
+            /* Touch optimizado para iOS */
+            -webkit-tap-highlight-color: rgba(118, 200, 147, 0.2);
+            touch-action: manipulation;
         }
 
         .search-filter-select:focus {
@@ -721,13 +784,17 @@
         .search-box-standalone {
             width: 100%;
             padding: 14px 20px 14px 44px;
+            min-height: 44px; /* Touch target mínimo para iPhone */
             border: 2px solid var(--border);
             border-radius: 999px;
-            font-size: 15px;
+            font-size: 16px; /* Mínimo 16px para evitar zoom en iOS */
             margin-bottom: 20px;
             background: rgba(255, 255, 255, 0.1) url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23b8c5be" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>') no-repeat 16px center;
             transition: all 0.3s;
             color: var(--text-primary);
+            /* Prevenir zoom en iOS */
+            -webkit-appearance: none;
+            touch-action: manipulation;
         }
 
         .search-box-standalone::placeholder {
@@ -828,13 +895,17 @@
             padding: 6px 10px;
             border-radius: 8px;
             font-size: 14px;
+            min-width: 44px; /* Touch target mínimo para iPhone */
+            min-height: 44px;
             cursor: pointer;
             transition: all 0.2s;
             flex-shrink: 0;
-            min-width: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
+            /* Touch optimizado para iOS */
+            -webkit-tap-highlight-color: rgba(239, 68, 68, 0.2);
+            touch-action: manipulation;
         }
 
         .person-delete-btn:hover {
@@ -933,11 +1004,16 @@
         }
 
         .attendance-checkbox-compact {
-            width: 20px;
-            height: 20px;
+            width: 24px; /* Aumentado para mejor touch en iPhone */
+            height: 24px;
+            min-width: 24px;
+            min-height: 24px;
             cursor: pointer;
             accent-color: var(--accent);
             flex-shrink: 0;
+            /* Touch optimizado para iOS */
+            -webkit-tap-highlight-color: rgba(118, 200, 147, 0.2);
+            touch-action: manipulation;
         }
 
         .attendance-name-compact {
@@ -977,13 +1053,17 @@
         .filter-compact-select {
             flex: 1;
             padding: 8px 12px;
+            min-height: 44px; /* Touch target mínimo para iPhone */
             border: 1px solid var(--border);
             border-radius: 10px;
-            font-size: 13px;
+            font-size: 16px; /* Mínimo 16px para evitar zoom en iOS */
             background: rgba(255, 255, 255, 0.1);
             color: var(--text-primary);
             cursor: pointer;
             transition: all 0.2s;
+            /* Prevenir zoom en iOS */
+            -webkit-appearance: none;
+            touch-action: manipulation;
         }
 
         .filter-compact-select:focus {
@@ -1004,8 +1084,12 @@
             gap: 12px;
             cursor: pointer;
             padding: 12px;
+            min-height: 44px; /* Touch target mínimo para iPhone */
             border-radius: 12px;
             transition: background 0.2s;
+            /* Touch optimizado para iOS */
+            -webkit-tap-highlight-color: rgba(118, 200, 147, 0.2);
+            touch-action: manipulation;
         }
 
         .checkbox-label:hover {
@@ -1044,8 +1128,13 @@
             bottom: 0;
             left: 0;
             right: 0;
+            /* Safe area para iPhone con notch */
+            bottom: env(safe-area-inset-bottom);
+            left: env(safe-area-inset-left);
+            right: env(safe-area-inset-right);
             background: var(--bg-card);
             padding: 16px;
+            padding-bottom: calc(16px + env(safe-area-inset-bottom));
             box-shadow: 0 -4px 16px var(--shadow);
             max-width: 480px;
             margin: 0 auto;
@@ -1060,12 +1149,18 @@
             left: 0;
             right: 0;
             bottom: 0;
+            /* Safe area para iPhone con notch */
+            top: env(safe-area-inset-top);
+            left: env(safe-area-inset-left);
+            right: env(safe-area-inset-right);
+            bottom: env(safe-area-inset-bottom);
             background: rgba(0,0,0,0.8);
             backdrop-filter: blur(4px);
             z-index: 1000;
             align-items: flex-end;
             justify-content: center;
             padding: 0;
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         /* Modal de confirmación debe estar por encima de otros modales */
@@ -1091,12 +1186,18 @@
             background: var(--bg-card);
             border-radius: 24px 24px 0 0;
             padding: 28px 20px;
+            /* Safe area para iPhone */
+            padding-bottom: calc(28px + env(safe-area-inset-bottom));
+            padding-left: calc(20px + env(safe-area-inset-left));
+            padding-right: calc(20px + env(safe-area-inset-right));
             max-width: 480px;
             width: 100%;
-            max-height: 85vh;
+            max-height: calc(85vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
             overflow-y: auto;
             animation: slideUp 0.3s ease;
             border: 1px solid var(--border);
+            /* Scroll optimizado para iOS */
+            -webkit-overflow-scrolling: touch;
         }
 
         @keyframes slideUp {
@@ -1338,25 +1439,29 @@
 }
 
 /* AGREGAR al CSS para navegación minimalista */
+/* Siempre ocultar texto en nav tabs - solo iconos */
 .nav-tab span.text {
-    display: none;
+    display: none !important;
 }
 
 .nav-tab.active span.text {
-    display: inline;
+    display: none !important;
 }
 
-/* Para pantallas más grandes, mostrar texto en hover */
+/* Nunca mostrar texto, ni en hover ni en active */
 @media (min-width: 400px) {
     .nav-tab:hover span.text {
-        display: inline;
-        margin-left: 4px;
-        font-size: 11px;
+        display: none !important;
     }
 }
 
         select.form-input {
             color: var(--text-primary);
+            min-height: 44px; /* Touch target mínimo para iPhone */
+            font-size: 16px; /* Mínimo 16px para evitar zoom en iOS */
+            /* Prevenir zoom en iOS */
+            -webkit-appearance: none;
+            touch-action: manipulation;
         }
 
         select.form-input option {
@@ -1434,22 +1539,26 @@
 
         .toast.success {
             border-left: 4px solid var(--success);
-            background: rgba(16, 185, 129, 0.15);
+            background: rgba(16, 185, 129, 0.95) !important;
+            backdrop-filter: blur(10px);
         }
 
         .toast.error {
             border-left: 4px solid var(--danger);
-            background: rgba(239, 68, 68, 0.15);
+            background: rgba(239, 68, 68, 0.95) !important;
+            backdrop-filter: blur(10px);
         }
 
         .toast.warning {
             border-left: 4px solid #fbbf24;
-            background: rgba(251, 191, 36, 0.15);
+            background: rgba(251, 191, 36, 0.95) !important;
+            backdrop-filter: blur(10px);
         }
 
         .toast.info {
             border-left: 4px solid var(--accent);
-            background: rgba(59, 130, 246, 0.15);
+            background: rgba(59, 130, 246, 0.95) !important;
+            backdrop-filter: blur(10px);
         }
 
         .toast-icon {
@@ -1503,9 +1612,9 @@
         /* RESPONSIVE - iPhone */
         @media (max-width: 375px) {
             .toast-container {
-                top: 10px;
-                right: 10px;
-                left: 10px;
+                top: calc(10px + env(safe-area-inset-top));
+                right: calc(10px + env(safe-area-inset-right));
+                left: calc(10px + env(safe-area-inset-left));
                 gap: 8px;
             }
 
@@ -1528,6 +1637,87 @@
             .toast-message {
                 font-size: 11px;
             }
+            
+            /* Nav tabs más compactos en iPhone */
+            .nav-tabs {
+                grid-template-columns: repeat(6, 1fr);
+                gap: 0;
+            }
+            
+            .nav-tab {
+                padding: 12px 4px;
+                font-size: 20px; /* Solo iconos, tamaño más grande */
+            }
+            
+            /* Asegurar que los botones sean táctiles */
+            .btn, .btn-small {
+                min-height: 48px; /* Más grande en iPhone para mejor touch */
+            }
+            
+            /* Inputs optimizados */
+            .form-input, .search-box, .search-box-standalone {
+                font-size: 16px; /* Mantener 16px para evitar zoom */
+            }
+            
+            /* Modales ajustados */
+            .modal-content {
+                max-height: calc(85vh - env(safe-area-inset-bottom));
+                border-radius: 24px 24px 0 0;
+            }
+        }
+        
+        /* Optimizaciones específicas para iOS */
+        @supports (-webkit-touch-callout: none) {
+            /* Solo se aplica en iOS */
+            body {
+                /* Prevenir pull-to-refresh accidental */
+                overscroll-behavior-y: contain;
+            }
+            
+            /* Mejorar scroll en iOS */
+            .section {
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Inputs sin zoom */
+            input[type="text"],
+            input[type="number"],
+            input[type="password"],
+            input[type="date"],
+            input[type="email"],
+            textarea,
+            select {
+                font-size: 16px !important;
+            }
+            
+            /* Mejorar touch en todos los elementos interactivos */
+            button, a, [onclick], [role="button"] {
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            /* Checkboxes más grandes en iPhone */
+            input[type="checkbox"] {
+                width: 24px !important;
+                height: 24px !important;
+                min-width: 24px !important;
+                min-height: 24px !important;
+            }
+        }
+        
+        /* Prevenir selección de texto accidental en iPhone */
+        @media (max-width: 768px) {
+            * {
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                user-select: none;
+            }
+            
+            input, textarea, [contenteditable] {
+                -webkit-user-select: text;
+                user-select: text;
+            }
+        }
 
             .reserva-compact {
                 flex-direction: column;
