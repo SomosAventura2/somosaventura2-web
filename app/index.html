@@ -1791,10 +1791,10 @@
         📍 <span class="text">Rutas</span>
     </button>
     <button class="nav-tab" onclick="showTab('reservas')">
-        👥 <span class="text">Reservas</span>
+        🎫 <span class="text">Reservas</span>
     </button>
     <button class="nav-tab" onclick="showTab('participantes')">
-        ✅ <span class="text">Personas</span>
+        👥 <span class="text">Personas</span>
     </button>
     <button class="nav-tab" onclick="showTab('asistencia')">
         📋 <span class="text">Asistencia</span>
@@ -4503,6 +4503,14 @@ function formatearFechaCorta(fechaString) {
             
             // Partimos de todos los participantes cargados
             let filtered = [...(data.participantes || [])];
+            
+            // Filtrar participantes de rutas archivadas (solo mostrar participantes de rutas activas)
+            filtered = filtered.filter(p => {
+                const rutaNombre = p.ruta_nombre || p.ruta || '';
+                if (!rutaNombre) return true; // Si no tiene ruta asociada, lo mostramos
+                const ruta = data.rutas.find(r => r.nombre === rutaNombre);
+                return !ruta || !ruta.archivada; // Mostrar solo si la ruta no existe o no está archivada
+            });
             
             // Aplicar búsqueda por nombre o líder
             if (search) {
