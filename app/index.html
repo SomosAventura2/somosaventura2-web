@@ -601,7 +601,124 @@
         }
 
         /* Search */
+        /* Barra de búsqueda integrada con filtro */
+        .search-filter-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid var(--border);
+            border-radius: 999px;
+            transition: all 0.3s;
+        }
+
+        .search-filter-container:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(118, 200, 147, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
         .search-box {
+            flex: 1;
+            width: 100%;
+            padding: 14px 20px 14px 44px;
+            border: none;
+            border-radius: 999px;
+            font-size: 15px;
+            background: transparent;
+            transition: all 0.3s;
+            color: var(--text-primary);
+        }
+
+        .search-box::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .search-box:focus {
+            outline: none;
+        }
+
+        /* Icono de búsqueda dentro del contenedor */
+        .search-filter-container::before {
+            content: '';
+            position: absolute;
+            left: 16px;
+            width: 20px;
+            height: 20px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23b8c5be" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>') no-repeat center;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+
+        .search-filter-container:focus-within::before {
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%2376c893" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>') no-repeat center;
+        }
+
+        /* Separador entre búsqueda y filtro */
+        .search-filter-separator {
+            width: 1px;
+            height: 24px;
+            background: var(--border);
+            flex-shrink: 0;
+        }
+
+        /* Select del filtro integrado */
+        .search-filter-select {
+            padding: 14px 16px 14px 12px;
+            border: none;
+            border-radius: 0 999px 999px 0;
+            font-size: 13px;
+            background: transparent;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+            appearance: none;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23b8c5be" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+            min-width: 140px;
+            flex-shrink: 0;
+        }
+
+        .search-filter-select:focus {
+            outline: none;
+        }
+
+        .search-filter-select option {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        /* Responsive: En pantallas pequeñas, el filtro puede ser más compacto */
+        @media (max-width: 480px) {
+            .search-filter-container {
+                flex-wrap: wrap;
+            }
+
+            .search-filter-select {
+                min-width: 120px;
+                font-size: 12px;
+                padding: 14px 32px 14px 10px;
+            }
+
+            .search-box {
+                padding-right: 12px;
+            }
+        }
+
+        @media (max-width: 375px) {
+            .search-filter-select {
+                min-width: 100px;
+                font-size: 11px;
+                padding: 14px 28px 14px 8px;
+            }
+        }
+
+        /* Versión sin filtro (para historial) */
+        .search-box-standalone {
             width: 100%;
             padding: 14px 20px 14px 44px;
             border: 2px solid var(--border);
@@ -613,11 +730,11 @@
             color: var(--text-primary);
         }
 
-        .search-box::placeholder {
+        .search-box-standalone::placeholder {
             color: var(--text-secondary);
         }
 
-        .search-box:focus {
+        .search-box-standalone:focus {
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 4px rgba(118, 200, 147, 0.2);
@@ -1436,8 +1553,8 @@
             <img src="../logo.png" alt="SomosAventura2" class="logo-img">
             
             <div class="login-form">
-                <input type="text" id="username" placeholder="Usuario" autocomplete="username">
-                <input type="password" id="password" placeholder="Contraseña" autocomplete="current-password">
+                <input type="text" id="username" placeholder="Usuario" autocomplete="username" onkeypress="if(event.key==='Enter') { document.getElementById('password').focus(); }">
+                <input type="password" id="password" placeholder="Contraseña" autocomplete="current-password" onkeypress="if(event.key==='Enter') { event.preventDefault(); if(window.login) window.login(); }">
                 <button class="login-btn" onclick="window.login && window.login()">Iniciar Sesión</button>
             </div>
             
@@ -1517,13 +1634,13 @@
         </div>
     </div>
     <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
-        Selecciona una ruta para comenzar el check-in
+        Selecciona un líder para comenzar el check-in
     </div>
 </div>
 
         <!-- RUTAS -->
         <div id="rutas" class="section active">
-            <input type="text" class="search-box" id="searchRutas" placeholder="Buscar rutas..." oninput="renderRutas()">
+            <input type="text" class="search-box-standalone" id="searchRutas" placeholder="Buscar rutas..." oninput="renderRutas()">
             <div id="listaRutas"></div>
             <div class="bottom-action">
                 <button class="btn btn-primary" onclick="openModal('modalNuevaRuta')">+ Nueva Ruta</button>
@@ -1532,15 +1649,13 @@
 
         <!-- RESERVAS -->
         <div id="reservas" class="section">
-            <div class="filter-compact">
-                <div class="filter-compact-wrapper">
-                    <span class="filter-compact-label">🔍 Ruta:</span>
-                    <select id="filtroRutaReservas" class="filter-compact-select" onchange="renderReservas()">
-                        <option value="">Todas las rutas</option>
-                    </select>
-                </div>
+            <div class="search-filter-container">
+                <input type="text" class="search-box" id="searchReservas" placeholder="Buscar reservas..." oninput="renderReservas()">
+                <div class="search-filter-separator"></div>
+                <select id="filtroRutaReservas" class="search-filter-select" onchange="renderReservas()">
+                    <option value="">Todas las rutas</option>
+                </select>
             </div>
-            <input type="text" class="search-box" id="searchReservas" placeholder="Buscar reservas..." oninput="renderReservas()">
             <div id="listaReservas"></div>
             <div class="bottom-action">
                 <button class="btn btn-primary" onclick="openModal('modalNuevaReserva')">+ Nueva Reserva</button>
@@ -1549,43 +1664,37 @@
 
         <!-- PARTICIPANTES -->
         <div id="participantes" class="section">
-            <div class="filter-compact">
-                <div class="filter-compact-wrapper">
-                    <span class="filter-compact-label">🔍 Ruta:</span>
-                    <select id="filtroRutaParticipantes" class="filter-compact-select" onchange="renderParticipantes()">
-                        <option value="">Todas las rutas</option>
-                    </select>
-                </div>
+            <div class="search-filter-container">
+                <input type="text" class="search-box" id="searchParticipantes" placeholder="Buscar personas..." oninput="renderParticipantes()">
+                <div class="search-filter-separator"></div>
+                <select id="filtroRutaParticipantes" class="search-filter-select" onchange="renderParticipantes()">
+                    <option value="">Todas las rutas</option>
+                </select>
             </div>
-            <input type="text" class="search-box" id="searchParticipantes" placeholder="Buscar personas..." oninput="renderParticipantes()">
             <div id="listaParticipantes"></div>
         </div>
 
         <!-- ASISTENCIA -->
         <div id="asistencia" class="section">
-            <div class="filter-compact">
-                <div class="filter-compact-wrapper">
-                    <span class="filter-compact-label">🔍 Ruta:</span>
-                    <select id="filtroRuta" class="filter-compact-select" onchange="renderAsistencia()">
-                        <option value="">Todas las rutas</option>
-                    </select>
-                </div>
+            <div class="search-filter-container">
+                <input type="text" class="search-box" id="searchAsistencia" placeholder="Buscar por líder..." oninput="renderAsistencia()">
+                <div class="search-filter-separator"></div>
+                <select id="filtroLiderAsistencia" class="search-filter-select" onchange="renderAsistencia()">
+                    <option value="">Todos los líderes</option>
+                </select>
             </div>
-            <input type="text" class="search-box" id="searchAsistencia" placeholder="Buscar por líder..." oninput="renderAsistencia()">
             <div id="listaAsistencia"></div>
         </div>
 
         <!-- GASTOS -->
         <div id="gastos" class="section">
-            <div class="filter-compact">
-                <div class="filter-compact-wrapper">
-                    <span class="filter-compact-label">🔍 Ruta:</span>
-                    <select id="filtroRutaGastos" class="filter-compact-select" onchange="renderGastos()">
-                        <option value="">Todas las rutas</option>
-                    </select>
-                </div>
+            <div class="search-filter-container">
+                <input type="text" class="search-box" id="searchGastos" placeholder="Buscar gastos..." oninput="renderGastos()">
+                <div class="search-filter-separator"></div>
+                <select id="filtroRutaGastos" class="search-filter-select" onchange="renderGastos()">
+                    <option value="">Todas las rutas</option>
+                </select>
             </div>
-            <input type="text" class="search-box" id="searchGastos" placeholder="Buscar gastos..." oninput="renderGastos()">
             <div id="listaGastos"></div>
             <div class="bottom-action">
                 <button class="btn btn-primary" onclick="openModal('modalNuevoGasto')">+ Nuevo Gasto</button>
@@ -1594,7 +1703,7 @@
 
         <!-- HISTORIAL -->
         <div id="historial" class="section">
-            <input type="text" class="search-box" id="searchHistorial" placeholder="Buscar en historial..." oninput="renderHistorial()">
+            <input type="text" class="search-box-standalone" id="searchHistorial" placeholder="Buscar en historial..." oninput="renderHistorial()">
             <div id="listaHistorial"></div>
         </div>
     </div>
@@ -2039,6 +2148,11 @@ async function loadUsuarios() {
             }
         }
 
+        /**
+         * Carga todos los datos desde Supabase y los normaliza
+         * Muestra loader y toast de confirmación
+         * @returns {Promise<void>}
+         */
         async function loadData() {
             showLoader('Cargando datos...');
             
@@ -2065,34 +2179,12 @@ async function loadUsuarios() {
                         .order('fecha', { ascending: false }))
                 ]);
 
-                // Procesar rutas
-                if (rutasResult.error) throw rutasResult.error;
-                data.rutas = (rutasResult.data || []).map((r, index) => ({
-                    ...r,
-                    archivada: r.archivada === true,
-                    precioEuros: r.precio_euros || 0,
-                    numero: r.numero || (index + 1)
-                }));
-
-                // Procesar reservas
-                if (reservasResult.error) throw reservasResult.error;
-                data.reservas = (reservasResult.data || []).map(r => ({
-                    ...r,
-                    ruta: r.ruta_nombre || r.ruta || '',
-                    montoPagado: r.monto_pagado || 0,
-                    pagos: r.pagos || []
-                }));
-
-                // Procesar participantes
-                if (participantesResult.error) throw participantesResult.error;
-                data.participantes = participantesResult.data || [];
-
-                // Procesar gastos
-                if (gastosResult.error) throw gastosResult.error;
-                data.gastos = (gastosResult.data || []).map(g => ({
-                    ...g,
-                    ruta: g.ruta_nombre || g.ruta || ''
-                }));
+                // Normalizar y asignar datos (reutiliza función centralizada)
+                const datosNormalizados = normalizarDatos({ rutasResult, reservasResult, participantesResult, gastosResult });
+                data.rutas = datosNormalizados.rutas;
+                data.reservas = datosNormalizados.reservas;
+                data.participantes = datosNormalizados.participantes;
+                data.gastos = datosNormalizados.gastos;
 
                 console.log('✅ Datos cargados:', {
                     rutas: data.rutas.length,
@@ -2129,47 +2221,73 @@ async function loadUsuarios() {
         }
 
         // =============================================
-        // 9. GUARDAR DATOS (función faltante)
+        // 9. NORMALIZACIÓN DE DATOS (función auxiliar reutilizable)
         // =============================================
+        /**
+         * Normaliza los datos obtenidos de Supabase al formato usado en el frontend
+         * @param {Object} results - Objeto con resultados de las queries de Supabase
+         * @returns {Object} Datos normalizados listos para usar en el frontend
+         */
+        function normalizarDatos({ rutasResult, reservasResult, participantesResult, gastosResult }) {
+            // Validar errores
+            if (rutasResult.error) throw rutasResult.error;
+            if (reservasResult.error) throw reservasResult.error;
+            if (participantesResult.error) throw participantesResult.error;
+            if (gastosResult.error) throw gastosResult.error;
+
+            // Normalizar rutas
+            const rutas = (rutasResult.data || []).map((r, index) => ({
+                ...r,
+                archivada: r.archivada === true,
+                precioEuros: r.precio_euros || 0, // Normalizado: usar solo precioEuros después
+                numero: r.numero || (index + 1)
+            }));
+
+            // Normalizar reservas
+            const reservas = (reservasResult.data || []).map(r => ({
+                ...r,
+                ruta: r.ruta_nombre || r.ruta || '', // Normalizado: usar solo ruta después
+                montoPagado: r.monto_pagado || 0, // Normalizado: usar solo montoPagado después
+                pagos: r.pagos || []
+            }));
+
+            // Normalizar participantes (sin cambios necesarios)
+            const participantes = participantesResult.data || [];
+
+            // Normalizar gastos
+            const gastos = (gastosResult.data || []).map(g => ({
+                ...g,
+                ruta: g.ruta_nombre || g.ruta || '' // Normalizado: usar solo ruta después
+            }));
+
+            return { rutas, reservas, participantes, gastos };
+        }
+
+        // =============================================
+        // 10. GUARDAR DATOS (refactorizado - sin duplicación)
+        // =============================================
+        /**
+         * Recarga todos los datos desde Supabase y los normaliza
+         * @param {boolean} sinLoader - Si es true, no muestra el loader (útil para evitar parpadeo)
+         * @returns {Promise<void>}
+         */
         async function saveData(sinLoader = false) {
             try {
-                // Recargar todos los datos desde Supabase
-                if (sinLoader) {
-                    // Versión sin loader para no causar parpadeo en confirmaciones
-                    const [rutasResult, reservasResult, participantesResult, gastosResult] = await Promise.all([
-                        retryWithBackoff(() => db.from('rutas').select('*').order('fecha', { ascending: true })),
-                        retryWithBackoff(() => db.from('reservas').select('*')),
-                        retryWithBackoff(() => db.from('participantes').select('*')),
-                        retryWithBackoff(() => db.from('gastos').select('*').order('fecha', { ascending: false }))
-                    ]);
-                    
-                    if (rutasResult.error) throw rutasResult.error;
-                    data.rutas = (rutasResult.data || []).map((r, index) => ({
-                        ...r,
-                        archivada: r.archivada === true,
-                        precioEuros: r.precio_euros || 0,
-                        numero: r.numero || (index + 1)
-                    }));
+                // Cargar datos desde Supabase
+                const [rutasResult, reservasResult, participantesResult, gastosResult] = await Promise.all([
+                    retryWithBackoff(() => db.from('rutas').select('*').order('fecha', { ascending: true })),
+                    retryWithBackoff(() => db.from('reservas').select('*')),
+                    retryWithBackoff(() => db.from('participantes').select('*')),
+                    retryWithBackoff(() => db.from('gastos').select('*').order('fecha', { ascending: false }))
+                ]);
 
-                    if (reservasResult.error) throw reservasResult.error;
-                    data.reservas = (reservasResult.data || []).map(r => ({
-                        ...r,
-                        ruta: r.ruta_nombre || r.ruta || '',
-                        montoPagado: r.monto_pagado || 0,
-                        pagos: r.pagos || []
-                    }));
+                // Normalizar y asignar datos (reutiliza lógica centralizada)
+                const datosNormalizados = normalizarDatos({ rutasResult, reservasResult, participantesResult, gastosResult });
+                data.rutas = datosNormalizados.rutas;
+                data.reservas = datosNormalizados.reservas;
+                data.participantes = datosNormalizados.participantes;
+                data.gastos = datosNormalizados.gastos;
 
-                    if (participantesResult.error) throw participantesResult.error;
-                    data.participantes = participantesResult.data || [];
-
-                    if (gastosResult.error) throw gastosResult.error;
-                    data.gastos = (gastosResult.data || []).map(g => ({
-                        ...g,
-                        ruta: g.ruta_nombre || g.ruta || ''
-                    }));
-                } else {
-                    await loadData();
-                }
                 console.log('✅ Datos sincronizados con base de datos');
             } catch (error) {
                 console.error('❌ Error al sincronizar datos:', error);
@@ -2345,13 +2463,26 @@ function updateSelects() {
         });
     }
 
-    // 🔄 FILTRO ASISTENCIA - SOLO RUTAS ACTIVAS
-    const filtroRuta = document.getElementById('filtroRuta');
-    if (filtroRuta) {
-        filtroRuta.innerHTML = '<option value="">Todas las rutas</option>';
-        rutasActivas.forEach(ruta => {
-            const numeroRuta = ruta.numero ? `#${ruta.numero} ` : '';
-            filtroRuta.innerHTML += `<option value="${ruta.nombre}">${numeroRuta}${ruta.nombre} - ${ruta.fecha}</option>`;
+    // 🔄 FILTRO ASISTENCIA - LÍDERES DE RESERVAS ACTIVAS
+    const filtroLiderAsistencia = document.getElementById('filtroLiderAsistencia');
+    if (filtroLiderAsistencia) {
+        // Obtener líderes únicos de reservas activas (no archivadas)
+        const lideresUnicos = new Set();
+        data.reservas.forEach(reserva => {
+            const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
+            if (ruta && !ruta.archivada) {
+                lideresUnicos.add(reserva.lider);
+            }
+        });
+        
+        // Ordenar líderes alfabéticamente
+        const lideresOrdenados = Array.from(lideresUnicos).sort((a, b) => 
+            a.localeCompare(b, 'es', { sensitivity: 'base' })
+        );
+        
+        filtroLiderAsistencia.innerHTML = '<option value="">Todos los líderes</option>';
+        lideresOrdenados.forEach(lider => {
+            filtroLiderAsistencia.innerHTML += `<option value="${lider}">${lider}</option>`;
         });
     }
 
@@ -2381,6 +2512,12 @@ function updateSelects() {
     }
 }
         // CÁLCULOS
+        /**
+         * Calcula el número de cupos ocupados en una ruta específica
+         * Cuenta solo participantes de reservas activas (no archivadas) y agrupados por líder+ruta
+         * @param {string} nombreRuta - Nombre de la ruta a calcular
+         * @returns {number} Número de participantes registrados en la ruta
+         */
         function calcularCuposOcupados(nombreRuta) {
             // Solo contar reservas de rutas no archivadas
             const ruta = data.rutas.find(r => r.nombre === nombreRuta);
@@ -2398,6 +2535,12 @@ function updateSelects() {
                 ).length;
         }
 
+        /**
+         * Calcula los cupos disponibles en una ruta
+         * Puede retornar valores negativos si hay sobreventa
+         * @param {string} nombreRuta - Nombre de la ruta a calcular
+         * @returns {number} Cupos disponibles (puede ser negativo si hay sobreventa)
+         */
         function calcularCuposDisponibles(nombreRuta) {
             const ruta = data.rutas.find(r => r.nombre === nombreRuta);
             if (!ruta) return 0;
@@ -2407,12 +2550,23 @@ function updateSelects() {
             return disponibles;
         }
 
+        /**
+         * Cuenta el total de participantes de un líder (todas sus rutas)
+         * @param {string} lider - Nombre del líder
+         * @returns {number} Total de participantes del líder
+         */
         function contarParticipantes(lider) {
             // Conteo global por líder (se mantiene para usos generales)
             return data.participantes.filter(p => p.lider === lider).length;
         }
 
         // Nuevo: contar participantes por reserva específica (líder + ruta)
+        /**
+         * Cuenta los participantes registrados para una reserva específica (líder + ruta)
+         * @param {string} lider - Nombre del líder de la reserva
+         * @param {string} rutaNombre - Nombre de la ruta
+         * @returns {number} Cantidad de participantes para esa reserva específica
+         */
         function contarParticipantesReserva(lider, rutaNombre) {
             return data.participantes.filter(p => 
                 p.lider === lider && 
@@ -2480,12 +2634,22 @@ function updateSelects() {
                 }, 0);
         }
 
+        /**
+         * Calcula el total de gastos registrados para una ruta
+         * @param {string} nombreRuta - Nombre de la ruta
+         * @returns {number} Total de gastos en Bs
+         */
         function calcularTotalGastos(nombreRuta) {
             return data.gastos
                 .filter(g => g.ruta === nombreRuta)
                 .reduce((sum, g) => sum + (g.monto || 0), 0);
         }
 
+        /**
+         * Calcula el profit neto (recaudado - gastos) para una ruta
+         * @param {string} nombreRuta - Nombre de la ruta
+         * @returns {number} Profit neto en Bs
+         */
         function calcularProfitNeto(nombreRuta) {
             const recaudado = calcularTotalRecaudado(nombreRuta);
             const gastos = calcularTotalGastos(nombreRuta);
@@ -2505,7 +2669,8 @@ function updateSelects() {
             if (rutaNombre) {
                 const ruta = data.rutas.find(r => r.nombre === rutaNombre);
                 if (ruta) {
-                    const precioEuros = ruta.precio_euros || ruta.precioEuros || 0;
+                    // Usar campo normalizado (siempre disponible después de loadData/saveData)
+                    const precioEuros = ruta.precioEuros || 0;
                     document.getElementById('infoPrecioRuta').style.display = 'block';
                     document.getElementById('precioReferencialRuta').textContent = `${precioEuros}€ por cupo`;
                 } else {
@@ -2623,17 +2788,41 @@ function updateSelects() {
             renderPersonasTemporales();
         }
 
-        // AGREGAR RUTA
-async function agregarRuta() {
-    const nombre = document.getElementById('rutaNombre').value.trim();
-    const fecha = document.getElementById('rutaFecha').value;
-    const cupos = parseInt(document.getElementById('rutaCupos').value);
-    const precioEuros = parseFloat(document.getElementById('rutaPrecioEuros').value);
+        /**
+         * Crea una nueva ruta con validaciones mejoradas
+         * Genera número automático y maneja archivado
+         * @returns {Promise<void>}
+         */
+        async function agregarRuta() {
+            const nombre = document.getElementById('rutaNombre').value.trim();
+            const fecha = document.getElementById('rutaFecha').value;
+            const cupos = parseInt(document.getElementById('rutaCupos').value);
+            const precioEuros = parseFloat(document.getElementById('rutaPrecioEuros').value);
 
-    if (!nombre || !fecha || !cupos || !precioEuros) {
-        showToast('Completa todos los campos', 'warning', 'Campos Incompletos');
-        return;
-    }
+            // Validaciones mejoradas
+            if (!nombre || nombre.length < 2) {
+                showToast('El nombre de la ruta debe tener al menos 2 caracteres', 'warning', 'Validación');
+                document.getElementById('rutaNombre').focus();
+                return;
+            }
+
+            if (!fecha) {
+                showToast('Selecciona una fecha', 'warning', 'Validación');
+                document.getElementById('rutaFecha').focus();
+                return;
+            }
+
+            if (!cupos || cupos < 1 || cupos > 1000) {
+                showToast('Los cupos deben estar entre 1 y 1000', 'warning', 'Validación');
+                document.getElementById('rutaCupos').focus();
+                return;
+            }
+
+            if (!precioEuros || precioEuros < 0) {
+                showToast('El precio debe ser un valor positivo', 'warning', 'Validación');
+                document.getElementById('rutaPrecioEuros').focus();
+                return;
+            }
 
     // 🔪 MODIFICACIÓN QUIRÚRGICA: generar número automático
     const ultimaRuta = data.rutas
@@ -2644,6 +2833,8 @@ async function agregarRuta() {
 
     // Guardar solo el nombre sin el # (el número se muestra por separado en el ID)
     try {
+        showLoader('Creando ruta...');
+        
         const { data: nuevaRuta, error } = await db
             .from('rutas')
             .insert([{
@@ -2665,26 +2856,52 @@ async function agregarRuta() {
         document.getElementById('rutaPrecioEuros').value = '';
         
         closeModal('modalNuevaRuta');
-        await loadData();
+        await saveData(true); // Usar saveData sin loader para evitar parpadeo
         updateSelects();
         renderRutas();
+        hideLoader();
         showToast(`Ruta creada: ${nombre} #${String(nuevoNumero).padStart(4, '0')}`, 'success', 'Éxito');
     } catch (error) {
+        hideLoader();
         console.error('Error:', error);
         showToast('Error al crear la ruta: ' + error.message, 'error', 'Error');
     }
 }
 
 
-        // AGREGAR RESERVA
+        /**
+         * Crea una nueva reserva con validaciones mejoradas
+         * Auto-registra al líder como participante
+         * @returns {Promise<void>}
+         */
         async function agregarReserva() {
             const lider = document.getElementById('reservaLider').value.trim();
             const ruta = document.getElementById('reservaRuta').value;
             const cantidad = parseInt(document.getElementById('reservaCantidad').value);
             const montoPagado = parseFloat(document.getElementById('reservaMontoPagado').value) || 0;
 
-            if (!lider || !ruta || !cantidad) {
-                showToast('Completa todos los campos obligatorios', 'warning', 'Campos Incompletos');
+            // Validaciones mejoradas
+            if (!lider || lider.length < 2) {
+                showToast('El nombre del líder debe tener al menos 2 caracteres', 'warning', 'Validación');
+                document.getElementById('reservaLider').focus();
+                return;
+            }
+
+            if (!ruta) {
+                showToast('Selecciona una ruta', 'warning', 'Validación');
+                document.getElementById('reservaRuta').focus();
+                return;
+            }
+
+            if (!cantidad || cantidad < 1 || cantidad > 100) {
+                showToast('La cantidad de cupos debe estar entre 1 y 100', 'warning', 'Validación');
+                document.getElementById('reservaCantidad').focus();
+                return;
+            }
+
+            if (montoPagado < 0) {
+                showToast('El monto pagado no puede ser negativo', 'warning', 'Validación');
+                document.getElementById('reservaMontoPagado').focus();
                 return;
             }
 
@@ -2726,6 +2943,8 @@ async function agregarRuta() {
             }
 
             try {
+                showLoader('Creando reserva...');
+                
                 // Crear la reserva
                 const referenciaPago = document.getElementById('reservaReferenciaPago').value.trim();
                 const enDolares = document.getElementById('reservaEnDolares')?.checked || false;
@@ -2824,6 +3043,14 @@ async function agregarRuta() {
         }
 
         // Primero, AGREGAR esta función para actualizar cupos de reserva:
+/**
+ * Actualiza la cantidad de cupos de una reserva
+ * Maneja validaciones de sobreventa y confirmaciones
+ * @param {string} lider - Nombre del líder de la reserva
+ * @param {number} incremento - Cantidad de cupos a agregar (default: 1)
+ * @param {boolean} sinConfirmacion - Si es true, no muestra confirmación de sobreventa
+ * @returns {Promise<boolean>} true si se actualizó correctamente, false en caso contrario
+ */
 async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = false) {
     const reserva = data.reservas.find(r => r.lider === lider);
     if (!reserva) return false;
@@ -2865,7 +3092,11 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
     }
 }
 
-        // FUNCIÓN AUXILIAR: Separar nombre completo en partes
+        /**
+         * Separa un nombre completo en nombre, segundo nombre y apellido
+         * @param {string} nombreCompleto - Nombre completo a separar
+         * @returns {Object} Objeto con {nombre, segundoNombre, apellido}
+         */
         function separarNombreCompleto(nombreCompleto) {
             const palabras = nombreCompleto.trim().split(/\s+/).filter(p => p);
             
@@ -2887,8 +3118,13 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
             }
         }
 
-        // AGREGAR PARTICIPANTE (siempre asociado a la reserva actual del card)
-async function agregarParticipante() {
+        /**
+         * Agrega un nuevo participante a una reserva específica
+         * El participante se asocia automáticamente al líder y ruta del contexto
+         * Maneja sobreventa con confirmación única y permite pagos opcionales
+         * @returns {Promise<void>}
+         */
+        async function agregarParticipante() {
     const nombreCompletoInput = document.getElementById('participanteNombreCompleto').value.trim();
     const lider = liderActualParaNuevoParticipante;
     const rutaAsociada = rutaActualParaNuevoParticipante;
@@ -2998,6 +3234,8 @@ async function agregarParticipante() {
     }
 
     try {
+        showLoader('Agregando participante...');
+        
         // Insertar participante con nombre completo, asociado a la ruta de esta reserva
         const { error: errorParticipante } = await db
             .from('participantes')
@@ -3045,8 +3283,9 @@ async function agregarParticipante() {
         const participanteEnDolaresInput = document.getElementById('participanteEnDolares');
         if (participanteEnDolaresInput) participanteEnDolaresInput.checked = false;
         
+        hideLoader();
         closeModal('modalNuevoParticipante');
-        await loadData();
+        await saveData(true); // Usar saveData sin loader para evitar parpadeo
         renderParticipantes();
         renderReservas();
         renderAsistencia();
@@ -3057,6 +3296,7 @@ async function agregarParticipante() {
             showToast('Persona registrada exitosamente', 'success', 'Éxito');
         }
     } catch (error) {
+        hideLoader();
         console.error('Error:', error);
         showToast('Error al registrar la persona: ' + error.message, 'error', 'Error');
     }
@@ -3144,7 +3384,8 @@ async function agregarPersonaRapida(lider, ruta) {
             if (!reserva) return;
             
             const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
-            const montoPagado = reserva.monto_pagado || reserva.montoPagado || 0;
+            // Usar campo normalizado (después de loadData/saveData siempre está normalizado)
+            const montoPagado = reserva.montoPagado || 0;
             
             // Calcular totales separados
             const totalBs = (reserva.pagos || [])
@@ -3189,7 +3430,7 @@ async function agregarPersonaRapida(lider, ruta) {
                         </div>
                         <div>
                             <div style="font-size: 12px; color: var(--text-secondary);">Precio Referencial</div>
-                            <div style="font-size: 20px; font-weight: 800; color: var(--text-primary);">${ruta ? (ruta.precio_euros || ruta.precioEuros || 0) : 0}€</div>
+                            <div style="font-size: 20px; font-weight: 800; color: var(--text-primary);">${ruta ? (ruta.precioEuros || 0) : 0}€</div>
                         </div>
                     </div>
                     <div class="divider"></div>
@@ -3297,7 +3538,7 @@ async function agregarPersonaRapida(lider, ruta) {
             mensaje += `${eRuta} *Ruta:* ${reserva.ruta}\n`;
             mensaje += `${eFecha} *Fecha:* ${fechaFormateada}\n`;
             mensaje += `${eCupos} *Cupos Reservados:* ${reserva.cantidad}\n`;
-            mensaje += `${ePrecio} *Precio Referencial:* ${ruta.precio_euros || ruta.precioEuros || 0}€\n`;
+            mensaje += `${ePrecio} *Precio Referencial:* ${ruta.precioEuros || 0}€\n`;
             
             // Agregar participantes
             if (participantes.length > 0) {
@@ -3591,7 +3832,7 @@ function renderRutas() {
             const haySobreventa = ocupados > ruta.cupos;
             const badgeClass = haySobreventa ? 'badge-closed' : (disponibles > 5 ? 'badge-active' : disponibles > 0 ? 'badge-warning' : 'badge-closed');
             const badgeText = haySobreventa ? 'Sobrevendida' : (disponibles > 0 ? 'Activa' : 'Completa');
-            const precioEuros = ruta.precio_euros || ruta.precioEuros || 0;
+            const precioEuros = ruta.precioEuros || 0; // Usar campo normalizado
             const colorCupos = haySobreventa ? 'var(--danger)' : 'var(--text-primary)';
             
             // Calcular asistencia (presentes vs cupos reservados) por ruta específica
@@ -3821,7 +4062,8 @@ function formatearFechaCorta(fechaString) {
                     const totalDolares = (reserva.pagos || [])
                         .filter(p => p.enDolares)
                         .reduce((sum, p) => sum + p.monto, 0);
-                    const precioEuros = ruta.precio_euros || ruta.precioEuros || 0;
+                    // Usar campo normalizado (siempre disponible después de loadData/saveData)
+                    const precioEuros = ruta.precioEuros || 0;
                     const numPagos = (reserva.pagos && reserva.pagos.length > 0) ? reserva.pagos.length : 0;
                     const tienePagos = totalBs > 0 || totalDolares > 0;
                     // ID único por líder + ruta, para soportar mismo líder en varias rutas
@@ -4127,14 +4369,15 @@ function formatearFechaCorta(fechaString) {
 
         // RENDER ASISTENCIA
         function renderAsistencia() {
-            const rutaFiltro = document.getElementById('filtroRuta').value;
+            const liderFiltro = document.getElementById('filtroLiderAsistencia')?.value || '';
             const searchTerm = (document.getElementById('searchAsistencia')?.value || '').trim().toLowerCase();
             
             // Construir cards de asistencia a partir de las reservas activas (no archivadas)
             const reservasActivas = (data.reservas || []).filter(reserva => {
                 const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
                 if (!ruta || ruta.archivada) return false;
-                if (rutaFiltro && reserva.ruta !== rutaFiltro) return false;
+                // Filtrar por líder seleccionado en el filtro
+                if (liderFiltro && reserva.lider !== liderFiltro) return false;
                 // Filtrar por nombre del líder si hay término de búsqueda
                 if (searchTerm && !reserva.lider.toLowerCase().includes(searchTerm)) return false;
                 return true;
@@ -4236,17 +4479,38 @@ function formatearFechaCorta(fechaString) {
         }
 
         // AGREGAR GASTO
+        /**
+         * Registra un nuevo gasto asociado a una ruta
+         * Incluye validaciones mejoradas y feedback visual
+         * @returns {Promise<void>}
+         */
         async function agregarGasto() {
             const concepto = document.getElementById('gastoConcepto').value.trim();
             const ruta = document.getElementById('gastoRuta').value;
             const monto = parseFloat(document.getElementById('gastoMonto').value);
 
-            if (!concepto || !ruta || !monto || monto <= 0) {
-                showToast('Completa todos los campos con valores válidos', 'warning', 'Campos Incompletos');
+            // Validaciones mejoradas
+            if (!concepto || concepto.length < 2) {
+                showToast('El concepto debe tener al menos 2 caracteres', 'warning', 'Validación');
+                document.getElementById('gastoConcepto').focus();
+                return;
+            }
+
+            if (!ruta) {
+                showToast('Selecciona una ruta', 'warning', 'Validación');
+                document.getElementById('gastoRuta').focus();
+                return;
+            }
+
+            if (!monto || monto <= 0 || monto > 10000000) {
+                showToast('El monto debe ser un valor positivo menor a 10,000,000', 'warning', 'Validación');
+                document.getElementById('gastoMonto').focus();
                 return;
             }
 
             try {
+                showLoader('Registrando gasto...');
+                
                 const { error } = await db
                     .from('gastos')
                     .insert([{
@@ -4257,18 +4521,21 @@ function formatearFechaCorta(fechaString) {
                     }]);
 
                 if (error) throw error;
+                
+                hideLoader();
 
                 document.getElementById('gastoConcepto').value = '';
                 document.getElementById('gastoRuta').value = '';
                 document.getElementById('gastoMonto').value = '';
 
                 closeModal('modalNuevoGasto');
-                await loadData();
+                await saveData(true); // Usar saveData sin loader para evitar parpadeo
                 updateSelects();
                 renderGastos();
                 renderRutas();
                 showToast('Gasto registrado exitosamente', 'success', 'Éxito');
             } catch (error) {
+                hideLoader();
                 console.error('Error:', error);
                 showToast('Error al registrar el gasto: ' + error.message, 'error', 'Error');
             }
@@ -4314,11 +4581,11 @@ function formatearFechaCorta(fechaString) {
         // Función para mostrar/ocultar check-in rápido
 function toggleCheckinRapido(mostrar) {
     const elemento = document.getElementById('checkinRapido');
-    const rutaFiltro = document.getElementById('filtroRuta')?.value;
+    const liderFiltro = document.getElementById('filtroLiderAsistencia')?.value;
 
     if (!elemento) return;
 
-    if (mostrar && rutaFiltro) {
+    if (mostrar && liderFiltro) {
         elemento.classList.add('active');
         actualizarContadorCheckin();
     } else {
@@ -4328,16 +4595,14 @@ function toggleCheckinRapido(mostrar) {
 
 // Actualizar contador de check-in
 function actualizarContadorCheckin() {
-    const rutaFiltro = document.getElementById('filtroRuta')?.value;
-    if (!rutaFiltro) {
+    const liderFiltro = document.getElementById('filtroLiderAsistencia')?.value;
+    if (!liderFiltro) {
         document.getElementById('checkinContador').textContent = "0/0";
         return;
     }
 
-    // Participantes cuyos líderes tienen al menos una reserva en esa ruta
-    const participantes = data.participantes.filter(p => {
-        return data.reservas.some(r => r.lider === p.lider && r.ruta === rutaFiltro);
-    });
+    // Participantes del líder seleccionado (todas sus rutas)
+    const participantes = data.participantes.filter(p => p.lider === liderFiltro);
 
     const presentes = participantes.filter(p => p.asiste).length;
     const total = participantes.length;
@@ -4346,23 +4611,21 @@ function actualizarContadorCheckin() {
 
     const checkinTitle = document.querySelector('.checkin-title');
     if (checkinTitle) {
-        const ruta = data.rutas.find(r => r.nombre === rutaFiltro);
-        const rutaFecha = ruta ? formatearFechaCorta(ruta.fecha) : '';
         checkinTitle.innerHTML =
-            `📋 ${rutaFiltro}${rutaFecha ? ' - ' + rutaFecha : ''} <span class="checkin-contador">${presentes}/${total}</span>`;
+            `📋 ${liderFiltro} <span class="checkin-contador">${presentes}/${total}</span>`;
     }
 }
 
 // Marcar todos como presentes
 async function marcarTodosPresentes() {
-    const rutaFiltro = document.getElementById('filtroRuta')?.value;
-    if (!rutaFiltro) {
-        showToast('Selecciona una ruta primero', 'warning', 'Selección Requerida');
+    const liderFiltro = document.getElementById('filtroLiderAsistencia')?.value;
+    if (!liderFiltro) {
+        showToast('Selecciona un líder primero', 'warning', 'Selección Requerida');
         return;
     }
 
     const participantes = data.participantes.filter(p =>
-        !p.asiste && data.reservas.some(r => r.lider === p.lider && r.ruta === rutaFiltro)
+        !p.asiste && p.lider === liderFiltro
     );
 
     if (participantes.length === 0) {
@@ -4470,7 +4733,8 @@ async function marcarTodosPresentes() {
                     const gastos = calcularTotalGastos(ruta.nombre);
                     const profitNeto = calcularProfitNeto(ruta.nombre);
                     const totalDolares = calcularTotalDolares(ruta.nombre);
-                    const precioEuros = ruta.precio_euros || ruta.precioEuros || 0;
+                    // Usar campo normalizado (siempre disponible después de loadData/saveData)
+                    const precioEuros = ruta.precioEuros || 0;
                     
                     // Calcular asistencia (presentes vs cupos reservados)
                     const participantesRuta = data.participantes.filter(p => 
@@ -4548,7 +4812,7 @@ async function marcarTodosPresentes() {
                                         ${reservasRuta.map(reserva => {
                                             const participantesReserva = data.participantes.filter(p => p.lider === reserva.lider);
                                             const presentes = participantesReserva.filter(p => p.asiste).length;
-                                            const totalPagado = reserva.monto_pagado || reserva.montoPagado || 0;
+                                            const totalPagado = reserva.montoPagado || 0; // Usar campo normalizado
                                             
                                             // Calcular totales de pagos
                                             const totalBs = (reserva.pagos || [])
