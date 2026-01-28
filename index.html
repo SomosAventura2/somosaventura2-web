@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Somos Aventurados - Ecoturismo responsable, senderismo guiado y aventuras en la naturaleza. Únete a nuestra comunidad de aventureros.">
   <title>Somos Aventurados | Ecoturismo y Senderismo</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -205,13 +207,16 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       position: relative;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
       padding-bottom: 10px;
     }
 
     .section-title::after {
       content: '';
       display: block;
-      width: 100px;
+      width: 100%;
       height: 3px;
       background: linear-gradient(90deg, transparent, #4CAF50, transparent);
       margin: 10px auto 0;
@@ -599,24 +604,7 @@
       }
     }
 
-    #upcomingRoutes .section-title {
-      position: relative;
-      display: inline-block;
-      left: 50%;
-      transform: translateX(-50%);
-      padding-bottom: 12px;
-    }
-
-    #upcomingRoutes .section-title::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, transparent, var(--accent), transparent);
-      border-radius: 2px;
-    }
+    /* Nota: Los títulos de sección usan el estilo global `.section-title` */
 
     .routes-grid {
       display: flex;
@@ -1187,14 +1175,14 @@
       <h2 class="section-title">Equípate para la Aventura</h2>
       <div class="products-grid">
         <div class="product-card">
-          <img src="chaqueta.png" alt="Cortavientos personalizados" class="product-image" loading="lazy" width="240" height="160">
+          <img src="chaqueta.jpg" alt="Cortavientos personalizados" class="product-image" loading="lazy" width="240" height="160">
           <div class="product-info">
             <h4>Chaquetas Cortavientos</h4>
             <p>Diseños exclusivos</p>
           </div>
         </div>
         <div class="product-card">
-          <img src="franela.png" alt="Franelas personalizadas" class="product-image" loading="lazy" width="240" height="160">
+          <img src="franela.jpg" alt="Franelas personalizadas" class="product-image" loading="lazy" width="240" height="160">
           <div class="product-info">
             <h4>Franelas Aventura</h4>
             <p>Diseños exclusivos</p>
