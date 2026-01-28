@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>SomosAventura - Gestión</title>
+    <link rel="icon" type="image/png" href="/favicon.png?v=99" sizes="32x32">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=99">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -1952,6 +1954,10 @@
                 <label class="form-label">Precio en Euros (€)</label>
                 <input type="number" id="rutaPrecioEuros" class="form-input" placeholder="10.00" step="0.01" min="0" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
             </div>
+            <div class="form-group">
+                <label class="form-label">Flyer / Foto de Portada</label>
+                <input type="file" id="rutaFoto" class="form-input" accept="image/*">
+            </div>
             <div class="btn-group">
                 <button class="btn btn-outline" onclick="closeModal('modalNuevaRuta')">Cancelar</button>
                 <button class="btn btn-primary" onclick="agregarRuta()">Guardar</button>
@@ -3044,6 +3050,7 @@ function updateSelects() {
             const fecha = document.getElementById('rutaFecha').value;
             const cupos = parseInt(document.getElementById('rutaCupos').value);
             const precioEuros = parseFloat(document.getElementById('rutaPrecioEuros').value);
+            const archivoFoto = document.getElementById('rutaFoto')?.files?.[0] || null;
 
             // Validaciones mejoradas
             if (!nombre || nombre.length < 2) {
@@ -3080,6 +3087,41 @@ function updateSelects() {
     // Guardar solo el nombre sin el # (el número se muestra por separado en el ID)
     try {
         showLoader('Creando ruta...');
+
+        let fotoUrl = null;
+
+        // Subir imagen a Supabase Storage si el usuario seleccionó un archivo
+        if (archivoFoto) {
+            try {
+                showLoader('Subiendo foto...');
+                const nombreLimpio = nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50);
+                const extension = archivoFoto.name.split('.').pop() || 'jpg';
+                const nombreUnico = `ruta_${Date.now()}_${nombreLimpio}.${extension}`;
+
+                const { error: errorUpload } = await db.storage
+                    .from('flyers')
+                    .upload(nombreUnico, archivoFoto, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+
+                if (errorUpload) {
+                    console.error('Error al subir la foto:', errorUpload);
+                    showToast('No se pudo subir la foto, pero la ruta se guardará igual.', 'warning', 'Foto opcional');
+                } else {
+                    const { data: publicData } = db.storage
+                        .from('flyers')
+                        .getPublicUrl(nombreUnico);
+
+                    fotoUrl = publicData?.publicUrl || null;
+                }
+            } catch (errorFoto) {
+                console.error('Error inesperado al subir la foto:', errorFoto);
+                showToast('Hubo un problema al subir la foto, pero la ruta se guardará igual.', 'warning', 'Foto opcional');
+            } finally {
+                showLoader('Creando ruta...');
+            }
+        }
         
         const { data: nuevaRuta, error } = await db
             .from('rutas')
@@ -3089,7 +3131,8 @@ function updateSelects() {
                 cupos,
                 precio_euros: precioEuros,
                 archivada: false,
-                numero: nuevoNumero // El número se guarda en el campo separado
+                numero: nuevoNumero, // El número se guarda en el campo separado
+                foto_url: fotoUrl
             }])
             .select()
             .single();
@@ -3100,6 +3143,9 @@ function updateSelects() {
         document.getElementById('rutaFecha').value = '';
         document.getElementById('rutaCupos').value = '';
         document.getElementById('rutaPrecioEuros').value = '';
+        if (document.getElementById('rutaFoto')) {
+            document.getElementById('rutaFoto').value = '';
+        }
         
         closeModal('modalNuevaRuta');
         await saveData(true); // Usar saveData sin loader para evitar parpadeo
@@ -3127,8 +3173,9 @@ function updateSelects() {
             const montoPagado = parseFloat(document.getElementById('reservaMontoPagado').value) || 0;
 
             // Validaciones mejoradas
-            if (!lider || lider.length < 2) {
-                showToast('El nombre del líder debe tener al menos 2 caracteres', 'warning', 'Validación');
+            const partesNombreLider = lider.split(/\s+/).filter(p => p);
+            if (!lider || partesNombreLider.length < 2) {
+                showToast('Ingresa el nombre completo del líder (nombre y apellido)', 'warning', 'Validación');
                 document.getElementById('reservaLider').focus();
                 return;
             }
