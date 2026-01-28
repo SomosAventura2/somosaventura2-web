@@ -1561,133 +1561,106 @@
             to { transform: rotate(360deg); }
         }
 
-        /* TOAST NOTIFICATIONS */
+        /* TOAST NOTIFICATIONS - MOBILE OPTIMIZED (BOTTOM & DARK GLASS) */
         .toast-container {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
+            /* Ajuste clave: Subimos de 30px a 110px para librar el botón inferior */
+            bottom: calc(110px + env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%); /* Centrado horizontalmente */
+            z-index: 99999;
             display: flex;
-            flex-direction: column;
-            gap: 12px;
-            pointer-events: none;
+            flex-direction: column-reverse; /* Los nuevos aparecen abajo y empujan hacia arriba */
+            gap: 10px;
+            pointer-events: none; /* Permite clicks a través del contenedor vacío */
+            width: 90%; /* Ancho cómodo en móviles */
+            max-width: 400px;
         }
 
         .toast {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px 16px;
-            min-width: 300px;
-            max-width: 400px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-            animation: slideInRight 0.3s ease;
-            pointer-events: auto;
+            /* Fondo 'Dark Glass': Petróleo oscuro con transparencia */
+            background: rgba(14, 47, 54, 0.95) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px; /* Bordes redondeados estilo iOS */
+            padding: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); /* Sombra profunda */
+            backdrop-filter: blur(10px); /* Efecto vidrio */
+            /* Animación de entrada: Sube desde abajo */
+            animation: slideInUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto; /* El toast sí recibe clicks */
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
         }
 
+        @keyframes slideInUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutDown {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Bordes de Estado (Izquierda) - Colores Matatán */
         .toast.success {
-            border-left: 4px solid var(--success);
-            background: rgba(16, 185, 129, 0.95) !important;
-            backdrop-filter: blur(10px);
+            border-left: 5px solid #4CAF50; /* Verde Marca */
         }
 
         .toast.error {
-            border-left: 4px solid var(--danger);
-            background: rgba(239, 68, 68, 0.95) !important;
-            backdrop-filter: blur(10px);
+            border-left: 5px solid #ef4444; /* Rojo Error */
         }
 
         .toast.warning {
-            border-left: 4px solid #fbbf24;
-            background: rgba(251, 191, 36, 0.95) !important;
-            backdrop-filter: blur(10px);
+            border-left: 5px solid #f59e0b; /* Ambar Alerta */
         }
 
         .toast.info {
-            border-left: 4px solid var(--accent);
-            background: rgba(59, 130, 246, 0.95) !important;
-            backdrop-filter: blur(10px);
+            border-left: 5px solid #3b82f6; /* Azul Info */
+        }
+
+        .toast.fade-out {
+            animation: slideOutDown 0.3s ease forwards;
         }
 
         .toast-icon {
-            font-size: 20px;
+            font-size: 22px;
             flex-shrink: 0;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
         }
 
         .toast-content {
             flex: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .toast-title {
             font-weight: 700;
-            font-size: 13px;
-            margin-bottom: 2px;
-            color: var(--text-primary);
+            font-size: 14px;
+            margin-bottom: 3px;
+            color: #ffffff; /* Blanco puro para título */
+            letter-spacing: 0.3px;
         }
 
         .toast-message {
-            font-size: 12px;
-            color: var(--text-secondary);
-            line-height: 1.4;
+            font-size: 13px;
+            color: #cfd8d3; /* Gris perla suave para lectura cómoda */
+            line-height: 1.3;
         }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideOutRight {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-        }
-
-        .toast.fade-out {
-            animation: slideOutRight 0.3s ease forwards;
-        }
-
-        /* RESPONSIVE - iPhone */
-        @media (max-width: 375px) {
-            .toast-container {
-                top: calc(10px + env(safe-area-inset-top));
-                right: calc(10px + env(safe-area-inset-right));
-                left: calc(10px + env(safe-area-inset-left));
-                gap: 8px;
-            }
-
-            .toast {
-                min-width: auto;
-                max-width: 100%;
-                padding: 10px 12px;
-                gap: 8px;
-            }
-            
-            .toast-icon {
-                font-size: 18px;
-            }
-            
-            .toast-title {
-                font-size: 12px;
-                margin-bottom: 2px;
-            }
-            
-            .toast-message {
-                font-size: 11px;
-            }
             
             /* Nav tabs más compactos en iPhone */
             .nav-tabs {
@@ -2225,6 +2198,15 @@ async function loadUsuarios() {
             const container = document.getElementById('toastContainer');
             if (!container) return;
 
+            // 🔒 ANTI-SPAM: Verificar si ya existe un toast con el mismo mensaje
+            const existingToasts = container.querySelectorAll('.toast:not(.fade-out) .toast-message');
+            for (let toastMessage of existingToasts) {
+                if (toastMessage.textContent.trim() === message.trim()) {
+                    // Ya existe un toast con este mensaje, no crear duplicado
+                    return;
+                }
+            }
+
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
 
@@ -2252,7 +2234,7 @@ async function loadUsuarios() {
 
             container.appendChild(toast);
 
-            // Auto-remover después de 4 segundos
+            // Auto-remover después de 2 segundos
             setTimeout(() => {
                 toast.classList.add('fade-out');
                 setTimeout(() => {
@@ -2260,7 +2242,7 @@ async function loadUsuarios() {
                         toast.parentNode.removeChild(toast);
                     }
                 }, 300);
-            }, 4000);
+            }, 2000);
         }
 
         // =============================================
@@ -2450,7 +2432,7 @@ async function loadUsuarios() {
                 }
                 
                 hideLoader();
-                showToast('Datos cargados correctamente', 'success', 'Éxito');
+                // 🔇 SILENCIOSO: No mostrar toast de éxito (las acciones específicas ya muestran su propio mensaje)
                 
             } catch (error) {
                 console.error('❌ Error cargando datos:', error);
@@ -3304,11 +3286,13 @@ function updateSelects() {
                 renderPersonasTemporales();
                 
                 closeModal('modalNuevaReserva');
-                await loadData();
+                // 🔇 Usar saveData en lugar de loadData para evitar toasts redundantes
+                await saveData(true); // Silencioso, sin loader
                 updateSelects();
                 renderReservas();
                 renderRutas();
                 renderParticipantes();
+                // ✅ Solo un toast específico de la acción
                 showToast('Reserva creada exitosamente. El líder y las personas agregadas han sido registradas automáticamente.', 'success', 'Éxito');
             } catch (error) {
                 console.error('Error:', error);
@@ -3404,7 +3388,7 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
         async function agregarParticipante() {
     const nombreCompletoInput = document.getElementById('participanteNombreCompleto').value.trim();
     const lider = liderActualParaNuevoParticipante;
-    const rutaAsociada = rutaActualParaNuevoParticipante;
+    const rutaAsociadaId = rutaActualParaNuevoParticipante; // Es un ID (UUID)
     const monto = parseFloat(document.getElementById('participanteMonto').value) || 0;
     const referencia = document.getElementById('participanteReferencia').value.trim();
 
@@ -3413,126 +3397,105 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
         return;
     }
 
-    if (!lider || !rutaAsociada) {
+    if (!lider || !rutaAsociadaId) {
         showToast('Abre este formulario desde el card de la reserva.', 'warning', 'Selecciona una reserva');
         return;
     }
 
     // Separar el nombre completo automáticamente
     const { nombre, segundoNombre, apellido } = separarNombreCompleto(nombreCompletoInput);
-    
-    // Validar que tenga al menos nombre y apellido (mínimo 2 palabras)
-    if (!nombre || !apellido) {
-        showToast('Ingresa al menos nombre y apellido', 'warning', 'Nombre Incompleto');
-        return;
+    if (!nombre || !apellido) { 
+        showToast('Ingresa al menos nombre y apellido', 'warning', 'Nombre Incompleto'); 
+        return; 
     }
-    
-    // Construir nombre completo para guardar en BD
+
     const nombreCompleto = [nombre, segundoNombre, apellido].filter(n => n).join(' ');
 
-    // Buscar la reserva específica por líder + ruta
-    const reserva = data.reservas.find(r => r.lider === lider && r.rutaId === rutaAsociada);
+    // Buscar la reserva específica por líder + ruta ID
+    const reserva = data.reservas.find(r => r.lider === lider && r.rutaId === rutaAsociadaId);
     if (!reserva) {
         showToast('No se encontró la reserva', 'error', 'Error');
         return;
     }
 
-    // 🔥 CORRECCIÓN: Buscar ruta por ID y usar rutaId para cálculos
+    // Buscar el objeto ruta para obtener el nombre y cupos
     const rutaParticipante = data.rutas.find(r => r.id === reserva.rutaId);
     if (!rutaParticipante) {
-        showToast('No se encontró la ruta de la reserva', 'error', 'Error');
+        showToast('No se encontró la ruta asociada', 'error', 'Error');
         return;
     }
-    
+
     const registrados = contarParticipantesReserva(lider, reserva.rutaId);
     const ocupadosRuta = calcularCuposOcupados(reserva.rutaId);
-    const haySobreventaRuta = rutaParticipante && ocupadosRuta >= rutaParticipante.cupos;
-    const disponiblesRuta = rutaParticipante ? rutaParticipante.cupos - ocupadosRuta : 0;
-    
-    // Si la reserva está llena, necesitamos agregar un cupo adicional
+    const haySobreventaRuta = ocupadosRuta >= rutaParticipante.cupos;
+    const disponiblesRuta = rutaParticipante.cupos - ocupadosRuta;
+
+    // Lógica de Sobreventa
     if (registrados >= reserva.cantidad) {
-        // Verificar si agregar un cupo causaría sobreventa a nivel de ruta
-        const causariaSobreventaRuta = disponiblesRuta <= 0;
-        
-        // Construir mensaje único combinando ambas advertencias
-        let mensaje = `El líder ${lider} ya tiene ${reserva.cantidad} personas registradas en su reserva.\n\n`;
-        
+        let mensaje = `El líder ${lider} ya tiene ${reserva.cantidad} personas registradas.\n\n`;
+
         if (haySobreventaRuta) {
-            mensaje += `⚠️ La ruta "${rutaParticipante.nombre}" ya está sobrevendida (${ocupadosRuta}/${rutaParticipante.cupos} personas).\n\n`;
-        } else if (causariaSobreventaRuta) {
-            mensaje += `⚠️ Agregar un cupo adicional causaría sobreventa en la ruta (${ocupadosRuta + 1}/${rutaParticipante.cupos} personas).\n\n`;
+            mensaje += `⚠️ La ruta "${rutaParticipante.nombre}" ya está sobrevendida (${ocupadosRuta}/${rutaParticipante.cupos}).\n\n`;
+        } else if (disponiblesRuta <= 0) {
+            mensaje += `⚠️ Agregar uno más causará sobreventa en la ruta.\n\n`;
         } else if (disponiblesRuta === 1) {
             mensaje += `⚠️ Solo queda 1 cupo disponible en la ruta.\n\n`;
         }
-        
-        mensaje += `¿Deseas agregar un cupo adicional a la reserva y continuar con el registro?`;
-        
-        const agregarCupo = await confirmarAccion(mensaje, 'peligro');
 
+        mensaje += `¿Deseas agregar un cupo extra a la reserva y registrar a esta persona?`;
+
+        const agregarCupo = await confirmarAccion(mensaje, 'peligro');
         if (agregarCupo) {
-            // Actualizar cupos sin mostrar otra confirmación (ya se confirmó todo arriba)
             const nuevaCantidad = reserva.cantidad + 1;
             const { error } = await db
                 .from('reservas')
                 .update({ cantidad: nuevaCantidad })
                 .eq('lider', lider)
-                .eq('ruta_id', reserva.rutaId);
-                
+                .eq('ruta_id', reserva.rutaId); // Usamos ID
+            
             if (error) {
-                console.error('Error actualizando cupos:', error);
-                showToast('Error al actualizar los cupos de la reserva', 'error', 'Error');
-                return; // No cerrar el formulario si hay error
+                showToast('Error al actualizar cupos', 'error');
+                return;
             }
-
-            // Recargar datos sin loader para evitar parpadeo
-            await saveData(true);
-            renderReservas(); // Actualizar vista de reservas
+            await saveData(true); // Recarga silenciosa
         } else {
-            // Usuario canceló - NO cerrar el formulario, solo volver atrás
-            return; // Simplemente retornar sin hacer nada más
+            return; // Cancelado por usuario
         }
     } else if (haySobreventaRuta) {
-        // Si la ruta ya está sobrevendida pero la reserva no, advertir pero permitir
         const continuar = await confirmarAccion(
-            `La ruta "${rutaParticipante.nombre}" ya está sobrevendida (${ocupadosRuta}/${rutaParticipante.cupos} personas).\n\n` +
-            `¿Deseas continuar agregando esta persona?`,
-            'peligro'
+            `La ruta "${rutaParticipante.nombre}" ya está sobrevendida.\n¿Continuar?`, 'peligro'
         );
-        if (!continuar) return; // No cerrar el formulario si cancela
+        if (!continuar) return;
     }
-    // 🔪 MODIFICACIÓN QUIRÚRGICA FIN
 
-    // Verificar duplicados (comparar nombre completo por líder + ruta)
-    // 🔥 CORRECCIÓN: Usar rutaId para verificar duplicados correctamente
+    // Verificar duplicados (usando ID)
     const existe = data.participantes.find(p => 
         p.nombre.toLowerCase() === nombreCompleto.toLowerCase() && 
         p.lider === lider &&
-        (p.rutaId === reserva.rutaId || p.ruta_id === reserva.rutaId) // Por ID (preferido)
+        (p.rutaId === reserva.rutaId || p.ruta_id === reserva.rutaId)
     );
-    
-    if (existe) {
-        showToast('Esta persona ya está registrada para este líder', 'warning', 'Duplicado');
-        return;
+    if (existe) { 
+        showToast('Esta persona ya está registrada en esta reserva', 'warning', 'Duplicado'); 
+        return; 
     }
 
     try {
-        showLoader('Agregando participante...');
+        showLoader('Guardando...');
         
-        // Insertar participante con nombre completo, asociado a la ruta de esta reserva
-        // 🔥 CORRECCIÓN: Usar ruta_id (UUID) para integridad con rutas duplicadas
+        // Insertar participante
+        // AQUÍ ESTABA EL ERROR: Usamos rutaParticipante.nombre
         const { error: errorParticipante } = await db
             .from('participantes')
             .insert([{
                 nombre: nombreCompleto,
                 lider,
-                ruta_id: reserva.rutaId, // 🔥 CORRECCIÓN: Usar ruta_id (UUID)
-                ruta_nombre: nombreRutaParticipante, // Mantener por compatibilidad
+                ruta_id: reserva.rutaId,      // UUID Correcto
+                ruta_nombre: rutaParticipante.nombre, // Nombre Correcto (antes daba error)
                 asiste: false
             }]);
-
         if (errorParticipante) throw errorParticipante;
 
-        // Si hay pago, actualizar la reserva
+        // Registrar pago opcional
         if (monto > 0) {
             const enDolares = document.getElementById('participanteEnDolares')?.checked || false;
             const pagosActuales = reserva.pagos || [];
@@ -3543,46 +3506,33 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
                 enDolares: enDolares
             });
             
-            // Solo contar Bs para monto_pagado (los gastos son en Bs)
             const montoPagadoBs = pagosActuales
                 .filter(p => !p.enDolares)
                 .reduce((sum, p) => sum + p.monto, 0);
             
-            const { error: errorPago } = await db
-                .from('reservas')
-                .update({ 
-                    pagos: pagosActuales,
-                    monto_pagado: montoPagadoBs
-                })
-                .eq('lider', lider)
-                .eq('ruta_id', reserva.rutaId);
-
-            if (errorPago) throw errorPago;
+            await db.from('reservas').update({ 
+                pagos: pagosActuales,
+                monto_pagado: montoPagadoBs
+            }).eq('lider', lider).eq('ruta_id', reserva.rutaId);
         }
 
-        // Limpiar formulario
+        // Limpiar y cerrar
         document.getElementById('participanteNombreCompleto').value = '';
         document.getElementById('participanteMonto').value = '';
         document.getElementById('participanteReferencia').value = '';
-        const participanteEnDolaresInput = document.getElementById('participanteEnDolares');
-        if (participanteEnDolaresInput) participanteEnDolaresInput.checked = false;
+        if (document.getElementById('participanteEnDolares')) document.getElementById('participanteEnDolares').checked = false;
         
         hideLoader();
         closeModal('modalNuevoParticipante');
-        await saveData(true); // Usar saveData sin loader para evitar parpadeo
-        renderParticipantes();
-        renderReservas();
-        renderAsistencia();
+        await saveData(true);
+        renderAll();
         
-        if (monto > 0) {
-            showToast('Persona registrada y pago agregado exitosamente', 'success', 'Éxito');
-        } else {
-            showToast('Persona registrada exitosamente', 'success', 'Éxito');
-        }
+        const msg = monto > 0 ? 'Persona y pago registrados exitosamente' : 'Persona registrada exitosamente';
+        showToast(msg, 'success');
     } catch (error) {
         hideLoader();
-        console.error('Error:', error);
-        showToast('Error al registrar la persona: ' + error.message, 'error', 'Error');
+        console.error(error);
+        showToast('Error: ' + error.message, 'error');
     }
 }
 
@@ -3649,11 +3599,14 @@ async function agregarPersonaRapida(lider, ruta) {
                 if (nuevoPagoRefInput) nuevoPagoRefInput.value = '';
                 if (nuevoPagoEnDolaresInput) nuevoPagoEnDolaresInput.checked = false;
                 
-                await loadData();
+                // 🔇 Usar saveData en lugar de loadData para evitar toasts redundantes
+                await saveData(true); // Silencioso, sin loader
                 renderReservas();
                 renderRutas();
                 verDetalleReserva(lider, reserva.rutaId); // Refrescar el modal
-                showToast('Pago registrado exitosamente', 'success', 'Éxito');
+                // ✅ Solo un toast específico del pago
+                const simbolo = enDolares ? '$' : 'Bs';
+                showToast(`Pago de ${simbolo} ${nuevoMonto.toLocaleString()} registrado`, 'success', 'Éxito');
             } catch (error) {
                 console.error('Error:', error);
                 showToast('Error al registrar el pago: ' + error.message, 'error', 'Error');
