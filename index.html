@@ -1374,243 +1374,264 @@
     // =============================================
     // SECCIÓN RUTAS PRÓXIMAS (Supabase)
     // =============================================
-    const SUPABASE_URL = 'https://dgubxitmqegounjyeciw.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_EY4EoqiHn7om0Qf-HYpJZQ_HwDJXlan';
-    
-    let supabaseClient = null;
-    let realtimeChannel = null;
-    
-    // Inicializar Supabase
-    try {
-      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } catch (error) {
-      console.error('Error inicializando Supabase:', error);
-    }
-
-    // Función para formatear fecha corta (Ej: "Sáb, 15 Mar")
-    function formatearFechaCorta(fechaISO) {
-      // Parseamos la fecha como local para evitar problemas de zona horaria
-      const partes = fechaISO.split('-');
-      const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
-      const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-      const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Supabase listo, cargando rutas...');
       
-      return `${dias[fecha.getDay()]}, ${fecha.getDate()} ${meses[fecha.getMonth()]}`;
-    }
-
-    // Función para calcular cupos ocupados de una ruta
-    async function calcularCuposOcupados(rutaId) {
+      const SUPABASE_URL = 'https://dgubxitmqegounjyeciw.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_EY4EoqiHn7om0Qf-HYpJZQ_HwDJXlan';
+      
+      let supabaseClient = null;
+      let realtimeChannel = null;
+      
+      // Verificar que Supabase esté disponible antes de inicializar
+      if (typeof supabase === 'undefined') {
+        console.error('Supabase no está disponible. Verifica que el script se haya cargado correctamente.');
+        return;
+      }
+      
+      // Inicializar Supabase
       try {
-        const { data: participantes, error } = await supabaseClient
-          .from('participantes')
-          .select('id')
-          .eq('ruta_id', rutaId);
-        
-        if (error) {
-          console.error('Error calculando cupos:', error);
-          return 0;
-        }
-        
-        return participantes ? participantes.length : 0;
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('Cliente de Supabase inicializado correctamente');
       } catch (error) {
-        console.error('Error en calcularCuposOcupados:', error);
-        return 0;
-      }
-    }
-
-    // Función para renderizar una tarjeta de ruta - NUEVA
-    function renderizarRuta(ruta, cuposOcupados) {
-      const disponibles = ruta.cupos - cuposOcupados;
-      const porcentajeOcupado = ruta.cupos > 0 ? (cuposOcupados / ruta.cupos) * 100 : 0;
-      
-      // Determinar clase de urgencia
-      let claseUrgencia = 'normal';
-      let mensajeUrgencia = `${disponibles} cupos disponibles`;
-      
-      if (disponibles <= 0) {
-        claseUrgencia = 'critical';
-        mensajeUrgencia = '¡Agotado!';
-      } else if (disponibles < 5) {
-        claseUrgencia = 'low';
-        mensajeUrgencia = `¡Solo ${disponibles} cupos!`;
-      }
-
-      // Determinar día de la semana y fecha legible (forzando hora al mediodía para evitar problemas de zona horaria)
-      const fechaObj = new Date(ruta.fecha + 'T12:00:00');
-      const esSabado = fechaObj.getDay() === 6;
-      const nombreDia = fechaObj.toLocaleDateString('es-ES', { weekday: 'long' }).toUpperCase();
-      // Ej: "15 de marzo" -> "15 de Marzo"
-      let fechaFormateada = fechaObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
-      fechaFormateada = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
-
-      // Precio en euros
-      const precioEuros = ruta.precio_euros || ruta.precio_euro || 0;
-      const precioFormateado = precioEuros > 0 ? `${parseFloat(precioEuros).toFixed(0)}€` : 'N/A';
-
-      // Mensaje para WhatsApp
-      const mensajeWhatsApp = encodeURIComponent(`Hola, quiero ir a ${ruta.nombre}`);
-      const urlWhatsApp = `https://wa.me/584244656881?text=${mensajeWhatsApp}`;
-
-      // Determinar nivel/dificultad (puedes agregar esto a tu base de datos)
-      const nivel = ruta.nivel || 'Moderado';
-
-      const clasesDia = esSabado ? 'sabado' : 'domingo';
-
-      // Seleccionar imagen de fondo: primero foto_url, luego fallback por día
-      let imagenFondo;
-      if (ruta.foto_url) {
-        imagenFondo = ruta.foto_url;
-      } else {
-        imagenFondo = esSabado ? 'flyersab.jpg' : 'flyerdom.jpg';
-      }
-
-      return `
-        <div class="route-card">
-          <div class="route-image-header ${clasesDia}" style="background-image: url('${imagenFondo}');">
-            <div class="route-day-indicator">${nombreDia}</div>
-          </div>
-
-          <div class="route-card-inner">
-            <div class="route-header">
-              <h3 class="route-title">${ruta.nombre}</h3>
-              <div class="route-subdate">📅 ${fechaFormateada}</div>
-            </div>
-
-            <div class="route-info-grid">
-              <div class="route-info-item">
-                <span class="route-info-label">Cupos totales</span>
-                <span class="route-info-value">${ruta.cupos} personas</span>
-              </div>
-              <div class="route-info-item">
-                <span class="route-info-label">Ocupados</span>
-                <span class="route-info-value">${cuposOcupados} / ${ruta.cupos}</span>
-              </div>
-            </div>
-
-            <div class="route-progress">
-              <div class="route-progress-bar">
-                <div class="route-progress-fill" style="width: ${Math.min(porcentajeOcupado, 100)}%"></div>
-              </div>
-              <div class="route-availability ${claseUrgencia}">${mensajeUrgencia}</div>
-            </div>
-
-            <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; gap: 15px;">
-              <div style="display: flex; flex-direction: column; justify-content: center;">
-                <span style="font-size: 0.7rem; color: #b8c5be; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1; display: block; margin-bottom: 4px;">Precio Ref</span>
-                <span style="font-size: 2.2rem; font-weight: 800; color: #ffffff; line-height: 1.1;">${precioFormateado}</span>
-              </div>
-              <a 
-                href="${urlWhatsApp}" 
-                class="route-btn btn-glow-sutil" 
-                target="_blank" 
-                rel="noopener"
-                style="flex: 1; max-width: 200px; background: #25D366; color: #0e2f36; padding: 10px 16px; border-radius: 12px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); white-space: nowrap; transition: transform 0.2s;">
-                <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px;">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                </svg>
-                <span>Reservar ahora</span>
-              </a>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    // Función principal para cargar y mostrar rutas
-    async function cargarRutasProximas() {
-      const seccionRutas = document.getElementById('upcomingRoutes');
-      const gridRutas = document.getElementById('routesGrid');
-      
-      if (!seccionRutas || !gridRutas || !supabaseClient) {
-        if (seccionRutas) seccionRutas.style.display = 'none';
+        console.error('Error inicializando Supabase:', error);
         return;
       }
 
-      try {
-        // Obtener fecha de hoy
-        const hoy = new Date();
-        hoy.setHours(0, 0, 0, 0);
-        const hoyISO = hoy.toISOString().split('T')[0];
-
-        // Consultar las 2 próximas rutas activas
-        const { data: rutas, error } = await supabaseClient
-          .from('rutas')
-          .select('*')
-          .eq('archivada', false)
-          .gte('fecha', hoyISO)
-          .order('fecha', { ascending: true })
-          .limit(2);
-
-        if (error) {
-          console.error('Error cargando rutas:', error);
-          seccionRutas.style.display = 'none';
-          return;
-        }
-
-        // Si no hay rutas, ocultar sección
-        if (!rutas || rutas.length === 0) {
-          seccionRutas.style.display = 'none';
-          return;
-        }
-
-        // Calcular cupos ocupados para cada ruta
-        const rutasConCupos = await Promise.all(
-          rutas.map(async (ruta) => {
-            const cuposOcupados = await calcularCuposOcupados(ruta.id);
-            return { ...ruta, cuposOcupados };
-          })
-        );
-
-        // Renderizar tarjetas
-        gridRutas.innerHTML = rutasConCupos
-          .map(ruta => renderizarRuta(ruta, ruta.cuposOcupados))
-          .join('');
-
-        // Mostrar sección con animación
-        seccionRutas.classList.add('active');
-        seccionRutas.style.display = 'block';
-
-      } catch (error) {
-        console.error('Error en cargarRutasProximas:', error);
-        seccionRutas.style.display = 'none';
+      // Función para formatear fecha corta (Ej: "Sáb, 15 Mar")
+      function formatearFechaCorta(fechaISO) {
+        // Parseamos la fecha como local para evitar problemas de zona horaria
+        const partes = fechaISO.split('-');
+        const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
+        const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        
+        return `${dias[fecha.getDay()]}, ${fecha.getDate()} ${meses[fecha.getMonth()]}`;
       }
-    }
 
-    // Inicializar suscripción Realtime para mantener las rutas actualizadas
-    function initRealtimeRutas() {
-      if (!supabaseClient || realtimeChannel) return;
-
-      realtimeChannel = supabaseClient
-        .channel('cambios-reservas-rutas')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'reservas' },
-          () => {
-            console.log('🔁 Cambio en reservas detectado, recargando próximas rutas...');
-            cargarRutasProximas();
+      // Función para calcular cupos ocupados de una ruta
+      async function calcularCuposOcupados(rutaId) {
+        try {
+          const { data: participantes, error } = await supabaseClient
+            .from('participantes')
+            .select('id')
+            .eq('ruta_id', rutaId);
+          
+          if (error) {
+            console.error('Error calculando cupos:', error);
+            return 0;
           }
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'rutas' },
-          () => {
-            console.log('🔁 Cambio en rutas detectado, recargando próximas rutas...');
-            cargarRutasProximas();
-          }
-        )
-        .subscribe();
-    }
+          
+          return participantes ? participantes.length : 0;
+        } catch (error) {
+          console.error('Error en calcularCuposOcupados:', error);
+          return 0;
+        }
+      }
 
-    // Cargar rutas cuando el DOM esté listo y activar Realtime
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        cargarRutasProximas();
-        initRealtimeRutas();
-      });
-    } else {
+      // Función para renderizar una tarjeta de ruta - NUEVA
+      function renderizarRuta(ruta, cuposOcupados) {
+        const disponibles = ruta.cupos - cuposOcupados;
+        const porcentajeOcupado = ruta.cupos > 0 ? (cuposOcupados / ruta.cupos) * 100 : 0;
+        
+        // Determinar clase de urgencia
+        let claseUrgencia = 'normal';
+        let mensajeUrgencia = `${disponibles} cupos disponibles`;
+        
+        if (disponibles <= 0) {
+          claseUrgencia = 'critical';
+          mensajeUrgencia = '¡Agotado!';
+        } else if (disponibles < 5) {
+          claseUrgencia = 'low';
+          mensajeUrgencia = `¡Solo ${disponibles} cupos!`;
+        }
+
+        // Determinar día de la semana y fecha legible (forzando hora al mediodía para evitar problemas de zona horaria)
+        const fechaObj = new Date(ruta.fecha + 'T12:00:00');
+        const esSabado = fechaObj.getDay() === 6;
+        const nombreDia = fechaObj.toLocaleDateString('es-ES', { weekday: 'long' }).toUpperCase();
+        // Ej: "15 de marzo" -> "15 de Marzo"
+        let fechaFormateada = fechaObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+        fechaFormateada = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+
+        // Precio en euros
+        const precioEuros = ruta.precio_euros || ruta.precio_euro || 0;
+        const precioFormateado = precioEuros > 0 ? `${parseFloat(precioEuros).toFixed(0)}€` : 'N/A';
+
+        // Mensaje para WhatsApp
+        const mensajeWhatsApp = encodeURIComponent(`Hola, quiero ir a ${ruta.nombre}`);
+        const urlWhatsApp = `https://wa.me/584244656881?text=${mensajeWhatsApp}`;
+
+        // Determinar nivel/dificultad (puedes agregar esto a tu base de datos)
+        const nivel = ruta.nivel || 'Moderado';
+
+        const clasesDia = esSabado ? 'sabado' : 'domingo';
+
+        // Seleccionar imagen de fondo: primero foto_url, luego fallback por día
+        let imagenFondo;
+        if (ruta.foto_url) {
+          imagenFondo = ruta.foto_url;
+        } else {
+          imagenFondo = esSabado ? 'flyersab.jpg' : 'flyerdom.jpg';
+        }
+
+        return `
+          <div class="route-card">
+            <div class="route-image-header ${clasesDia}" style="background-image: url('${imagenFondo}');">
+              <div class="route-day-indicator">${nombreDia}</div>
+            </div>
+
+            <div class="route-card-inner">
+              <div class="route-header">
+                <h3 class="route-title">${ruta.nombre}</h3>
+                <div class="route-subdate">📅 ${fechaFormateada}</div>
+              </div>
+
+              <div class="route-info-grid">
+                <div class="route-info-item">
+                  <span class="route-info-label">Cupos totales</span>
+                  <span class="route-info-value">${ruta.cupos} personas</span>
+                </div>
+                <div class="route-info-item">
+                  <span class="route-info-label">Ocupados</span>
+                  <span class="route-info-value">${cuposOcupados} / ${ruta.cupos}</span>
+                </div>
+              </div>
+
+              <div class="route-progress">
+                <div class="route-progress-bar">
+                  <div class="route-progress-fill" style="width: ${Math.min(porcentajeOcupado, 100)}%"></div>
+                </div>
+                <div class="route-availability ${claseUrgencia}">${mensajeUrgencia}</div>
+              </div>
+
+              <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; gap: 15px;">
+                <div style="display: flex; flex-direction: column; justify-content: center;">
+                  <span style="font-size: 0.7rem; color: #b8c5be; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1; display: block; margin-bottom: 4px;">Precio Ref</span>
+                  <span style="font-size: 2.2rem; font-weight: 800; color: #ffffff; line-height: 1.1;">${precioFormateado}</span>
+                </div>
+                <a 
+                  href="${urlWhatsApp}" 
+                  class="route-btn btn-glow-sutil" 
+                  target="_blank" 
+                  rel="noopener"
+                  style="flex: 1; max-width: 200px; background: #25D366; color: #0e2f36; padding: 10px 16px; border-radius: 12px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); white-space: nowrap; transition: transform 0.2s;">
+                  <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px;">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                  </svg>
+                  <span>Reservar ahora</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Función principal para cargar y mostrar rutas
+      async function cargarRutasProximas() {
+        const seccionRutas = document.getElementById('upcomingRoutes');
+        const gridRutas = document.getElementById('routesGrid');
+        
+        if (!seccionRutas || !gridRutas || !supabaseClient) {
+          if (seccionRutas) seccionRutas.style.display = 'none';
+          return;
+        }
+
+        try {
+          console.log('Cargando rutas próximas...');
+          
+          // Obtener fecha de hoy
+          const hoy = new Date();
+          hoy.setHours(0, 0, 0, 0);
+          const hoyISO = hoy.toISOString().split('T')[0];
+
+          // Consultar las 2 próximas rutas activas
+          // En Supabase, los errores se manejan a través de la variable 'error' de la desestructuración
+          const { data: rutas, error } = await supabaseClient
+            .from('rutas')
+            .select('*')
+            .eq('archivada', false)
+            .gte('fecha', hoyISO)
+            .order('fecha', { ascending: true })
+            .limit(2);
+
+          // Verificar si hubo error en la consulta
+          if (error) {
+            console.error('Error al cargar rutas:', error);
+            seccionRutas.style.display = 'none';
+            return;
+          }
+
+          // Si no hay rutas, ocultar sección
+          if (!rutas || rutas.length === 0) {
+            console.log('No se encontraron rutas próximas');
+            seccionRutas.style.display = 'none';
+            return;
+          }
+
+          console.log(`Se encontraron ${rutas.length} rutas próximas`);
+
+          // Calcular cupos ocupados para cada ruta
+          const rutasConCupos = await Promise.all(
+            rutas.map(async (ruta) => {
+              const cuposOcupados = await calcularCuposOcupados(ruta.id);
+              return { ...ruta, cuposOcupados };
+            })
+          );
+
+          // Renderizar tarjetas
+          gridRutas.innerHTML = rutasConCupos
+            .map(ruta => renderizarRuta(ruta, ruta.cuposOcupados))
+            .join('');
+
+          // Mostrar sección con animación
+          seccionRutas.classList.add('active');
+          seccionRutas.style.display = 'block';
+          
+          console.log('Rutas cargadas y renderizadas correctamente');
+
+        } catch (error) {
+          console.error('Error en cargarRutasProximas:', error);
+          const seccionRutas = document.getElementById('upcomingRoutes');
+          if (seccionRutas) seccionRutas.style.display = 'none';
+        }
+      }
+
+      // Inicializar suscripción Realtime para mantener las rutas actualizadas
+      function initRealtimeRutas() {
+        if (!supabaseClient || realtimeChannel) return;
+
+        try {
+          realtimeChannel = supabaseClient
+            .channel('cambios-reservas-rutas')
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'reservas' },
+              () => {
+                console.log('🔁 Cambio en reservas detectado, recargando próximas rutas...');
+                cargarRutasProximas();
+              }
+            )
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'rutas' },
+              () => {
+                console.log('🔁 Cambio en rutas detectado, recargando próximas rutas...');
+                cargarRutasProximas();
+              }
+            )
+            .subscribe();
+          
+          console.log('Suscripción Realtime inicializada');
+        } catch (error) {
+          console.error('Error inicializando Realtime:', error);
+        }
+      }
+
+      // Cargar rutas y activar Realtime
       cargarRutasProximas();
       initRealtimeRutas();
-    }
+    });
   </script>
 </body>
 </html>
