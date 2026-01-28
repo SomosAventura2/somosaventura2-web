@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<parameter name="file_text"><!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -20,6 +21,7 @@
       --text-primary: #ffffff;
       --text-secondary: #b8c5be;
       --accent: #76c893;
+      --accent-orange: #ff8c42;
       --shadow: rgba(0, 0, 0, 0.5);
     }
 
@@ -102,15 +104,14 @@
     .hero-subcopy {
       display: block;
       margin: 8px auto 0;
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       line-height: 1.2;
       letter-spacing: -0.3px;
-      color: rgba(255, 255, 255, 0.7);
+      color: rgba(255, 255, 255, 0.9);
       text-align: center;
       text-decoration: none;
-      max-width: 90%;
-      pointer-events: none;
-      white-space: normal;
+      max-width: 280px;
+      opacity: 0.9;
     }
 
     .btn {
@@ -196,26 +197,24 @@
     }
 
     .section-title {
-      position: relative;
-      display: block;
-      width: fit-content;
-      margin: 0 auto 28px;
-      padding-bottom: 10px;
       text-align: center;
       font-size: 24px;
       font-weight: 700;
-      color: var(--text-primary);
+      margin-bottom: 28px;
+      color: var(--accent);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
+      position: relative;
+      padding-bottom: 10px;
     }
 
     .section-title::after {
       content: '';
       display: block;
-      width: 100%;
+      width: 100px;
       height: 3px;
       background: linear-gradient(90deg, transparent, #4CAF50, transparent);
-      margin-top: 10px;
+      margin: 10px auto 0;
       border-radius: 2px;
     }
 
@@ -289,7 +288,7 @@
       font-weight: 800;
       color: var(--accent);
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .stat-label {
@@ -299,9 +298,285 @@
       letter-spacing: 0.5px;
     }
 
-    /* ===============================
-       PRÓXIMAS AVENTURAS (Supabase)
-       =============================== */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .gallery-item {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      aspect-ratio: 1;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+
+    .gallery-item:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 24px rgba(118, 200, 147, 0.3);
+      z-index: 10;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .gallery-item::after {
+      content: '🔍';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-size: 36px;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .gallery-item:hover::after {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+
+    .about-content {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .about-image {
+      width: 100%;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px var(--shadow);
+    }
+
+    .about-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .about-text {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid rgba(118, 200, 147, 0.1);
+    }
+
+    .about-text h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--accent);
+    }
+
+    .about-text p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 14px;
+    }
+
+    .about-text p:last-child {
+      margin-bottom: 0;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .product-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(118, 200, 147, 0.1);
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+
+    .product-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 8px 24px rgba(118, 200, 147, 0.3);
+      border-color: rgba(118, 200, 147, 0.3);
+    }
+
+    .product-image {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+    }
+
+    .product-info {
+      padding: 16px;
+    }
+
+    .product-info h4 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+
+    .product-info p {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .cta-section {
+      text-align: center;
+      padding: 50px 24px;
+      background: linear-gradient(135deg, var(--green-mountain) 0%, var(--green-dark) 100%);
+      border-radius: 24px;
+      margin: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .cta-section h2 {
+      font-size: 28px;
+      margin-bottom: 16px;
+      color: var(--accent);
+    }
+
+    .cta-section p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 30px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      border-top: 1px solid rgba(118, 200, 147, 0.1);
+    }
+
+    /* ===== LIGHTBOX STYLES ===== */
+    .lightbox {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lightbox.active {
+      display: flex;
+    }
+
+    .lightbox-content {
+      position: relative;
+      max-width: 90%;
+      max-height: 90%;
+      animation: zoomIn 0.3s ease-out;
+    }
+
+    @keyframes zoomIn {
+      from {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .lightbox-content img {
+      max-width: 100%;
+      max-height: 90vh;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: -50px;
+      right: 0;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      font-size: 36px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .lightbox-close:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: rotate(90deg);
+    }
+
+    .lightbox-prev,
+    .lightbox-next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      font-size: 32px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lightbox-prev {
+      left: 20px;
+    }
+
+    .lightbox-next {
+      right: 20px;
+    }
+
+    .lightbox-prev:hover,
+    .lightbox-next:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .lightbox-caption {
+      position: absolute;
+      bottom: -60px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: white;
+      font-size: 16px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    /* ===== SECCIÓN RUTAS PRÓXIMAS - MEJORADA ===== */
     #upcomingRoutes {
       display: none;
       padding: 50px 24px 40px;
@@ -380,21 +655,31 @@
       background: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.75));
     }
 
-    /* Badge de día (macro) */
-    .route-day-indicator {
+    /* Imagen según día */
+    .route-image-header.sabado {
+      background-image: url('flyersab.jpg');
+    }
+
+    .route-image-header.domingo {
+      background-image: url('flyerdom.jpg');
+    }
+
+    /* Badge de fecha dentro del header (esquina superior izquierda, fondo sólido) */
+    .route-date-badge {
       position: absolute;
-      top: 16px;
-      right: 16px;
-      background: linear-gradient(135deg, #ff7e3a, #ff4d00);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      box-shadow: 0 4px 12px rgba(255, 140, 66, 0.5);
-      z-index: 10;
+      top: 14px;
+      left: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1a3d47; /* fondo sólido para máxima legibilidad */
+      color: #ffffff;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 2;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
     }
 
     .route-card:nth-child(1) {
@@ -422,6 +707,24 @@
       border-color: rgba(118, 200, 147, 0.4);
     }
 
+    /* Indicador visual de día (Sábado/Domingo) */
+    .route-day-indicator {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: linear-gradient(135deg, var(--accent-orange), #ff6b35);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 12px rgba(255, 140, 66, 0.5);
+      z-index: 10;
+    }
+
+    /* Parte inferior: cuerpo de la tarjeta */
     .route-card-inner {
       padding: 20px 20px 18px;
       position: relative;
@@ -451,6 +754,11 @@
       margin-bottom: 8px;
     }
 
+    .route-date-icon {
+      font-size: 16px;
+    }
+
+    /* Contenedor de información en grid */
     .route-info-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -482,6 +790,26 @@
       font-weight: 700;
     }
 
+    /* Precio discreto + footer */
+    .route-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .route-price-inline {
+      font-size: 13px;
+      color: var(--text-secondary);
+      background: rgba(0, 0, 0, 0.25);
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(118, 200, 147, 0.3);
+      white-space: nowrap;
+    }
+
+    /* Barra de progreso mejorada */
     .route-progress {
       margin-top: 4px;
       margin-bottom: 12px;
@@ -513,772 +841,185 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(90deg,
-        transparent,
-        rgba(255, 255, 255, 0.2),
+      background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.3), 
         transparent);
-      mix-blend-mode: screen;
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% {
+        transform: translateX(-100%);
+      }
+      100% {
+        transform: translateX(100%);
+      }
     }
 
     .route-availability {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
       font-size: 13px;
       font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .route-availability.normal {
+      background: rgba(118, 200, 147, 0.15);
       color: var(--accent);
-      text-align: left;
+      border: 1px solid rgba(118, 200, 147, 0.3);
     }
 
     .route-availability.low {
-      color: #f59e0b;
+      background: rgba(255, 193, 7, 0.15);
+      color: #ffc107;
+      border: 1px solid rgba(255, 193, 7, 0.3);
+      animation: pulse-warning 2s infinite;
+    }
+
+    @keyframes pulse-warning {
+      0%, 100% {
+        box-shadow: 0 0 0 rgba(255, 193, 7, 0);
+      }
+      50% {
+        box-shadow: 0 0 15px rgba(255, 193, 7, 0.4);
+      }
+    }
+
+    .route-availability.low::before {
+      content: '🔥';
+      font-size: 16px;
     }
 
     .route-availability.critical {
-      color: #ef4444;
+      background: rgba(244, 67, 54, 0.15);
+      color: #f44336;
+      border: 1px solid rgba(244, 67, 54, 0.3);
     }
 
-    /* Footer de tarjeta: precio + botón */
-    @media (min-width: 768px) {
-      .routes-grid {
-        max-width: 700px;
-        margin-left: auto;
-        margin-right: auto;
-      }
+    .route-availability.critical::before {
+      content: '⛔';
+      font-size: 16px;
     }
 
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
+    /* Botón de reserva mejorado */
+    .route-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       gap: 12px;
-      margin-top: 24px;
-    }
-
-    .gallery-item {
-      position: relative;
-      border-radius: 16px;
-      overflow: hidden;
-      aspect-ratio: 1;
-      box-shadow: 0 4px 12px var(--shadow);
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .gallery-item:hover {
-      transform: scale(1.05);
-      box-shadow: 0 8px 24px rgba(118, 200, 147, 0.3);
-    }
-
-    .gallery-item img {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .lightbox {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.95);
-      z-index: 9999;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .lightbox.active {
-      display: flex;
-    }
-
-    .lightbox-content {
-      position: relative;
-      max-width: 90%;
-      max-height: 90vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      padding-bottom: 80px;
-    }
-
-    .lightbox-img {
-      max-width: 100%;
-      max-height: 70vh;
-      border-radius: 12px;
-      box-shadow: 0 10px 50px rgba(0, 0, 0, 0.8);
-      transition: opacity 0.3s ease, transform 0.3s ease;
-    }
-
-    .lightbox-img.fade-anim {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-
-    #lightbox-caption {
-      position: fixed;
-      bottom: 40px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(26, 61, 71, 0.95);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      padding: 20px 28px;
-      border-radius: 12px;
-      text-align: center;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--green-primary), var(--green-mountain));
       color: white;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      max-width: 85%;
-      transition: opacity 0.3s ease;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-      z-index: 10001;
-    }
-
-    #lightbox-caption .caption-title {
-      font-size: 18px;
       font-weight: 700;
-      color: var(--accent);
-      margin-bottom: 8px;
-      display: block;
+      font-size: 15px;
+      text-decoration: none;
+      border-radius: 12px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 16px rgba(76, 175, 80, 0.4);
+      position: relative;
+      overflow: hidden;
     }
 
-    #lightbox-caption .caption-description {
-      font-size: 14px;
-      font-weight: 400;
-      color: var(--text-secondary);
-      line-height: 1.4;
-    }
-
-    .lightbox-close {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 40px;
-      height: 40px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      color: white;
-      font-size: 24px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-      z-index: 10000;
-      border: none;
-    }
-
-    .lightbox-close:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: scale(1.1);
-    }
-
-    .lightbox-prev,
-    .lightbox-next {
+    .route-btn::before {
+      content: '';
       position: absolute;
       top: 50%;
-      transform: translateY(-50%);
-      width: 50px;
-      height: 50px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      left: 50%;
+      width: 0;
+      height: 0;
       border-radius: 50%;
-      color: white;
-      font-size: 24px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-      z-index: 10000;
-      border: none;
-    }
-
-    .lightbox-prev {
-      left: 20px;
-    }
-
-    .lightbox-next {
-      right: 20px;
-    }
-
-    .lightbox-prev:hover,
-    .lightbox-next:hover {
       background: rgba(255, 255, 255, 0.2);
-      transform: translateY(-50%) scale(1.1);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
     }
 
-    .about-content {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      margin-top: 24px;
+    .route-btn:hover::before {
+      width: 300px;
+      height: 300px;
     }
 
-    .about-image {
-      width: 100%;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 8px 24px var(--shadow);
+    .route-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(76, 175, 80, 0.6);
     }
 
-    .about-image img {
-      width: 100%;
-      height: auto;
+    .route-btn:active {
+      transform: translateY(0);
+    }
+
+    .route-btn svg {
+      width: 20px;
+      height: 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .route-btn span {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Responsive */
+    @media (max-width: 400px) {
+      .route-title {
+        font-size: 20px;
+      }
+      
+      .route-price {
+        font-size: 32px;
+      }
+
+      .route-info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Loading state */
+    .routes-loading {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+    }
+
+    .routes-loading::after {
+      content: '⏳';
       display: block;
+      font-size: 48px;
+      margin-top: 16px;
+      animation: spin 2s linear infinite;
     }
 
-    .about-text {
-      background: var(--bg-card);
-      border-radius: 16px;
-      padding: 24px;
-      border: 1px solid rgba(118, 200, 147, 0.1);
-    }
-
-    .about-text h3 {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 16px;
-      color: var(--accent);
-    }
-
-    .about-text p {
-      font-size: 15px;
-      color: var(--text-secondary);
-      line-height: 1.7;
-      margin-bottom: 14px;
-    }
-
-    .about-text p:last-child {
-      margin-bottom: 0;
-    }
-
-    .products-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-      margin-top: 24px;
-    }
-
-    .product-card {
-      background: var(--bg-card);
-      border-radius: 16px;
-      overflow: hidden;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 12px var(--shadow);
-      border: 1px solid rgba(118, 200, 147, 0.1);
-    }
-
-    .product-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 12px 28px rgba(118, 200, 147, 0.25);
-      border-color: rgba(118, 200, 147, 0.3);
-    }
-
-    .product-image {
-      width: 100%;
-      height: 160px;
-      object-fit: cover;
-    }
-
-    .product-info {
-      padding: 16px;
-      text-align: center;
-    }
-
-    .product-info h4 {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: var(--text-primary);
-    }
-
-    .product-info p {
-      font-size: 13px;
-      color: var(--text-secondary);
-    }
-
-    .cta-section {
-      background: linear-gradient(135deg, var(--green-mountain) 0%, var(--green-dark) 100%);
-      padding: 32px 24px;
-      text-align: center;
-      margin: 40px 24px;
-      border-radius: 20px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-    }
-
-    .cta-section h2 {
-      font-size: 22px;
-      margin-bottom: 12px;
-      color: var(--text-primary);
-      font-weight: 700;
-    }
-
-    .cta-section p {
-      color: var(--text-secondary);
-      margin-bottom: 24px;
-      font-size: 15px;
-    }
-
-    .cta-section .btn {
-      background: var(--text-primary);
-      color: var(--green-dark);
-      font-weight: 700;
-      box-shadow: none;
-    }
-
-    .cta-section .btn:hover {
-      background: #f0f0f0;
-      transform: translateY(-2px);
-    }
-
-    footer {
-      text-align: center;
-      padding: 32px 24px;
-      font-size: 13px;
-      color: var(--text-secondary);
-      background: rgba(14, 47, 54, 0.5);
-    }
-
-    footer p {
-      margin-bottom: 8px;
-    }
-
-    .social-links {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 20px;
-      margin-top: 0;
-      padding-top: 0;
-      border-top: none;
-    }
-
-    .social-link {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-primary);
-      text-decoration: none;
-      font-size: 14px;
-      transition: all 0.3s ease;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: rgba(118, 200, 147, 0.1);
-    }
-
-    .social-link:hover {
-      color: var(--accent);
-      background: rgba(118, 200, 147, 0.2);
-      transform: translateY(-2px);
-    }
-
-    .social-link svg {
-      width: 24px;
-      height: 24px;
-    }
-
-    .whatsapp-float {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: 60px;
-      height: 60px;
-      background: var(--whatsapp);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 16px rgba(37, 211, 102, 0.4);
-      z-index: 1000;
-      transition: all 0.3s ease;
-      text-decoration: none;
-      animation: pulse-wa 2s infinite;
-    }
-
-    @keyframes pulse-wa {
-      0%, 100% {
-        box-shadow: 0 4px 16px rgba(37, 211, 102, 0.4);
-      }
-      50% {
-        box-shadow: 0 4px 28px rgba(37, 211, 102, 0.7);
-      }
-    }
-
-    .whatsapp-float:hover {
-      transform: scale(1.1);
-      box-shadow: 0 6px 24px rgba(37, 211, 102, 0.6);
-    }
-
-    .whatsapp-float svg {
-      width: 32px;
-      height: 32px;
-      fill: white;
-    }
-
-    @keyframes fadeInUp {
+    @keyframes spin {
       from {
-        opacity: 0;
-        transform: translateY(30px);
+        transform: rotate(0deg);
       }
       to {
-        opacity: 1;
-        transform: translateY(0);
+        transform: rotate(360deg);
       }
     }
 
-    .fade-in-up {
-      animation: fadeInUp 0.8s ease-out;
-    }
-
-    .stagger-1 { animation-delay: 0.1s; }
-    .stagger-2 { animation-delay: 0.2s; }
-    .stagger-3 { animation-delay: 0.3s; }
-    .stagger-4 { animation-delay: 0.4s; }
-    .stagger-5 { animation-delay: 0.5s; }
-    .stagger-6 { animation-delay: 0.6s; }
-
-    @media (min-width: 480px) {
-      .container {
-        max-width: 520px;
-      }
-
-      .products-grid {
-        gap: 20px;
-      }
-
-      .product-image {
-        height: 180px;
-      }
-    }
-
-    @media (min-width: 768px) {
-      .container {
-        max-width: 720px;
-      }
-
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
       .hero {
-        padding: 80px 40px 60px;
-      }
-
-      .logo {
-        width: 450px;
-      }
-
-      .hero h1 {
-        font-size: 42px;
-      }
-
-      .hero p {
-        font-size: 18px;
+        padding: 40px 20px 40px;
       }
 
       section {
-        padding: 60px 40px;
-      }
-
-      .section-title {
-        font-size: 28px;
-        margin-bottom: 36px;
-      }
-
-      .cards {
-        gap: 20px;
-      }
-
-      .card {
-        padding: 24px;
-      }
-
-      .stats-grid {
-        gap: 20px;
-        margin-top: 32px;
-      }
-
-      .stat-card {
-        padding: 28px 16px;
-      }
-
-      .stat-number {
-        font-size: 32px;
-      }
-
-      .gallery-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-      }
-
-      .products-grid {
-        gap: 24px;
-      }
-
-      .product-image {
-        height: 200px;
-      }
-
-      .cta-section {
-        padding: 48px 40px;
-        margin: 60px 40px;
-      }
-
-      .cta-section h2 {
-        font-size: 26px;
-      }
-
-      footer {
-        padding: 48px 40px;
-      }
-    }
-
-    @media (min-width: 1024px) {
-      .container {
-        max-width: 960px;
-      }
-
-      .hero {
-        padding: 100px 60px 80px;
-      }
-
-      .logo {
-        width: 500px;
-      }
-
-      .hero h1 {
-        font-size: 48px;
-        margin-bottom: 16px;
-      }
-
-      .hero p {
-        font-size: 20px;
-        margin-bottom: 40px;
-      }
-
-      .btn {
-        max-width: 450px;
-        padding: 20px 32px;
-        font-size: 18px;
-      }
-
-      section {
-        padding: 80px 60px;
-      }
-
-      .section-title {
-        font-size: 32px;
-        margin-bottom: 40px;
-      }
-
-      .cards {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
-      }
-
-      .card {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        padding: 32px 24px;
-      }
-
-      .card-icon {
-        font-size: 48px;
-        margin-bottom: 8px;
-      }
-
-      .card-content h3 {
-        font-size: 20px;
-        margin-bottom: 8px;
-      }
-
-      .card-content p {
-        font-size: 15px;
-      }
-
-      .stats-grid {
-        gap: 24px;
-        margin-top: 40px;
-      }
-
-      .stat-card {
         padding: 32px 20px;
       }
 
-      .stat-number {
-        font-size: 36px;
-      }
-
-      .stat-label {
-        font-size: 13px;
-      }
-
-      .gallery-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-      }
-
-      .about-content {
-        flex-direction: row;
-        align-items: center;
-        gap: 32px;
-      }
-
-      .about-image {
-        flex: 1;
-        max-width: 45%;
-      }
-
-      .about-text {
-        flex: 1;
-        padding: 32px;
-      }
-
-      .about-text h3 {
-        font-size: 24px;
-        margin-bottom: 20px;
-      }
-
-      .about-text p {
-        font-size: 16px;
-        margin-bottom: 16px;
-      }
-
-      .products-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 32px;
-        max-width: 700px;
-        margin: 40px auto 0;
-      }
-
-      .product-image {
-        height: 220px;
-      }
-
-      .product-info {
-        padding: 20px;
-      }
-
-      .product-info h4 {
-        font-size: 16px;
-      }
-
-      .cta-section {
-        padding: 60px 60px;
-        margin: 80px 60px;
-      }
-
-      .cta-section h2 {
-        font-size: 28px;
-        margin-bottom: 16px;
-      }
-
-      .cta-section p {
-        font-size: 16px;
-        margin-bottom: 32px;
-      }
-
-      footer {
-        padding: 60px 60px;
-        font-size: 14px;
-      }
-
-      .social-links {
-        gap: 24px;
-      }
-
-      .social-link {
-        width: 44px;
-        height: 44px;
-      }
-
-      .social-link svg {
-        width: 26px;
-        height: 26px;
-      }
-
-      .whatsapp-float {
-        width: 70px;
-        height: 70px;
-        bottom: 32px;
-        right: 32px;
-      }
-
-      .whatsapp-float svg {
-        width: 36px;
-        height: 36px;
-      }
-    }
-
-    @media (min-width: 1280px) {
-      .container {
-        max-width: 1200px;
-      }
-
-      .hero {
-        padding: 120px 80px 100px;
-      }
-
-      .logo {
-        width: 550px;
-      }
-
-      .hero h1 {
-        font-size: 56px;
-      }
-
-      section {
-        padding: 100px 80px;
-      }
-
-      .section-title {
-        font-size: 36px;
-      }
-
-      .cards {
-        gap: 32px;
-      }
-
-      .card {
-        padding: 40px 28px;
-      }
-
-      .gallery-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
-      }
-
-      .products-grid {
-        max-width: 800px;
-        gap: 40px;
-      }
-
-      .product-image {
-        height: 240px;
-      }
-
-      .cta-section {
-        padding: 70px 80px;
-        margin: 100px 80px;
-      }
-    }
-
-    @media (min-width: 1920px) {
-      .container {
-        max-width: 1400px;
-      }
-
-      .gallery-grid {
-        grid-template-columns: repeat(4, 1fr);
-      }
-    }
-
-    @media (max-width: 480px) {
       .lightbox-prev,
       .lightbox-next {
         width: 40px;
         height: 40px;
-        font-size: 20px;
+        font-size: 24px;
       }
 
       .lightbox-prev {
@@ -1290,63 +1031,37 @@
       }
 
       .lightbox-close {
-        top: 10px;
-        right: 10px;
-        width: 36px;
-        height: 36px;
-        font-size: 20px;
-      }
-
-      .whatsapp-float {
-        bottom: 20px;
-        right: 20px;
-        width: 56px;
-        height: 56px;
-      }
-
-      #lightbox-caption {
-        font-size: 13px;
-        padding: 12px 16px;
-      }
-    }
-
-    @media (max-width: 360px) {
-      .hero {
-        padding: 50px 20px 40px;
-      }
-
-      .btn {
-        font-size: 15px;
-        padding: 16px 24px;
-      }
-
-      .section-title {
-        font-size: 20px;
+        width: 40px;
+        height: 40px;
+        font-size: 28px;
+        top: -45px;
       }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <section class="hero fade-in-up">
+    <!-- Hero Section -->
+    <div class="hero">
       <img src="logo.png" alt="Somos Aventurados Logo" class="logo">
       <h1>
-        Vive la aventura <span class="highlight">con nosotros</span>
+        Vive la aventura
+        <span class="highlight">con nosotros</span>
       </h1>
       <p>Ecoturismo · Senderismo · Comunidad</p>
       <a href="https://whatsapp.com/channel/0029Vb6vCSj4yltO4CJQJL2L" class="btn" target="_blank" rel="noopener">
-        <svg viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19.11 17.53c-.27-.14-1.6-.79-1.85-.88-.25-.09-.43-.14-.61.14-.18.27-.7.88-.86 1.06-.16.18-.32.2-.59.07-.27-.14-1.14-.42-2.17-1.33-.8-.71-1.34-1.6-1.5-1.87-.16-.27-.02-.42.12-.56.12-.12.27-.32.41-.48.14-.16.18-.27.27-.45.09-.18.05-.34-.02-.48-.07-.14-.61-1.48-.84-2.03-.22-.53-.45-.46-.61-.46h-.52c-.18 0-.48.07-.73.34-.25.27-.96.93-.96 2.26s.98 2.62 1.12 2.8c.14.18 1.93 2.95 4.67 4.13.65.28 1.16.45 1.55.58.65.21 1.25.18 1.72.11.52-.08 1.6-.65 1.83-1.27.23-.62.23-1.15.16-1.27-.07-.11-.25-.18-.52-.32z"/>
-          <path d="M16.04 2.67C8.83 2.67 3 8.49 3 15.7c0 2.5.65 4.85 1.78 6.9L3 29l6.55-1.72c1.98 1.08 4.26 1.7 6.49 1.7 7.21 0 13.04-5.83 13.04-13.04S23.25 2.67 16.04 2.67zm0 23.6c-2.06 0-4.07-.56-5.83-1.63l-.42-.25-3.89 1.02 1.04-3.78-.27-.39c-1.1-1.77-1.68-3.81-1.68-5.9 0-6.09 4.96-11.05 11.05-11.05 2.95 0 5.73 1.15 7.82 3.23 2.09 2.09 3.23 4.87 3.23 7.82 0 6.09-4.96 11.05-11.05 11.05z"/>
+        <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
         </svg>
         Sé un Aventurado
       </a>
-      <p class="hero-subcopy">
+      <a href="https://whatsapp.com/channel/0029Vb6vCSj4yltO4CJQJL2L" class="hero-subcopy" target="_blank" rel="noopener">
         📲 Únete al canal y no te pierdas ninguna aventura
-      </p>
-    </section>
+      </a>
+    </div>
 
-    <section class="fade-in-up stagger-1">
+    <!-- About Section -->
+    <section>
       <h2 class="section-title">¿Quiénes Somos?</h2>
       <div class="cards">
         <div class="card">
@@ -1388,49 +1103,41 @@
       </div>
     </section>
 
-    <!-- PRÓXIMAS AVENTURAS (Supabase) -->
-    <section id="upcomingRoutes" class="fade-in-up stagger-2">
-      <h2 class="section-title">⛰️ Próximas Aventuras</h2>
+    <!-- Sección Próximas Aventuras -->
+    <section id="upcomingRoutes">
+      <h2 class="section-title">🔥 Próximas Aventuras</h2>
       <div id="routesGrid" class="routes-grid">
         <div class="routes-loading">Cargando próximas rutas...</div>
       </div>
     </section>
 
-    <section class="fade-in-up stagger-2">
+    <!-- Gallery Section -->
+    <section>
       <h2 class="section-title">Nuestras Aventuras</h2>
-      <div class="gallery-grid" id="gallery">
-        <div class="gallery-item" data-index="0">
-          <img src="galeria1.jpg" alt="Cascada Los Gavilanes" loading="lazy" data-title="Cascada Los Gavilanes" data-caption="Un tesoro en la cumaca">
+      <div class="gallery-grid">
+        <div class="gallery-item" data-caption="Cascada Los Gavilanes">
+          <img src="galeria1.jpg" alt="Cascada Los Gavilanes" loading="lazy">
         </div>
-        <div class="gallery-item" data-index="1">
-          <img src="galeria2.jpg" alt="Nuestros aventurados" loading="lazy" data-title="Nuestros Aventurados" data-caption="Disfrutando del paisaje y nuevas experiencias">
+        <div class="gallery-item" data-caption="Nuestros aventurados">
+          <img src="galeria2.jpg" alt="Nuestros aventurados" loading="lazy">
         </div>
-        <div class="gallery-item" data-index="2">
-          <img src="galeria3.jpg" alt="Cascada Los Aguacates" loading="lazy" data-title="Cascada Los Aguacates" data-caption="Un paraíso escondido en la hacienda Santa Clara">
+        <div class="gallery-item" data-caption="Cascada Los Aguacates">
+          <img src="galeria3.jpg" alt="Cascada Los Aguacates" loading="lazy">
         </div>
-        <div class="gallery-item" data-index="3">
-          <img src="galeria4.jpg" alt="El chorrerón de Chuao" loading="lazy" data-title="El Chorrerón de Chuao" data-caption="Una travesía en donde se cosecha el mejor cacao de Venezuela">
+        <div class="gallery-item" data-caption="El chorrerón de Chuao">
+          <img src="galeria4.jpg" alt="El chorrerón de Chuao" loading="lazy">
         </div>
-        <div class="gallery-item" data-index="4">
-          <img src="galeria5.jpg" alt="Cascada la reina" loading="lazy" data-title="Cascada La Reina" data-caption="Una maravilla escondida en los altos del Cabriales">
+        <div class="gallery-item" data-caption="Cascada la reina">
+          <img src="galeria5.jpg" alt="Cascada la reina" loading="lazy">
         </div>
-        <div class="gallery-item" data-index="5">
-          <img src="galeria6.jpg" alt="Los Azules" loading="lazy" data-title="Los Azules" data-caption="El jacuzzi natural con la mejor vista en Carabobo">
+        <div class="gallery-item" data-caption="Los Azules">
+          <img src="galeria6.jpg" alt="Los Azules" loading="lazy">
         </div>
       </div>
     </section>
 
-    <div class="lightbox" id="lightbox">
-      <button class="lightbox-close" id="lightbox-close">×</button>
-      <button class="lightbox-prev" id="lightbox-prev">‹</button>
-      <div class="lightbox-content">
-        <img class="lightbox-img" id="lightbox-img" src="" alt="Imagen ampliada">
-      </div>
-      <button class="lightbox-next" id="lightbox-next">›</button>
-      <div id="lightbox-caption"></div>
-    </div>
-
-    <section class="fade-in-up stagger-3">
+    <!-- Team Section -->
+    <section>
       <h2 class="section-title">Nuestra Historia</h2>
       <div class="about-content">
         <div class="about-image">
@@ -1444,7 +1151,8 @@
       </div>
     </section>
 
-    <section class="fade-in-up stagger-4">
+    <!-- Products Section -->
+    <section>
       <h2 class="section-title">Equípate para la Aventura</h2>
       <div class="products-grid">
         <div class="product-card">
@@ -1464,7 +1172,8 @@
       </div>
     </section>
 
-    <div class="cta-section fade-in-up stagger-5">
+    <!-- CTA Section -->
+    <div class="cta-section">
       <h2>¿Listo para tu Próxima Aventura?</h2>
       <p>Contáctanos por WhatsApp y descubre todas nuestras rutas disponibles</p>
       <a href="https://wa.me/584244656881" class="btn" target="_blank" rel="noopener">
@@ -1475,83 +1184,80 @@
       </a>
     </div>
 
-    <footer class="fade-in-up stagger-6">
+    <!-- Footer -->
+    <footer>
       <p><strong>© 2026 SomosAventura2</strong></p>
       <p>Ecoturismo responsable y senderismo guiado</p>
-      <div class="social-links">
-        <a href="https://www.instagram.com/somosaventura2/" target="_blank" rel="noopener" class="social-link" aria-label="Instagram">
-          <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-          </svg>
-        </a>
-        <a href="https://www.tiktok.com/@aventura2clips" target="_blank" rel="noopener" class="social-link" aria-label="TikTok">
-          <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
-          </svg>
-        </a>
-      </div>
     </footer>
+  </div>
 
-    <a href="https://wa.me/584244656881" class="whatsapp-float" target="_blank" rel="noopener" aria-label="WhatsApp">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-      </svg>
-    </a>
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose">&times;</button>
+    <button class="lightbox-prev" id="lightboxPrev">‹</button>
+    <button class="lightbox-next" id="lightboxNext">›</button>
+    <div class="lightbox-content">
+      <img id="lightboxImage" src="" alt="">
+      <div class="lightbox-caption" id="lightboxCaption"></div>
+    </div>
   </div>
 
   <script>
-    // Galería Lightbox con Swipe y Caption
+    // =============================================
+    // LIGHTBOX FUNCTIONALITY
+    // =============================================
     const galleryItems = document.querySelectorAll('.gallery-item');
     const lightbox = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightbox-img');
-    const lightboxCaption = document.getElementById('lightbox-caption');
-    const lightboxClose = document.getElementById('lightbox-close');
-    const lightboxPrev = document.getElementById('lightbox-prev');
-    const lightboxNext = document.getElementById('lightbox-next');
+    const lightboxImage = document.getElementById('lightboxImage');
+    const lightboxCaption = document.getElementById('lightboxCaption');
+    const lightboxClose = document.getElementById('lightboxClose');
+    const lightboxPrev = document.getElementById('lightboxPrev');
+    const lightboxNext = document.getElementById('lightboxNext');
     
+    let images = [];
     let currentIndex = 0;
-    const images = [];
     
-    // Recopilar todas las imágenes de la galería
+    // Preparar array de imágenes
     galleryItems.forEach((item, index) => {
       const img = item.querySelector('img');
+      const caption = item.getAttribute('data-caption');
+      
       images.push({
         src: img.src,
-        title: img.getAttribute('data-title') || '',
-        caption: img.getAttribute('data-caption') || ''
+        alt: img.alt,
+        caption: caption
       });
       
       item.addEventListener('click', () => {
-        openLightbox(index);
+        currentIndex = index;
+        openLightbox();
       });
     });
     
-    function openLightbox(index) {
-      currentIndex = index;
-      updateLightbox();
+    function openLightbox() {
       lightbox.classList.add('active');
       document.body.classList.add('lightbox-open');
+      updateLightbox();
     }
     
     function updateLightbox() {
-      lightboxImg.classList.add('fade-anim');
+      const currentImage = images[currentIndex];
+      
+      lightboxImage.style.opacity = '0';
       if (lightboxCaption) {
         lightboxCaption.style.opacity = '0';
       }
-
+      
       setTimeout(() => {
-        lightboxImg.src = images[currentIndex].src;
+        lightboxImage.src = currentImage.src;
+        lightboxImage.alt = currentImage.alt;
+        
         if (lightboxCaption) {
-          const title = images[currentIndex].title || 'Sin título';
-          const description = images[currentIndex].caption || 'Sin descripción';
-          
-          lightboxCaption.innerHTML = '<span class="caption-title">' + title + '</span><span class="caption-description">' + description + '</span>';
-          
-          console.log('Mostrando - Title:', title, 'Description:', description);
+          lightboxCaption.textContent = currentImage.caption || '';
         }
         
-        lightboxImg.onload = () => {
-          lightboxImg.classList.remove('fade-anim');
+        lightboxImage.onload = () => {
+          lightboxImage.style.opacity = '1';
           if (lightboxCaption) {
             lightboxCaption.style.opacity = '1';
             lightboxCaption.style.display = 'block';
@@ -1626,19 +1332,17 @@
       const swipeThreshold = 50;
       
       if (touchEndX < touchStartX - swipeThreshold) {
-        // Swipe left - siguiente imagen
         changeImage(1);
       }
       
       if (touchEndX > touchStartX + swipeThreshold) {
-        // Swipe right - imagen anterior
         changeImage(-1);
       }
     }
 
-    // ===============================
-    // PRÓXIMAS AVENTURAS (Supabase)
-    // ===============================
+    // =============================================
+    // SECCIÓN RUTAS PRÓXIMAS (Supabase)
+    // =============================================
     const SUPABASE_URL = 'https://dgubxitmqegounjyeciw.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_EY4EoqiHn7om0Qf-HYpJZQ_HwDJXlan';
     
@@ -1650,6 +1354,17 @@
       supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     } catch (error) {
       console.error('Error inicializando Supabase:', error);
+    }
+
+    // Función para formatear fecha corta (Ej: "Sáb, 15 Mar")
+    function formatearFechaCorta(fechaISO) {
+      // Parseamos la fecha como local para evitar problemas de zona horaria
+      const partes = fechaISO.split('-');
+      const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
+      const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      
+      return `${dias[fecha.getDay()]}, ${fecha.getDate()} ${meses[fecha.getMonth()]}`;
     }
 
     // Función para calcular cupos ocupados de una ruta
@@ -1672,7 +1387,7 @@
       }
     }
 
-    // Función para renderizar una tarjeta de ruta - diseño Split Card
+    // Función para renderizar una tarjeta de ruta - NUEVA
     function renderizarRuta(ruta, cuposOcupados) {
       const disponibles = ruta.cupos - cuposOcupados;
       const porcentajeOcupado = ruta.cupos > 0 ? (cuposOcupados / ruta.cupos) * 100 : 0;
@@ -1704,6 +1419,9 @@
       // Mensaje para WhatsApp
       const mensajeWhatsApp = encodeURIComponent(`Hola, quiero ir a ${ruta.nombre}`);
       const urlWhatsApp = `https://wa.me/584244656881?text=${mensajeWhatsApp}`;
+
+      // Determinar nivel/dificultad (puedes agregar esto a tu base de datos)
+      const nivel = ruta.nivel || 'Moderado';
 
       const clasesDia = esSabado ? 'sabado' : 'domingo';
 
@@ -1832,12 +1550,12 @@
       if (!supabaseClient || realtimeChannel) return;
 
       realtimeChannel = supabaseClient
-        .channel('cambios-reservas-rutas-landing')
+        .channel('cambios-reservas-rutas')
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'reservas' },
           () => {
-            console.log('🔁 Cambio en reservas detectado, recargando próximas rutas (landing)...');
+            console.log('🔁 Cambio en reservas detectado, recargando próximas rutas...');
             cargarRutasProximas();
           }
         )
@@ -1845,7 +1563,7 @@
           'postgres_changes',
           { event: '*', schema: 'public', table: 'rutas' },
           () => {
-            console.log('🔁 Cambio en rutas detectado, recargando próximas rutas (landing)...');
+            console.log('🔁 Cambio en rutas detectado, recargando próximas rutas...');
             cargarRutasProximas();
           }
         )
