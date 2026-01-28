@@ -1842,10 +1842,10 @@
         📍 <span class="text">Rutas</span>
     </button>
     <button class="nav-tab" onclick="showTab('reservas')">
-        👥 <span class="text">Reservas</span>
+        🎫 <span class="text">Reservas</span>
     </button>
     <button class="nav-tab" onclick="showTab('participantes')">
-        ✅ <span class="text">Personas</span>
+        👥 <span class="text">Personas</span>
     </button>
     <button class="nav-tab" onclick="showTab('asistencia')">
         📋 <span class="text">Asistencia</span>
@@ -2022,7 +2022,7 @@
             </div>
             <div class="form-group">
                 <label class="form-label">📎 Referencia del Pago Inicial (Opcional)</label>
-                <input type="text" id="reservaReferenciaPago" class="form-input" placeholder="Ej: Transferencia 001, Zelle, Efectivo">
+                <input type="text" id="reservaReferenciaPago" class="form-input" placeholder="Ej: 001, 12345" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             </div>
             
             <!-- SECCIÓN DE PERSONAS -->
@@ -2078,7 +2078,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label" style="font-size: 12px;">Referencia de Pago</label>
-                    <input type="text" id="participanteReferencia" class="form-input" placeholder="Ej: Transferencia #12345">
+                    <input type="text" id="participanteReferencia" class="form-input" placeholder="Ej: 12345" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                 </div>
             </div>
             <div class="btn-group">
@@ -2484,7 +2484,7 @@ async function loadUsuarios() {
             if (participantesResult.error) throw participantesResult.error;
             if (gastosResult.error) throw gastosResult.error;
 
-            // Normalizar rutas
+            // Normalizar rutas PRIMERO (necesario para normalizar reservas después)
             const rutas = (rutasResult.data || []).map((r, index) => ({
                 ...r,
                 archivada: r.archivada === true,
@@ -2493,21 +2493,36 @@ async function loadUsuarios() {
             }));
 
             // Normalizar reservas
-            const reservas = (reservasResult.data || []).map(r => ({
-                ...r,
-                ruta: r.ruta_nombre || r.ruta || '', // Normalizado: usar solo ruta después
-                montoPagado: r.monto_pagado || 0, // Normalizado: usar solo montoPagado después
-                pagos: r.pagos || []
-            }));
+            const reservas = (reservasResult.data || []).map(r => {
+                const rutaId = r.ruta_id || r.rutaId;
+                // Buscar la ruta para obtener el nombre (compatibilidad)
+                const ruta = rutas.find(rt => rt.id === rutaId);
+                return {
+                    ...r,
+                    rutaId: rutaId, // 🔥 NUEVO: Usar ID de ruta en lugar de nombre
+                    ruta: ruta ? ruta.nombre : null, // 🔥 Campo derivado para compatibilidad
+                    montoPagado: r.monto_pagado || 0, // Normalizado: usar solo montoPagado después
+                    pagos: r.pagos || []
+                };
+            });
 
-            // Normalizar participantes (sin cambios necesarios)
-            const participantes = participantesResult.data || [];
+            // Normalizar participantes
+            const participantes = (participantesResult.data || []).map(p => ({
+                ...p,
+                rutaId: p.ruta_id || p.rutaId // 🔥 NUEVO: Normalizar ruta_id
+            }));
 
             // Normalizar gastos
-            const gastos = (gastosResult.data || []).map(g => ({
-                ...g,
-                ruta: g.ruta_nombre || g.ruta || '' // Normalizado: usar solo ruta después
-            }));
+            const gastos = (gastosResult.data || []).map(g => {
+                const rutaId = g.ruta_id || g.rutaId;
+                // Buscar la ruta para obtener el nombre (compatibilidad)
+                const ruta = rutas.find(rt => rt.id === rutaId);
+                return {
+                    ...g,
+                    rutaId: rutaId, // 🔥 NUEVO: Usar ID de ruta en lugar de nombre
+                    ruta: ruta ? ruta.nombre : null // 🔥 Campo derivado para compatibilidad
+                };
+            });
 
             return { rutas, reservas, participantes, gastos };
         }
@@ -2671,14 +2686,14 @@ function updateSelects() {
     if (selectRuta) {
         selectRuta.innerHTML = '<option value="">Selecciona una ruta</option>';
         rutasActivas.forEach(ruta => {
-            const ocupados = calcularCuposOcupados(ruta.nombre);
-            const disponibles = calcularCuposDisponibles(ruta.nombre);
+            const ocupados = calcularCuposOcupados(ruta.id);
+            const disponibles = calcularCuposDisponibles(ruta.id);
             const haySobreventa = ocupados > ruta.cupos;
-            const numeroRuta = ruta.numero ? `#${ruta.numero} ` : '';
+            const numeroRuta = ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
             const textoDisponibles = haySobreventa 
                 ? `⚠️ Sobrevendida (${ocupados}/${ruta.cupos})` 
                 : `(${disponibles} disponibles)`;
-            selectRuta.innerHTML += `<option value="${ruta.nombre}">${numeroRuta}${ruta.nombre} - ${ruta.fecha} ${textoDisponibles}</option>`;
+            selectRuta.innerHTML += `<option value="${ruta.id}">${ruta.nombre} ${numeroRuta} - ${formatearFechaRuta(ruta.fecha)} ${textoDisponibles}</option>`;
         });
     }
 
@@ -2687,8 +2702,8 @@ function updateSelects() {
     if (gastoRuta) {
         gastoRuta.innerHTML = '<option value="">Selecciona una ruta</option>';
         rutasActivas.forEach(ruta => {
-            const numeroRuta = ruta.numero ? `#${ruta.numero} ` : '';
-            gastoRuta.innerHTML += `<option value="${ruta.nombre}">${numeroRuta}${ruta.nombre} - ${ruta.fecha}</option>`;
+            const numeroRuta = ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
+            gastoRuta.innerHTML += `<option value="${ruta.id}">${ruta.nombre} ${numeroRuta} - ${formatearFechaRuta(ruta.fecha)}</option>`;
         });
     }
 
@@ -2697,8 +2712,8 @@ function updateSelects() {
     if (filtroRutaReservas) {
         filtroRutaReservas.innerHTML = '<option value="">Todas las rutas</option>';
         rutasActivas.forEach(ruta => {
-            const numeroRuta = ruta.numero ? `#${ruta.numero} ` : '';
-            filtroRutaReservas.innerHTML += `<option value="${ruta.nombre}">${numeroRuta}${ruta.nombre} - ${ruta.fecha}</option>`;
+            const numeroRuta = ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
+            filtroRutaReservas.innerHTML += `<option value="${ruta.id}">${ruta.nombre} ${numeroRuta} - ${formatearFechaRuta(ruta.fecha)}</option>`;
         });
     }
 
@@ -2707,8 +2722,8 @@ function updateSelects() {
     if (filtroRutaParticipantes) {
         filtroRutaParticipantes.innerHTML = '<option value="">Todas las rutas</option>';
         rutasActivas.forEach(ruta => {
-            const numeroRuta = ruta.numero ? `#${ruta.numero} ` : '';
-            filtroRutaParticipantes.innerHTML += `<option value="${ruta.nombre}">${numeroRuta}${ruta.nombre} - ${ruta.fecha}</option>`;
+            const numeroRuta = ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
+            filtroRutaParticipantes.innerHTML += `<option value="${ruta.id}">${ruta.nombre} ${numeroRuta} - ${formatearFechaRuta(ruta.fecha)}</option>`;
         });
     }
 
@@ -2718,7 +2733,7 @@ function updateSelects() {
         // Obtener líderes únicos de reservas activas (no archivadas)
         const lideresUnicos = new Set();
         data.reservas.forEach(reserva => {
-            const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
+            const ruta = data.rutas.find(r => r.id === reserva.rutaId);
             if (ruta && !ruta.archivada) {
                 lideresUnicos.add(reserva.lider);
             }
@@ -2740,8 +2755,8 @@ function updateSelects() {
     if (filtroRutaGastos) {
         filtroRutaGastos.innerHTML = '<option value="">Todas las rutas</option>';
         rutasActivas.forEach(ruta => {
-            const numeroRuta = ruta.numero ? `#${ruta.numero} ` : '';
-            filtroRutaGastos.innerHTML += `<option value="${ruta.nombre}">${numeroRuta}${ruta.nombre} - ${ruta.fecha}</option>`;
+            const numeroRuta = ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
+            filtroRutaGastos.innerHTML += `<option value="${ruta.id}">${ruta.nombre} ${numeroRuta} - ${formatearFechaRuta(ruta.fecha)}</option>`;
         });
     }
 
@@ -2751,12 +2766,12 @@ function updateSelects() {
         selectReserva.innerHTML = '<option value="">Selecciona un líder</option>';
         // Solo mostrar líderes de reservas de rutas activas (no archivadas)
         data.reservas.forEach(reserva => {
-            const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
+            const ruta = data.rutas.find(r => r.id === reserva.rutaId);
             // Excluir reservas de rutas archivadas
             if (!ruta || ruta.archivada) return;
             
-            const numeroRuta = ruta && ruta.numero ? `#${ruta.numero} ` : '';
-            selectReserva.innerHTML += `<option value="${reserva.lider}">${reserva.lider} - ${numeroRuta}${reserva.ruta}</option>`;
+            const numeroRuta = ruta && ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
+            selectReserva.innerHTML += `<option value="${reserva.lider}">${reserva.lider} - ${ruta.nombre} ${numeroRuta}</option>`;
         });
     }
     
@@ -2770,33 +2785,28 @@ function updateSelects() {
          * @param {string} nombreRuta - Nombre de la ruta a calcular
          * @returns {number} Número de participantes registrados en la ruta
          */
-        function calcularCuposOcupados(nombreRuta) {
+        function calcularCuposOcupados(rutaId) {
             // Solo contar reservas de rutas no archivadas
-            const ruta = data.rutas.find(r => r.nombre === nombreRuta);
-            if (ruta && ruta.archivada) return 0;
+            const ruta = data.rutas.find(r => r.id === rutaId);
+            if (!ruta || ruta.archivada) return 0;
             
-            // Contar participantes REALES por ruta específica (líder + ruta),
-            // para que un líder con varias rutas no mezcle sus personas entre rutas.
-            const reservasDeRuta = data.reservas.filter(r => r.ruta === nombreRuta);
-            const lideresDeRuta = reservasDeRuta.map(r => r.lider);
-            
-            return data.participantes
-                .filter(p => 
-                    lideresDeRuta.includes(p.lider) &&
-                    ((p.ruta_nombre || p.ruta) === nombreRuta)
-                ).length;
+            // 🔥 CORRECCIÓN: Contar participantes directamente por rutaId
+            // Esto garantiza que no se mezclen participantes de rutas diferentes con el mismo nombre
+            return data.participantes.filter(p => 
+                (p.rutaId === rutaId || p.ruta_id === rutaId) // Compatibilidad con ambos formatos
+            ).length;
         }
 
         /**
          * Calcula los cupos disponibles en una ruta
          * Puede retornar valores negativos si hay sobreventa
-         * @param {string} nombreRuta - Nombre de la ruta a calcular
+         * @param {string} rutaId - ID (UUID) de la ruta a calcular
          * @returns {number} Cupos disponibles (puede ser negativo si hay sobreventa)
          */
-        function calcularCuposDisponibles(nombreRuta) {
-            const ruta = data.rutas.find(r => r.nombre === nombreRuta);
+        function calcularCuposDisponibles(rutaId) {
+            const ruta = data.rutas.find(r => r.id === rutaId);
             if (!ruta) return 0;
-            const ocupados = calcularCuposOcupados(nombreRuta);
+            const ocupados = calcularCuposOcupados(rutaId);
             const disponibles = ruta.cupos - ocupados;
             // Permitir valores negativos (sobreventa)
             return disponibles;
@@ -2819,10 +2829,11 @@ function updateSelects() {
          * @param {string} rutaNombre - Nombre de la ruta
          * @returns {number} Cantidad de participantes para esa reserva específica
          */
-        function contarParticipantesReserva(lider, rutaNombre) {
+        function contarParticipantesReserva(lider, rutaId) {
+            // 🔥 CORRECCIÓN: Usar rutaId directamente para contar participantes
             return data.participantes.filter(p => 
                 p.lider === lider && 
-                ((p.ruta_nombre || p.ruta) === rutaNombre)
+                (p.rutaId === rutaId || p.ruta_id === rutaId) // Compatibilidad con ambos formatos
             ).length;
         }
 
@@ -2830,8 +2841,9 @@ function updateSelects() {
             // Buscar la primera reserva del líder (puede tener múltiples)
             const reserva = data.reservas.find(r => r.lider === lider);
             if (reserva) {
-                // Usar ruta normalizada (puede ser ruta_nombre o ruta)
-                return reserva.ruta || reserva.ruta_nombre || 'Sin ruta';
+                // 🔥 CORRECCIÓN: Buscar ruta por ID y obtener el nombre
+                const ruta = data.rutas.find(r => r.id === reserva.rutaId);
+                return ruta ? ruta.nombre : (reserva.ruta || 'Sin ruta');
             }
             return 'Sin ruta';
         }
@@ -2862,10 +2874,10 @@ function updateSelects() {
             };
         }
 
-        function calcularTotalRecaudado(nombreRuta) {
+        function calcularTotalRecaudado(rutaId) {
             // Solo contar pagos en Bs (los gastos son en Bs)
             return data.reservas
-                .filter(r => r.ruta === nombreRuta)
+                .filter(r => r.rutaId === rutaId)
                 .reduce((sum, r) => {
                     const totalBs = (r.pagos || [])
                         .filter(p => !p.enDolares)
@@ -2874,10 +2886,10 @@ function updateSelects() {
                 }, 0);
         }
         
-        function calcularTotalDolares(nombreRuta) {
+        function calcularTotalDolares(rutaId) {
             // Calcular total en dólares efectivo
             return data.reservas
-                .filter(r => r.ruta === nombreRuta)
+                .filter(r => r.rutaId === rutaId)
                 .reduce((sum, r) => {
                     const totalDolares = (r.pagos || [])
                         .filter(p => p.enDolares)
@@ -2888,29 +2900,29 @@ function updateSelects() {
 
         /**
          * Calcula el total de gastos registrados para una ruta
-         * @param {string} nombreRuta - Nombre de la ruta
+         * @param {string} rutaId - ID (UUID) de la ruta
          * @returns {number} Total de gastos en Bs
          */
-        function calcularTotalGastos(nombreRuta) {
+        function calcularTotalGastos(rutaId) {
             return data.gastos
-                .filter(g => g.ruta === nombreRuta)
+                .filter(g => g.rutaId === rutaId)
                 .reduce((sum, g) => sum + (g.monto || 0), 0);
         }
 
         /**
          * Calcula el profit neto (recaudado - gastos) para una ruta
-         * @param {string} nombreRuta - Nombre de la ruta
+         * @param {string} rutaId - ID (UUID) de la ruta
          * @returns {number} Profit neto en Bs
          */
-        function calcularProfitNeto(nombreRuta) {
-            const recaudado = calcularTotalRecaudado(nombreRuta);
-            const gastos = calcularTotalGastos(nombreRuta);
+        function calcularProfitNeto(rutaId) {
+            const recaudado = calcularTotalRecaudado(rutaId);
+            const gastos = calcularTotalGastos(rutaId);
             return recaudado - gastos;
         }
 
-        function calcularMontoEsperado(nombreRuta) {
+        function calcularMontoEsperado(rutaId) {
             const cuposReservados = data.reservas
-                .filter(r => r.ruta === nombreRuta)
+                .filter(r => r.rutaId === rutaId)
                 .reduce((sum, r) => sum + r.cantidad, 0);
             return cuposReservados;
         }
@@ -3128,7 +3140,7 @@ function updateSelects() {
          */
         async function agregarReserva() {
             const lider = document.getElementById('reservaLider').value.trim();
-            const ruta = document.getElementById('reservaRuta').value;
+            const rutaId = document.getElementById('reservaRuta').value; // 🔥 CAMBIO: Ahora es un ID
             const cantidad = parseInt(document.getElementById('reservaCantidad').value);
             const montoPagado = parseFloat(document.getElementById('reservaMontoPagado').value) || 0;
 
@@ -3139,7 +3151,7 @@ function updateSelects() {
                 return;
             }
 
-            if (!ruta) {
+            if (!rutaId) {
                 showToast('Selecciona una ruta', 'warning', 'Validación');
                 document.getElementById('reservaRuta').focus();
                 return;
@@ -3157,18 +3169,25 @@ function updateSelects() {
                 return;
             }
 
-            // Permitir múltiples reservas del mismo líder, pero solo en rutas diferentes
-            const reservaExistente = data.reservas.find(r => r.lider === lider && r.ruta === ruta);
-            if (reservaExistente) {
-                showToast(`Ya existe una reserva de "${lider}" para la ruta "${ruta}". Un líder solo puede tener una reserva por ruta.`, 'error', 'Reserva Duplicada');
+            // Obtener el objeto de ruta completo
+            const ruta = data.rutas.find(r => r.id === rutaId);
+            if (!ruta) {
+                showToast('Ruta no encontrada', 'error', 'Error');
                 return;
             }
 
-            const disponibles = calcularCuposDisponibles(ruta);
+            // Permitir múltiples reservas del mismo líder, pero solo en rutas diferentes
+            const reservaExistente = data.reservas.find(r => r.lider === lider && r.rutaId === rutaId);
+            if (reservaExistente) {
+                showToast(`Ya existe una reserva de "${lider}" para la ruta "${ruta.nombre}". Un líder solo puede tener una reserva por ruta.`, 'error', 'Reserva Duplicada');
+                return;
+            }
+
+            const disponibles = calcularCuposDisponibles(rutaId);
             if (disponibles < 0) {
                 // Ya hay sobreventa, permitir continuar con advertencia
                 const continuar = await confirmarAccion(
-                    `Esta ruta ya está sobrevendida (${calcularCuposOcupados(ruta)}/${ruta.cupos} personas).\n\n` +
+                    `Esta ruta ya está sobrevendida (${calcularCuposOcupados(rutaId)}/${ruta.cupos} personas).\n\n` +
                     `¿Deseas continuar agregando ${cantidad} cupo${cantidad > 1 ? 's' : ''} más?`,
                     'peligro'
                 );
@@ -3217,7 +3236,7 @@ function updateSelects() {
                     .from('reservas')
                     .insert([{ 
                         lider, 
-                        ruta_nombre: ruta, 
+                        ruta_id: rutaId, // 🔥 CAMBIO: Usar ruta_id con el UUID
                         cantidad, 
                         monto_pagado: montoPagadoBs, 
                         pagos: pagosIniciales 
@@ -3228,10 +3247,11 @@ function updateSelects() {
                 if (errorReserva) throw errorReserva;
 
                 // AUTO-REGISTRO DEL LÍDER (asociado a esta ruta)
+                // 🔥 CORRECCIÓN: Usar nombre de ruta del objeto ruta
                 const liderExiste = data.participantes.find(p => 
                     p.nombre.toLowerCase() === lider.toLowerCase() && 
                     p.lider === lider &&
-                    (p.ruta_nombre || p.ruta) === ruta
+                    (p.ruta_nombre || p.ruta) === ruta.nombre
                 );
                 
                 if (!liderExiste) {
@@ -3240,25 +3260,27 @@ function updateSelects() {
                         .insert([{
                             nombre: lider,
                             lider: lider,
-                            ruta_nombre: ruta,
+                            ruta_id: rutaId, // 🔥 CORRECCIÓN: Usar ruta_id (UUID) para integridad
+                            ruta_nombre: ruta.nombre, // Mantener por compatibilidad
                             asiste: false
                         }]);
                 }
                 
-                // Agregar las personas temporales (todas asociadas a esta ruta)
+                // Agregar las personas temporales (todas asociadas a este líder y ruta)
                 const participantesInsert = [];
                 personasTemporales.forEach(nombre => {
                     const existe = data.participantes.find(p => 
                         p.nombre.toLowerCase() === nombre.toLowerCase() && 
                         p.lider === lider &&
-                        (p.ruta_nombre || p.ruta) === ruta
+                        (p.ruta_nombre || p.ruta) === ruta.nombre
                     );
                     
                     if (!existe) {
                         participantesInsert.push({
                             nombre: nombre,
                             lider: lider,
-                            ruta_nombre: ruta,
+                            ruta_id: rutaId, // 🔥 CORRECCIÓN: Usar ruta_id (UUID) para integridad
+                            ruta_nombre: ruta.nombre, // Mantener por compatibilidad
                             asiste: false
                         });
                     }
@@ -3307,16 +3329,19 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
     const reserva = data.reservas.find(r => r.lider === lider);
     if (!reserva) return false;
     
-    const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
+    // 🔥 CORRECCIÓN: Buscar ruta por ID
+    const ruta = data.rutas.find(r => r.id === reserva.rutaId);
     if (!ruta) return false;
     
     // Verificar cupos disponibles (permitir sobreventa)
-    const disponibles = calcularCuposDisponibles(reserva.ruta);
+    // 🔥 CORRECCIÓN: Usar rutaId en lugar de nombre
+    const disponibles = calcularCuposDisponibles(reserva.rutaId);
     
     // Solo mostrar confirmación si no se pasó sinConfirmacion=true (para evitar doble confirmación)
     if (!sinConfirmacion && disponibles < incremento) {
         // Permitir sobreventa con advertencia usando modal
-        const ocupados = calcularCuposOcupados(reserva.ruta);
+        // 🔥 CORRECCIÓN: Usar rutaId en lugar de nombre
+        const ocupados = calcularCuposOcupados(reserva.rutaId);
         const continuar = await confirmarAccion(
             `Solo hay ${disponibles >= 0 ? disponibles : 0} cupo${disponibles !== 1 ? 's' : ''} disponible${disponibles !== 1 ? 's' : ''}.\n\n` +
             `Actualmente: ${ocupados}/${ruta.cupos} personas\n\n` +
@@ -3332,7 +3357,7 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
             .from('reservas')
             .update({ cantidad: nuevaCantidad })
             .eq('lider', lider)
-            .eq('ruta_nombre', reserva.ruta);
+            .eq('ruta_id', reserva.rutaId);
             
         if (error) throw error;
         
@@ -3406,17 +3431,21 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
     const nombreCompleto = [nombre, segundoNombre, apellido].filter(n => n).join(' ');
 
     // Buscar la reserva específica por líder + ruta
-    const reserva = data.reservas.find(r => r.lider === lider && r.ruta === rutaAsociada);
+    const reserva = data.reservas.find(r => r.lider === lider && r.rutaId === rutaAsociada);
     if (!reserva) {
         showToast('No se encontró la reserva', 'error', 'Error');
         return;
     }
 
-    const registrados = contarParticipantesReserva(lider, reserva.ruta);
-
-    // 🔪 MODIFICACIÓN QUIRÚRGICA INICIO - Permitir sobreventa (confirmación única)
-    const rutaParticipante = data.rutas.find(r => r.nombre === reserva.ruta);
-    const ocupadosRuta = rutaParticipante ? calcularCuposOcupados(reserva.ruta) : 0;
+    // 🔥 CORRECCIÓN: Buscar ruta por ID y usar rutaId para cálculos
+    const rutaParticipante = data.rutas.find(r => r.id === reserva.rutaId);
+    if (!rutaParticipante) {
+        showToast('No se encontró la ruta de la reserva', 'error', 'Error');
+        return;
+    }
+    
+    const registrados = contarParticipantesReserva(lider, reserva.rutaId);
+    const ocupadosRuta = calcularCuposOcupados(reserva.rutaId);
     const haySobreventaRuta = rutaParticipante && ocupadosRuta >= rutaParticipante.cupos;
     const disponiblesRuta = rutaParticipante ? rutaParticipante.cupos - ocupadosRuta : 0;
     
@@ -3429,7 +3458,7 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
         let mensaje = `El líder ${lider} ya tiene ${reserva.cantidad} personas registradas en su reserva.\n\n`;
         
         if (haySobreventaRuta) {
-            mensaje += `⚠️ La ruta "${reserva.ruta}" ya está sobrevendida (${ocupadosRuta}/${rutaParticipante.cupos} personas).\n\n`;
+            mensaje += `⚠️ La ruta "${rutaParticipante.nombre}" ya está sobrevendida (${ocupadosRuta}/${rutaParticipante.cupos} personas).\n\n`;
         } else if (causariaSobreventaRuta) {
             mensaje += `⚠️ Agregar un cupo adicional causaría sobreventa en la ruta (${ocupadosRuta + 1}/${rutaParticipante.cupos} personas).\n\n`;
         } else if (disponiblesRuta === 1) {
@@ -3447,7 +3476,7 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
                 .from('reservas')
                 .update({ cantidad: nuevaCantidad })
                 .eq('lider', lider)
-                .eq('ruta_nombre', reserva.ruta);
+                .eq('ruta_id', reserva.rutaId);
                 
             if (error) {
                 console.error('Error actualizando cupos:', error);
@@ -3465,7 +3494,7 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
     } else if (haySobreventaRuta) {
         // Si la ruta ya está sobrevendida pero la reserva no, advertir pero permitir
         const continuar = await confirmarAccion(
-            `La ruta "${reserva.ruta}" ya está sobrevendida (${ocupadosRuta}/${rutaParticipante.cupos} personas).\n\n` +
+            `La ruta "${rutaParticipante.nombre}" ya está sobrevendida (${ocupadosRuta}/${rutaParticipante.cupos} personas).\n\n` +
             `¿Deseas continuar agregando esta persona?`,
             'peligro'
         );
@@ -3474,10 +3503,11 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
     // 🔪 MODIFICACIÓN QUIRÚRGICA FIN
 
     // Verificar duplicados (comparar nombre completo por líder + ruta)
+    // 🔥 CORRECCIÓN: Usar rutaId para verificar duplicados correctamente
     const existe = data.participantes.find(p => 
         p.nombre.toLowerCase() === nombreCompleto.toLowerCase() && 
         p.lider === lider &&
-        (p.ruta_nombre || p.ruta) === reserva.ruta
+        (p.rutaId === reserva.rutaId || p.ruta_id === reserva.rutaId) // Por ID (preferido)
     );
     
     if (existe) {
@@ -3489,12 +3519,14 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
         showLoader('Agregando participante...');
         
         // Insertar participante con nombre completo, asociado a la ruta de esta reserva
+        // 🔥 CORRECCIÓN: Usar ruta_id (UUID) para integridad con rutas duplicadas
         const { error: errorParticipante } = await db
             .from('participantes')
             .insert([{
                 nombre: nombreCompleto,
                 lider,
-                ruta_nombre: reserva.ruta,
+                ruta_id: reserva.rutaId, // 🔥 CORRECCIÓN: Usar ruta_id (UUID)
+                ruta_nombre: nombreRutaParticipante, // Mantener por compatibilidad
                 asiste: false
             }]);
 
@@ -3523,7 +3555,7 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
                     monto_pagado: montoPagadoBs
                 })
                 .eq('lider', lider)
-                .eq('ruta_nombre', reserva.ruta);
+                .eq('ruta_id', reserva.rutaId);
 
             if (errorPago) throw errorPago;
         }
@@ -3556,7 +3588,7 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
 
 // AGREGAR PERSONA RÁPIDA DESDE CARD DE RESERVA
 async function agregarPersonaRapida(lider, ruta) {
-    const reserva = data.reservas.find(r => r.lider === lider && r.ruta === ruta);
+    const reserva = data.reservas.find(r => r.lider === lider && r.rutaId === ruta);
     if (!reserva) {
         showToast('No se encontró la reserva', 'error', 'Error');
         return;
@@ -3572,7 +3604,7 @@ async function agregarPersonaRapida(lider, ruta) {
             // Si no se proporciona ruta, buscar la primera reserva del líder (compatibilidad)
             let reserva;
             if (ruta) {
-                reserva = data.reservas.find(r => r.lider === lider && r.ruta === ruta);
+                reserva = data.reservas.find(r => r.lider === lider && r.rutaId === ruta);
             } else {
                 reserva = data.reservas.find(r => r.lider === lider);
             }
@@ -3605,7 +3637,7 @@ async function agregarPersonaRapida(lider, ruta) {
                         monto_pagado: montoPagadoBs // Solo Bs para cálculo de profit
                     })
                     .eq('lider', lider)
-                    .eq('ruta_nombre', reserva.ruta);
+                    .eq('ruta_id', reserva.rutaId);
 
                 if (error) throw error;
 
@@ -3620,7 +3652,7 @@ async function agregarPersonaRapida(lider, ruta) {
                 await loadData();
                 renderReservas();
                 renderRutas();
-                verDetalleReserva(lider, ruta); // Refrescar el modal
+                verDetalleReserva(lider, reserva.rutaId); // Refrescar el modal
                 showToast('Pago registrado exitosamente', 'success', 'Éxito');
             } catch (error) {
                 console.error('Error:', error);
@@ -3631,11 +3663,13 @@ async function agregarPersonaRapida(lider, ruta) {
 
 
         // VER DETALLE RESERVA
-        function verDetalleReserva(lider, nombreRuta) {
-            const reserva = data.reservas.find(r => r.lider === lider && r.ruta === nombreRuta);
+        function verDetalleReserva(lider, rutaId) {
+            // 🔥 CORRECCIÓN: Buscar por rutaId (UUID), no por nombre
+            const reserva = data.reservas.find(r => r.lider === lider && r.rutaId === rutaId);
             if (!reserva) return;
             
-            const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
+            // 🔥 CORRECCIÓN: Buscar ruta por ID
+            const ruta = data.rutas.find(r => r.id === reserva.rutaId);
             // Usar campo normalizado (después de loadData/saveData siempre está normalizado)
             const montoPagado = reserva.montoPagado || 0;
             
@@ -3671,7 +3705,7 @@ async function agregarPersonaRapida(lider, ruta) {
                     <div class="payment-header">
                         <div>
                             <div style="font-weight: 700; margin-bottom: 4px;">📊 Resumen de Pagos</div>
-                            <div style="font-size: 13px; color: var(--text-secondary);">Ruta: ${reserva.ruta}</div>
+                            <div style="font-size: 13px; color: var(--text-secondary);">Ruta: ${ruta ? ruta.nombre : 'N/A'}</div>
                         </div>
                     </div>
                     <div class="divider"></div>
@@ -3726,9 +3760,9 @@ async function agregarPersonaRapida(lider, ruta) {
                 <div class="form-group">
                     <label class="form-label">📎 Referencia (Opcional)</label>
                     <input type="text" id="nuevoPagoReferencia" class="form-input" 
-                           placeholder="Número de referencia del pago">
+                           placeholder="Número de referencia del pago" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                 </div>
-                <button class="btn btn-success" onclick="actualizarPagos('${lider}', parseFloat(document.getElementById('nuevoPago').value), document.getElementById('nuevoPagoReferencia').value.trim(), document.getElementById('nuevoPagoEnDolares').checked, '${reserva.ruta}')">
+                <button class="btn btn-success" onclick="actualizarPagos('${lider}', parseFloat(document.getElementById('nuevoPago').value), document.getElementById('nuevoPagoReferencia').value.trim(), document.getElementById('nuevoPagoEnDolares').checked, '${reserva.rutaId}')">
                     ✅ Registrar Pago
                 </button>
                 
@@ -3762,18 +3796,18 @@ async function agregarPersonaRapida(lider, ruta) {
                 return;
             }
             
-            // Obtener datos de la ruta
-            const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
+            // 🔥 CORRECCIÓN: Obtener datos de la ruta por ID
+            const ruta = data.rutas.find(r => r.id === reserva.rutaId);
             if (!ruta) {
                 showToast('No se encontró la información de la ruta', 'error', 'Error');
                 return;
             }
             
             // Obtener lista de participantes del líder
-            // Participantes asociados a este líder y a esta ruta específica
+            // 🔥 CORRECCIÓN: Participantes asociados a este líder y a esta ruta específica (por ID)
             const participantes = data.participantes.filter(p => 
                 p.lider === lider && 
-                ((p.ruta_nombre || p.ruta) === rutaNombre)
+                (p.rutaId === reserva.rutaId || p.ruta_id === reserva.rutaId) // Por ID (preferido)
             );
             
             // Calcular monto total pagado (solo Bs)
@@ -3787,7 +3821,7 @@ async function agregarPersonaRapida(lider, ruta) {
             // Construir mensaje con formato exacto
             let mensaje = `${eReserva} *DETALLES DE RESERVA*\n\n`;
             mensaje += `${eLider} *Líder:* ${lider}\n`;
-            mensaje += `${eRuta} *Ruta:* ${reserva.ruta}\n`;
+            mensaje += `${eRuta} *Ruta:* ${ruta.nombre}\n`;
             mensaje += `${eFecha} *Fecha:* ${fechaFormateada}\n`;
             mensaje += `${eCupos} *Cupos Reservados:* ${reserva.cantidad}\n`;
             mensaje += `${ePrecio} *Precio Referencial:* ${ruta.precioEuros || 0}€\n`;
@@ -3834,7 +3868,7 @@ function abrirAgregarPersonaAReserva(lider, nombreRuta) {
     closeModal('modalDetalleReserva');
     
     // Verificar que la reserva existe
-    const reserva = data.reservas.find(r => r.lider === lider && r.ruta === nombreRuta);
+    const reserva = data.reservas.find(r => r.lider === lider && r.rutaId === nombreRuta);
     if (!reserva) {
         showToast('No se encontró la reserva', 'error', 'Error');
         return;
@@ -3869,7 +3903,7 @@ async function archivarRuta(idRuta) {
     }
 
     // Filtrar reservas por nombre de ruta (frontend sigue usando nombre de ruta)
-    const reservas = data.reservas.filter(r => r.ruta === ruta.nombre);
+    const reservas = data.reservas.filter(r => r.rutaId === ruta.id);
     const participantes = data.participantes.filter(p =>
         reservas.some(r => r.lider === p.lider)
     );
@@ -3911,19 +3945,28 @@ async function archivarRuta(idRuta) {
     }
 }
 
-        async function eliminarReserva(lider, nombreRuta) {
-    const reserva = data.reservas.find(r => r.lider === lider && r.ruta === nombreRuta);
+        async function eliminarReserva(lider, rutaId) {
+    // 🔥 CORRECCIÓN: El parámetro es rutaId (UUID), no nombreRuta
+    const reserva = data.reservas.find(r => r.lider === lider && r.rutaId === rutaId);
     if (!reserva) return;
 
+    // 🔥 CORRECCIÓN: Buscar ruta por ID para obtener el nombre
+    const ruta = data.rutas.find(r => r.id === reserva.rutaId);
+    if (!ruta) {
+        showToast('No se encontró la ruta de la reserva', 'error', 'Error');
+        return;
+    }
+
     // Solo eliminar participantes de esta reserva específica (lider + ruta)
+    // 🔥 CORRECCIÓN: Filtrar participantes por rutaId para garantizar integridad
     const participantes = data.participantes.filter(p => {
-        const reservaParticipante = data.reservas.find(r => r.lider === p.lider);
-        return reservaParticipante && reservaParticipante.lider === lider && reservaParticipante.ruta === nombreRuta;
+        return p.lider === lider && 
+               (p.rutaId === reserva.rutaId || p.ruta_id === reserva.rutaId); // Por ID (preferido)
     });
 
     const mensaje =
         `Eliminar reserva de "${lider}"?\n\n` +
-        `• Ruta: ${reserva.ruta}\n` +
+        `• Ruta: ${ruta ? ruta.nombre : 'N/A'}\n` +
         `• Cupos: ${reserva.cantidad}\n` +
         `• Personas registradas: ${participantes.length}\n\n` +
         `Esta acción NO se puede deshacer.`;
@@ -3936,7 +3979,8 @@ async function archivarRuta(idRuta) {
         
         // 1. Eliminar participantes asociados a esta reserva específica
         // Verificar si el líder tiene otras reservas
-        const otrasReservas = data.reservas.filter(r => r.lider === lider && r.ruta !== nombreRuta);
+        // 🔥 CORRECCIÓN: Comparar por rutaId, no por nombre
+        const otrasReservas = data.reservas.filter(r => r.lider === lider && r.rutaId !== rutaId);
         
         if (participantes.length > 0) {
             if (otrasReservas.length > 0) {
@@ -3944,21 +3988,24 @@ async function archivarRuta(idRuta) {
                 console.log(`⚠️ El líder "${lider}" tiene ${otrasReservas.length} otra(s) reserva(s). Los participantes no se eliminarán.`);
             } else {
                 // Es la única reserva del líder, eliminar todos sus participantes
+                // 🔥 CORRECCIÓN: Eliminar solo participantes de esta ruta específica
                 const { error: errorParticipantes } = await db
                     .from('participantes')
                     .delete()
-                    .eq('lider', lider);
+                    .eq('lider', lider)
+                    .eq('ruta_id', rutaId);
                     
                 if (errorParticipantes) throw errorParticipantes;
             }
         }
         
         // 2. Eliminar la reserva específica (lider + ruta)
+        // 🔥 CORRECCIÓN: Usar rutaId directamente
         const { error: errorReserva } = await db
             .from('reservas')
             .delete()
             .eq('lider', lider)
-            .eq('ruta_nombre', nombreRuta);
+            .eq('ruta_id', rutaId);
             
         if (errorReserva) throw errorReserva;
 
@@ -4074,13 +4121,13 @@ function renderRutas() {
             <p>Crea tu primera ruta de senderismo</p>
         </div>` :
         filtered.map(ruta => {
-            const ocupados = calcularCuposOcupados(ruta.nombre);
+            const ocupados = calcularCuposOcupados(ruta.id);
             const disponibles = ruta.cupos - ocupados;
             const porcentaje = (ocupados / ruta.cupos * 100).toFixed(0);
-            const recaudado = calcularTotalRecaudado(ruta.nombre);
-            const gastos = calcularTotalGastos(ruta.nombre);
-            const profitNeto = calcularProfitNeto(ruta.nombre);
-            const totalDolares = calcularTotalDolares(ruta.nombre);
+            const recaudado = calcularTotalRecaudado(ruta.id);
+            const gastos = calcularTotalGastos(ruta.id);
+            const profitNeto = calcularProfitNeto(ruta.id);
+            const totalDolares = calcularTotalDolares(ruta.id);
             const haySobreventa = ocupados > ruta.cupos;
             const badgeClass = haySobreventa ? 'badge-closed' : (disponibles > 5 ? 'badge-active' : disponibles > 0 ? 'badge-warning' : 'badge-closed');
             const badgeText = haySobreventa ? 'Sobrevendida' : (disponibles > 0 ? 'Activa' : 'Completa');
@@ -4088,7 +4135,7 @@ function renderRutas() {
             const colorCupos = haySobreventa ? 'var(--danger)' : 'var(--text-primary)';
             
             // Calcular asistencia (presentes vs cupos reservados) por ruta específica
-            const reservasRuta = data.reservas.filter(r => r.ruta === ruta.nombre);
+            const reservasRuta = data.reservas.filter(r => r.rutaId === ruta.id);
             const participantesRuta = data.participantes.filter(p => 
                 reservasRuta.some(r => r.lider === p.lider && (p.ruta_nombre || p.ruta) === ruta.nombre)
             );
@@ -4277,35 +4324,40 @@ function formatearFechaCorta(fechaString) {
             
             // Filtrar reservas: excluir las de rutas archivadas
             let filtered = data.reservas.filter(r => {
-                const ruta = data.rutas.find(rt => rt.nombre === r.ruta);
+                // 🔥 CORRECCIÓN: Buscar ruta por ID, no por nombre
+                const ruta = data.rutas.find(rt => rt.id === r.rutaId);
                 // Excluir reservas de rutas archivadas o que no existan
                 if (!ruta || ruta.archivada) {
                     return false;
                 }
                 
-                // Aplicar filtro de búsqueda
+                // Aplicar filtro de búsqueda (usar nombre de ruta si está disponible)
+                const nombreRuta = r.ruta || ruta.nombre || '';
                 return r.lider.toLowerCase().includes(search) || 
-                       r.ruta.toLowerCase().includes(search);
+                       nombreRuta.toLowerCase().includes(search);
             });
             
             if (filtroRuta) {
-                filtered = filtered.filter(r => r.ruta === filtroRuta);
+                filtered = filtered.filter(r => r.rutaId === filtroRuta);
             }
             
             const html = filtered.length === 0 ?
                 `<div class="empty-state">
-                    <div class="empty-state-icon">👥</div>
+                    <div class="empty-state-icon">🎫</div>
                     <h3>No hay reservas</h3>
                     <p>Crea tu primera reserva grupal</p>
                 </div>` :
                 filtered.map(reserva => {
-                    const registrados = contarParticipantesReserva(reserva.lider, reserva.ruta);
-                    const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
+                    // 🔥 CORRECCIÓN: Buscar ruta por ID
+                    const ruta = data.rutas.find(r => r.id === reserva.rutaId);
                     
                     // Validar que la ruta existe (ya filtrado arriba, pero por seguridad)
                     if (!ruta) {
                         return '';
                     }
+                    
+                    // 🔥 CORRECCIÓN: Usar rutaId para contar participantes
+                    const registrados = contarParticipantesReserva(reserva.lider, reserva.rutaId);
                     
                     // Calcular totales separados
                     const totalBs = (reserva.pagos || [])
@@ -4319,7 +4371,8 @@ function formatearFechaCorta(fechaString) {
                     const numPagos = (reserva.pagos && reserva.pagos.length > 0) ? reserva.pagos.length : 0;
                     const tienePagos = totalBs > 0 || totalDolares > 0;
                     // ID único por líder + ruta, para soportar mismo líder en varias rutas
-                    const cardId = `reserva-${reserva.lider.replace(/\s+/g, '-').toLowerCase()}-${reserva.ruta.replace(/\s+/g, '-').toLowerCase()}`;
+                    // 🔥 CORRECCIÓN: Usar rutaId para cardId único (evita colisiones con rutas del mismo nombre)
+                    const cardId = `reserva-${reserva.lider.replace(/\s+/g, '-').toLowerCase()}-${reserva.rutaId}`;
                     
                     return `
                         <div class="card reserva-card" id="${cardId}">
@@ -4328,7 +4381,7 @@ function formatearFechaCorta(fechaString) {
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                     <div style="flex: 1;">
                                         <div class="card-title" style="margin-bottom: 4px;">👤 ${reserva.lider}</div>
-                                        <div class="card-meta" style="margin-bottom: 8px;">📍 ${reserva.ruta}</div>
+                                        <div class="card-meta" style="margin-bottom: 8px;">📍 ${ruta ? ruta.nombre : 'N/A'}${ruta && ruta.fecha ? ' • ' + formatearFechaCorta(ruta.fecha) : ''}</div>
                                         <div style="display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary);">
                                             ${(function() {
                                                 const haySobreventa = registrados > reserva.cantidad;
@@ -4381,13 +4434,13 @@ function formatearFechaCorta(fechaString) {
                                     </div>
                                 ` : ''}
                                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 16px;">
-                                    <button class="btn btn-success btn-small" onclick="agregarPersonaRapida('${reserva.lider}', '${reserva.ruta}')" title="Agregar persona">
+                                    <button class="btn btn-success btn-small" onclick="agregarPersonaRapida('${reserva.lider}', '${reserva.rutaId}')" title="Agregar persona">
                                         +1
                                     </button>
-                                    <button class="btn btn-primary btn-small" onclick="verDetalleReserva('${reserva.lider}', '${reserva.ruta}')">
+                                    <button class="btn btn-primary btn-small" onclick="verDetalleReserva('${reserva.lider}', '${reserva.rutaId}')">
                                         💰 Pagos
                                     </button>
-                                    <button class="btn btn-danger btn-small" onclick="eliminarReserva('${reserva.lider}', '${reserva.ruta}')">
+                                    <button class="btn btn-danger btn-small" onclick="eliminarReserva('${reserva.lider}', '${reserva.rutaId}')">
                                         🗑️ Eliminar
                                     </button>
                                 </div>
@@ -4567,10 +4620,18 @@ function formatearFechaCorta(fechaString) {
             let filtered = [...(data.participantes || [])];
             
             // Filtrar participantes de rutas archivadas (solo mostrar participantes de rutas activas)
+            // 🔥 CORRECCIÓN: Usar rutaId para filtrar correctamente
             filtered = filtered.filter(p => {
-                const rutaNombre = p.ruta_nombre || p.ruta || '';
-                if (!rutaNombre) return true; // Si no tiene ruta, mostrarlo (por si acaso)
-                const ruta = data.rutas.find(r => r.nombre === rutaNombre);
+                const rutaIdParticipante = p.rutaId || p.ruta_id;
+                if (!rutaIdParticipante) {
+                    // Si no tiene ruta_id, intentar buscar por nombre (compatibilidad)
+                    const rutaNombre = p.ruta_nombre || p.ruta || '';
+                    if (!rutaNombre) return true; // Si no tiene ruta, mostrarlo (por si acaso)
+                    const ruta = data.rutas.find(r => r.nombre === rutaNombre);
+                    return !ruta || !ruta.archivada;
+                }
+                // Buscar ruta por ID
+                const ruta = data.rutas.find(r => r.id === rutaIdParticipante);
                 return !ruta || !ruta.archivada; // Mostrar solo si la ruta no existe o no está archivada
             });
             
@@ -4583,20 +4644,34 @@ function formatearFechaCorta(fechaString) {
             }
             
             // Filtro por ruta (si está seleccionado)
+            // 🔥 CORRECCIÓN: El filtro usa rutaId (UUID), comparar correctamente
             if (filtroRuta) {
-                filtered = filtered.filter(p => (p.ruta_nombre || p.ruta) === filtroRuta);
+                filtered = filtered.filter(p => 
+                    (p.rutaId === filtroRuta || p.ruta_id === filtroRuta) || // Por ID
+                    (p.ruta_nombre || p.ruta) === filtroRuta // Compatibilidad: por nombre si el filtro es nombre
+                );
             }
             
             const html = filtered.length === 0 ?
                 `<div class="empty-state">
-                    <div class="empty-state-icon">✅</div>
+                    <div class="empty-state-icon">👥</div>
                     <h3>No hay personas registradas</h3>
                     <p>Registra a los participantes</p>
                 </div>` :
                 `<div class="person-list-compact">
                     ${filtered.map((p) => {
-                        const rutaNombre = p.ruta_nombre || p.ruta || 'Sin ruta';
-                        const ruta = data.rutas.find(r => r.nombre === rutaNombre);
+                        // 🔥 CORRECCIÓN: Buscar ruta por ID primero, luego por nombre (compatibilidad)
+                        const rutaIdParticipante = p.rutaId || p.ruta_id;
+                        let ruta = null;
+                        if (rutaIdParticipante) {
+                            ruta = data.rutas.find(r => r.id === rutaIdParticipante);
+                        }
+                        if (!ruta) {
+                            // Fallback: buscar por nombre (compatibilidad con datos antiguos)
+                            const rutaNombre = p.ruta_nombre || p.ruta || '';
+                            ruta = data.rutas.find(r => r.nombre === rutaNombre);
+                        }
+                        const rutaNombre = ruta ? ruta.nombre : (p.ruta_nombre || p.ruta || 'Sin ruta');
                         const rutaFecha = ruta ? formatearFechaCorta(ruta.fecha) : '';
                         
                         // Calcular si es cliente recurrente
@@ -4634,7 +4709,8 @@ function formatearFechaCorta(fechaString) {
             
             // Construir cards de asistencia a partir de las reservas activas (no archivadas)
             const reservasActivas = (data.reservas || []).filter(reserva => {
-                const ruta = data.rutas.find(r => r.nombre === reserva.ruta);
+                // 🔥 CORRECCIÓN: Buscar ruta por ID
+                const ruta = data.rutas.find(r => r.id === reserva.rutaId);
                 if (!ruta || ruta.archivada) return false;
                 // Filtrar por líder seleccionado en el filtro
                 if (liderFiltro && reserva.lider !== liderFiltro) return false;
@@ -4651,15 +4727,19 @@ function formatearFechaCorta(fechaString) {
                 </div>` :
                 reservasActivas.map(reserva => {
                     const lider = reserva.lider;
-                    const rutaNombre = reserva.ruta;
-                    const ruta = data.rutas.find(r => r.nombre === rutaNombre);
-                    const rutaFecha = ruta ? formatearFechaCorta(ruta.fecha) : '';
+                    // 🔥 CORRECCIÓN: Buscar ruta por ID
+                    const ruta = data.rutas.find(r => r.id === reserva.rutaId);
+                    if (!ruta) return '';
+                    
+                    const rutaNombre = ruta.nombre;
+                    const rutaFecha = formatearFechaCorta(ruta.fecha);
                     
                     // Participantes asociados a este líder y a esta ruta específica.
-                    // IMPORTANTE: Solo usamos líder + ruta para no mezclar reservas de un mismo líder.
+                    // 🔥 CORRECCIÓN: Usar rutaId para filtrar correctamente (evita mezclar rutas con mismo nombre)
                     let participantes = (data.participantes || []).filter(p => 
                         p.lider === lider && 
-                        ((p.ruta_nombre || p.ruta) === rutaNombre)
+                        ((p.rutaId === reserva.rutaId || p.ruta_id === reserva.rutaId) || // Por ID (preferido)
+                         (p.ruta_nombre || p.ruta) === rutaNombre) // Compatibilidad: por nombre
                     );
                     // Orden estable por nombre para que no cambien de posición al marcar/desmarcar
                     const participantesOrdenados = participantes
@@ -4670,10 +4750,9 @@ function formatearFechaCorta(fechaString) {
                     const totalEnCard = participantesOrdenados.length || 1; // evitar división por 0
                     const porcentaje = (presentes / totalEnCard * 100).toFixed(0);
                     
-                    // ID único por líder + ruta para no mezclar tarjetas
+                    // ID único por líder + rutaId para no mezclar tarjetas (evita colisiones con rutas del mismo nombre)
                     const liderSlug = lider.replace(/\s+/g, '-').toLowerCase();
-                    const rutaSlug = rutaNombre.replace(/\s+/g, '-').toLowerCase();
-                    const cardId = `asistencia-${liderSlug}-${rutaSlug}`;
+                    const cardId = `asistencia-${liderSlug}-${reserva.rutaId}`;
                     
                     return `
                         <div class="attendance-group-compact asistencia-card" id="${cardId}">
@@ -4746,7 +4825,7 @@ function formatearFechaCorta(fechaString) {
          */
         async function agregarGasto() {
             const concepto = document.getElementById('gastoConcepto').value.trim();
-            const ruta = document.getElementById('gastoRuta').value;
+            const rutaId = document.getElementById('gastoRuta').value; // 🔥 CORRECCIÓN: Variable se llama rutaId
             const monto = parseFloat(document.getElementById('gastoMonto').value);
 
             // Validaciones mejoradas
@@ -4756,7 +4835,7 @@ function formatearFechaCorta(fechaString) {
                 return;
             }
 
-            if (!ruta) {
+            if (!rutaId) {
                 showToast('Selecciona una ruta', 'warning', 'Validación');
                 document.getElementById('gastoRuta').focus();
                 return;
@@ -4771,11 +4850,12 @@ function formatearFechaCorta(fechaString) {
             try {
                 showLoader('Registrando gasto...');
                 
+                // 🔥 CORRECCIÓN: Usar ruta_id (UUID) en lugar de ruta_nombre
                 const { error } = await db
                     .from('gastos')
                     .insert([{
                         concepto,
-                        ruta_nombre: ruta,
+                        ruta_id: rutaId, // 🔥 CORRECCIÓN: Usar ruta_id con UUID
                         monto,
                         fecha: new Date().toISOString()
                     }]);
@@ -4921,20 +5001,23 @@ async function marcarTodosPresentes() {
             const filtroRuta = document.getElementById('filtroRutaGastos').value;
 
             // Filtrar gastos: excluir los de rutas archivadas
+            // 🔥 CORRECCIÓN: Buscar ruta por ID, no por nombre
             let filtered = data.gastos.filter(g => {
-                // Verificar si la ruta asociada está archivada
-                const ruta = data.rutas.find(r => r.nombre === g.ruta);
-                if (ruta && ruta.archivada) {
-                    return false; // Excluir gastos de rutas archivadas
+                const rutaIdGasto = g.rutaId || g.ruta_id;
+                // Buscar ruta por ID
+                const ruta = data.rutas.find(r => r.id === rutaIdGasto);
+                if (!ruta || ruta.archivada) {
+                    return false; // Excluir gastos de rutas archivadas o que no existan
                 }
                 
-                // Aplicar filtro de búsqueda
+                // Aplicar filtro de búsqueda (usar nombre de ruta si está disponible)
+                const nombreRuta = ruta ? ruta.nombre : (g.ruta || '');
                 return g.concepto.toLowerCase().includes(search) ||
-                       g.ruta.toLowerCase().includes(search);
+                       nombreRuta.toLowerCase().includes(search);
             });
 
             if (filtroRuta) {
-                filtered = filtered.filter(g => g.ruta === filtroRuta);
+                filtered = filtered.filter(g => g.rutaId === filtroRuta);
             }
 
             const html = filtered.length === 0 ?
@@ -4945,13 +5028,17 @@ async function marcarTodosPresentes() {
                 </div>` :
                 `<div class="person-list-compact">
                     ${filtered.map((gasto) => {
+                        // 🔥 CORRECCIÓN: Buscar ruta por ID para obtener el nombre
+                        const rutaIdGasto = gasto.rutaId || gasto.ruta_id;
+                        const ruta = data.rutas.find(r => r.id === rutaIdGasto);
+                        const nombreRuta = ruta ? ruta.nombre : (gasto.ruta || 'Sin ruta');
                         const fecha = new Date(gasto.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
                         return `
                             <div class="person-item-compact">
                                 <div class="person-info-compact">
                                     <div class="person-name-compact">${gasto.concepto}</div>
                                     <div class="person-meta-compact">
-                                        <span>📍 ${gasto.ruta}</span>
+                                        <span>📍 ${nombreRuta}</span>
                                         <span>📅 ${fecha}</span>
                                         <span style="color: var(--danger); font-weight: 700;">Bs ${gasto.monto.toLocaleString()}</span>
                                     </div>
@@ -4988,11 +5075,11 @@ async function marcarTodosPresentes() {
                 </div>` :
                 rutasArchivadas.map(ruta => {
                     const idCorto = ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
-                    const reservasRuta = data.reservas.filter(r => r.ruta === ruta.nombre);
-                    const recaudado = calcularTotalRecaudado(ruta.nombre);
-                    const gastos = calcularTotalGastos(ruta.nombre);
-                    const profitNeto = calcularProfitNeto(ruta.nombre);
-                    const totalDolares = calcularTotalDolares(ruta.nombre);
+                    const reservasRuta = data.reservas.filter(r => r.rutaId === ruta.id);
+                    const recaudado = calcularTotalRecaudado(ruta.id);
+                    const gastos = calcularTotalGastos(ruta.id);
+                    const profitNeto = calcularProfitNeto(ruta.id);
+                    const totalDolares = calcularTotalDolares(ruta.id);
                     // Usar campo normalizado (siempre disponible después de loadData/saveData)
                     const precioEuros = ruta.precioEuros || 0;
                     
@@ -5003,7 +5090,7 @@ async function marcarTodosPresentes() {
                     const presentes = participantesRuta.filter(p => p.asiste).length;
                     const cuposReservados = reservasRuta.reduce((sum, r) => sum + r.cantidad, 0);
                     const porcentajeAsistencia = cuposReservados > 0 ? (presentes / cuposReservados * 100).toFixed(0) : 0;
-                    const ocupados = calcularCuposOcupados(ruta.nombre);
+                    const ocupados = calcularCuposOcupados(ruta.id);
                     const cardId = `ruta-archivada-${ruta.id || ruta.nombre.replace(/\s+/g, '-').toLowerCase()}`;
                     
                     return `
