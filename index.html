@@ -966,6 +966,37 @@
       z-index: 2;
     }
 
+    /* Definición de la animación suave */
+    @keyframes glow-pulse-sutil {
+      0% {
+        /* Sombra base inicial (la que ya tiene, o similar) */
+        box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+      }
+      50% {
+        /* Expansión sutil del brillo (un poco más lejos, un poco más opaco) */
+        box-shadow: 0 8px 20px rgba(37, 211, 102, 0.5);
+      }
+      100% {
+        /* Vuelta al estado inicial */
+        box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+      }
+    }
+
+    /* Aplicar la animación a la nueva clase */
+    .btn-glow-sutil {
+      /* 2.5 segundos para que sea lento y relajado */
+      animation: glow-pulse-sutil 2.5s infinite ease-in-out;
+      /* Asegurar transición suave para hover */
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    /* Opcional: Al pasar el mouse, fijar el brillo en su estado máximo */
+    .btn-glow-sutil:hover {
+      animation: none; /* Pausa la animación */
+      box-shadow: 0 8px 25px rgba(37, 211, 102, 0.7); /* Brillo fuerte estático */
+      transform: translateY(-2px); /* Pequeño levantamiento */
+    }
+
     /* Responsive */
     @media (max-width: 400px) {
       .route-title {
@@ -1470,7 +1501,7 @@
               </div>
               <a 
                 href="${urlWhatsApp}" 
-                class="route-btn" 
+                class="route-btn btn-glow-sutil" 
                 target="_blank" 
                 rel="noopener"
                 style="flex: 1; max-width: 200px; background: #25D366; color: #0e2f36; padding: 10px 16px; border-radius: 12px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); white-space: nowrap; transition: transform 0.2s;">
