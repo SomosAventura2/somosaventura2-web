@@ -1945,12 +1945,12 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Cupos</label>
-                    <input type="number" id="rutaCupos" class="form-input" placeholder="20">
+                    <input type="number" id="rutaCupos" class="form-input" placeholder="20" min="0" step="1" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
                 </div>
             </div>
             <div class="form-group">
                 <label class="form-label">Precio en Euros (€)</label>
-                <input type="number" id="rutaPrecioEuros" class="form-input" placeholder="10.00" step="0.01">
+                <input type="number" id="rutaPrecioEuros" class="form-input" placeholder="10.00" step="0.01" min="0" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
             </div>
             <div class="btn-group">
                 <button class="btn btn-outline" onclick="closeModal('modalNuevaRuta')">Cancelar</button>
@@ -1980,11 +1980,11 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Cupos Reservados</label>
-                    <input type="number" id="reservaCantidad" class="form-input" placeholder="5" onchange="actualizarPersonasEnReserva()">
+                    <input type="number" id="reservaCantidad" class="form-input" placeholder="5" min="0" step="1" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();" onchange="actualizarPersonasEnReserva()">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Monto Inicial</label>
-                    <input type="number" id="reservaMontoPagado" class="form-input" placeholder="17500" step="0.01">
+                    <input type="number" id="reservaMontoPagado" class="form-input" placeholder="17500" step="0.01" min="0" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
                 </div>
             </div>
             <div class="form-group">
@@ -2041,7 +2041,7 @@
                 <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">💰 Pago Opcional</div>
                 <div class="form-group" style="margin-bottom: 12px;">
                     <label class="form-label" style="font-size: 12px;">Monto</label>
-                    <input type="number" id="participanteMonto" class="form-input" placeholder="0.00" step="0.01" min="0">
+                    <input type="number" id="participanteMonto" class="form-input" placeholder="0.00" step="0.01" min="0" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
                 </div>
                 <div class="form-group" style="margin-bottom: 12px;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px;">
@@ -2085,7 +2085,7 @@
             </div>
             <div class="form-group">
                 <label class="form-label">Monto (Bs)</label>
-                <input type="number" id="gastoMonto" class="form-input" placeholder="0.00" step="0.01">
+                <input type="number" id="gastoMonto" class="form-input" placeholder="0.00" step="0.01" min="0" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
             </div>
             <div class="btn-group">
                 <button class="btn btn-outline" onclick="closeModal('modalNuevoGasto')">Cancelar</button>
@@ -3613,7 +3613,62 @@ async function agregarPersonaRapida(lider, ruta) {
             }
         }
 
+        // ELIMINAR PAGO INDIVIDUAL (con confirmación)
+        async function eliminarPago(lider, rutaId, index) {
+            try {
+                const reserva = data.reservas.find(r => r.lider === lider && r.rutaId === rutaId);
+                if (!reserva) {
+                    showToast('No se encontró la reserva', 'error', 'Error');
+                    return;
+                }
 
+                const pagosActuales = Array.isArray(reserva.pagos) ? [...reserva.pagos] : [];
+                if (index < 0 || index >= pagosActuales.length) {
+                    showToast('Pago no encontrado', 'error', 'Error');
+                    return;
+                }
+
+                const pago = pagosActuales[index];
+                const simbolo = pago.enDolares ? '$' : 'Bs';
+                const mensaje =
+                    `Eliminar este pago?\n\n` +
+                    `• Monto: ${simbolo} ${pago.monto.toLocaleString()}\n` +
+                    (pago.referencia ? `• Ref: ${pago.referencia}\n` : '') +
+                    `• Líder: ${lider}`;
+
+                const ok = await confirmarAccion(mensaje, 'eliminar');
+                if (!ok) return;
+
+                // Eliminar el pago por índice
+                pagosActuales.splice(index, 1);
+
+                // Recalcular monto_pagado solo con pagos en Bs
+                const montoPagadoBs = pagosActuales
+                    .filter(p => !p.enDolares)
+                    .reduce((sum, p) => sum + (p.monto || 0), 0);
+
+                const { error } = await db
+                    .from('reservas')
+                    .update({
+                        pagos: pagosActuales,
+                        monto_pagado: montoPagadoBs
+                    })
+                    .eq('lider', lider)
+                    .eq('ruta_id', rutaId);
+
+                if (error) throw error;
+
+                await saveData(true); // Recarga silenciosa
+                renderReservas();
+                renderRutas();
+                verDetalleReserva(lider, rutaId); // Refrescar modal
+
+                showToast('Pago eliminado correctamente', 'success', 'Éxito');
+            } catch (error) {
+                console.error('Error al eliminar pago:', error);
+                showToast('Error al eliminar el pago: ' + error.message, 'error', 'Error');
+            }
+        }
 
         // VER DETALLE RESERVA
         function verDetalleReserva(lider, rutaId) {
@@ -3640,7 +3695,7 @@ async function agregarPersonaRapida(lider, ruta) {
                 const color = esDolares ? '#f59e0b' : 'var(--success)';
                 return `
                 <div style="padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border);">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
                         <div style="flex: 1;">
                             <div style="font-weight: 700; color: ${color}; margin-bottom: 4px;">
                                 ${simbolo} ${pago.monto.toLocaleString()} ${esDolares ? '(USD efectivo)' : ''}
@@ -3648,6 +3703,12 @@ async function agregarPersonaRapida(lider, ruta) {
                             ${pago.referencia ? `<div style="font-size: 12px; color: var(--accent); margin-bottom: 4px;">📎 Ref: ${pago.referencia}</div>` : ''}
                             <div style="font-size: 12px; color: var(--text-secondary);">${new Date(pago.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
+                        <button 
+                            class="person-delete-btn"
+                            title="Eliminar pago"
+                            onclick="eliminarPago('${lider}', '${reserva.rutaId}', ${index})">
+                            🗑️
+                        </button>
                     </div>
                 </div>
             `;
@@ -3702,7 +3763,7 @@ async function agregarPersonaRapida(lider, ruta) {
                     <label class="form-label">💵 Registrar Nuevo Pago</label>
                     <input type="number" id="nuevoPago" class="form-input" 
                            placeholder="Monto" 
-                           step="0.01">
+                           step="0.01" min="0" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
                 </div>
                 <div class="form-group">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
