@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <style>
     :root {
       --whatsapp: #25D366;
@@ -1074,7 +1074,7 @@
   <div class="container">
     <!-- Hero Section -->
     <div class="hero">
-      <img src="logo.png" alt="Somos Aventurados Logo" class="logo">
+      <img src="logo.png" alt="Somos Aventurados Logo" class="logo" fetchpriority="high" width="390" height="auto">
       <h1>
         Vive la aventura
         <span class="highlight">con nosotros</span>
@@ -1147,22 +1147,22 @@
       <h2 class="section-title">Nuestras Aventuras</h2>
       <div class="gallery-grid">
         <div class="gallery-item" data-caption="Cascada Los Gavilanes">
-          <img src="galeria1.jpg" alt="Cascada Los Gavilanes" loading="lazy">
+          <img src="galeria1.jpg" alt="Cascada Los Gavilanes" loading="lazy" width="400" height="400">
         </div>
         <div class="gallery-item" data-caption="Nuestros aventurados">
-          <img src="galeria2.jpg" alt="Nuestros aventurados" loading="lazy">
+          <img src="galeria2.jpg" alt="Nuestros aventurados" loading="lazy" width="400" height="400">
         </div>
         <div class="gallery-item" data-caption="Cascada Los Aguacates">
-          <img src="galeria3.jpg" alt="Cascada Los Aguacates" loading="lazy">
+          <img src="galeria3.jpg" alt="Cascada Los Aguacates" loading="lazy" width="400" height="400">
         </div>
         <div class="gallery-item" data-caption="El chorrerón de Chuao">
-          <img src="galeria4.jpg" alt="El chorrerón de Chuao" loading="lazy">
+          <img src="galeria4.jpg" alt="El chorrerón de Chuao" loading="lazy" width="400" height="400">
         </div>
         <div class="gallery-item" data-caption="Cascada la reina">
-          <img src="galeria5.jpg" alt="Cascada la reina" loading="lazy">
+          <img src="galeria5.jpg" alt="Cascada la reina" loading="lazy" width="400" height="400">
         </div>
         <div class="gallery-item" data-caption="Los Azules">
-          <img src="galeria6.jpg" alt="Los Azules" loading="lazy">
+          <img src="galeria6.jpg" alt="Los Azules" loading="lazy" width="400" height="400">
         </div>
       </div>
     </section>
@@ -1172,7 +1172,7 @@
       <h2 class="section-title">Nuestra Historia</h2>
       <div class="about-content">
         <div class="about-image">
-          <img src="cl.jpg" alt="Chantal y Luisfer" loading="lazy">
+          <img src="cl.jpg" alt="Chantal y Luisfer" loading="lazy" width="480" height="320">
         </div>
         <div class="about-text">
           <p>Somos Chantal y Luisfer, dos amantes de la naturaleza que decidimos compartir nuestra pasión por el ecoturismo y el senderismo con el mundo.</p>
@@ -1187,14 +1187,14 @@
       <h2 class="section-title">Equípate para la Aventura</h2>
       <div class="products-grid">
         <div class="product-card">
-          <img src="chaqueta.png" alt="Cortavientos personalizados" class="product-image">
+          <img src="chaqueta.png" alt="Cortavientos personalizados" class="product-image" loading="lazy" width="240" height="160">
           <div class="product-info">
             <h4>Chaquetas Cortavientos</h4>
             <p>Diseños exclusivos</p>
           </div>
         </div>
         <div class="product-card">
-          <img src="franela.png" alt="Franelas personalizadas" class="product-image">
+          <img src="franela.png" alt="Franelas personalizadas" class="product-image" loading="lazy" width="240" height="160">
           <div class="product-info">
             <h4>Franelas Aventura</h4>
             <p>Diseños exclusivos</p>
