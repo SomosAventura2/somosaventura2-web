@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="format-detection" content="telephone=no">
     <title>SomosAventura - Gestión</title>
     <link rel="icon" type="image/png" href="/favicon.png?v=99" sizes="32x32">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=99">
@@ -131,19 +130,31 @@
         }
 
         .login-form input {
+            /* Estética base */
             width: 100%;
             padding: 16px 20px;
-            min-height: 44px; /* Touch target mínimo para iPhone */
-            border: 2px solid var(--border);
-            border-radius: 16px;
-            font-size: 16px; /* Mínimo 16px para evitar zoom en iOS */
             margin-bottom: 16px;
-            transition: all 0.3s;
+            border-radius: 16px;
+            border: 2px solid var(--border);
             background: rgba(255, 255, 255, 0.1);
             color: var(--text-primary);
-            /* Prevenir zoom en iOS */
-            -webkit-appearance: none;
+            font-size: 16px; /* Vital para evitar zoom en iOS */
+
+            /* --- LA CLAVE PARA IOS PWA --- */
+            /* 1. Z-Index alto para estar encima de animaciones de fondo */
+            position: relative;
+            z-index: 5000;
+
+            /* 2. Comportamiento nativo de toque */
             touch-action: manipulation;
+
+            /* 3. Permitir selección de texto explícitamente */
+            -webkit-user-select: text !important;
+            user-select: text !important;
+
+            /* 4. Quitar estilos de sistema que a veces interfieren */
+            -webkit-appearance: none;
+            appearance: none;
         }
 
         .login-form input::placeholder {
@@ -153,7 +164,6 @@
         .login-form input:focus {
             outline: none;
             border-color: var(--accent);
-            box-shadow: 0 0 0 4px rgba(118, 200, 147, 0.2);
             background: rgba(255, 255, 255, 0.15);
         }
 
@@ -1770,9 +1780,36 @@
             }
         }
         
-        /* iOS PWA Fix */
+        /* Optimizaciones táctiles para iPhone - PERMITIR TECLADO EN INPUTS */
         @media (max-width: 768px) {
-            /* Sin restricciones de selección */
+            /* CRÍTICO: Inputs deben ser completamente interactivos */
+            input, 
+            textarea, 
+            select, 
+            [contenteditable="true"],
+            [contenteditable] {
+                -webkit-user-select: auto !important;
+                user-select: auto !important;
+                -webkit-touch-callout: default !important;
+                touch-callout: default !important;
+                pointer-events: auto !important;
+                -webkit-tap-highlight-color: rgba(118, 200, 147, 0.2) !important;
+                /* Forzar que iOS reconozca estos como campos editables */
+                cursor: text !important;
+            }
+            
+            /* Solo prevenir selección en elementos de interfaz NO editables */
+            body:not(input):not(textarea):not(select), 
+            div:not([contenteditable]), 
+            span:not([contenteditable]), 
+            p, h1, h2, h3, h4, h5, h6,
+            button, a,
+            label:not([for]), 
+            img, svg {
+                -webkit-user-select: none;
+                user-select: none;
+                -webkit-touch-callout: none;
+            }
         }
 
             .reserva-compact {
@@ -1798,26 +1835,11 @@
         <div class="login-card">
             <img src="../logo.png" alt="SomosAventura2" class="logo-img">
             
-            <form class="login-form" method="post" action="javascript:void(0);" onsubmit="event.preventDefault(); window.login && window.login(); return false;">
-                <input 
-                    type="text" 
-                    id="username" 
-                    name="username"
-                    placeholder="Usuario" 
-                    autocomplete="username"
-                    autocorrect="off"
-                    autocapitalize="off"
-                    spellcheck="false"
-                    required>
-                <input 
-                    type="password" 
-                    id="password" 
-                    name="password"
-                    placeholder="Contraseña" 
-                    autocomplete="current-password"
-                    required>
-                <button type="submit" class="login-btn">Iniciar Sesión</button>
-            </form>
+            <div class="login-form">
+                <input type="text" id="username" placeholder="Usuario" autocomplete="username">
+                <input type="password" id="password" placeholder="Contraseña" autocomplete="current-password">
+                <button class="login-btn" onclick="window.login && window.login()">Iniciar Sesión</button>
+            </div>
             
             <div id="errorMsg" class="error-msg">❌ Usuario o contraseña incorrectos</div>
         </div>
@@ -5714,64 +5736,27 @@ async function marcarTodosPresentes() {
         if (sessionStorage.getItem('authenticated') === 'true') {
             showApp();
         }
-        
-        // ========== WORKAROUND PARA BUG DE iOS PWA ==========
-        // Bug: iOS PWA ignora focus() y no muestra el teclado
-        // Solución: Usar un input readonly temporal que se activa en touchstart
-        
-        const isPWA = window.navigator.standalone === true || 
-                      window.matchMedia('(display-mode: standalone)').matches;
-        
-        if (isPWA) {
-            console.log('🔧 Aplicando workaround para iOS PWA keyboard bug');
-            
-            // Aplicar el fix a TODOS los inputs
-            const allInputs = document.querySelectorAll('input, textarea, select');
-            
-            allInputs.forEach(input => {
-                // El truco: hacer el input readonly primero
-                input.setAttribute('readonly', 'readonly');
-                
-                // En touchstart: remover readonly para que iOS active el teclado
-                input.addEventListener('touchstart', function(e) {
-                    // Remover readonly ANTES del focus
-                    this.removeAttribute('readonly');
-                }, false);
-                
-                // En focus: asegurar que readonly está removido
-                input.addEventListener('focus', function() {
-                    this.removeAttribute('readonly');
-                }, false);
-                
-                // Backup: si pierdes el focus, volver a poner readonly
-                input.addEventListener('blur', function() {
-                    // Pequeño delay para evitar conflictos
-                    setTimeout(() => {
-                        this.setAttribute('readonly', 'readonly');
-                    }, 100);
-                }, false);
+    });
+
+    // --- LOGIN: solo tecla Enter, cero hacks de foco (toque nativo en iOS) ---
+    function attemptLogin() {
+        if (window.login) window.login();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const userIn = document.getElementById('username');
+        const passIn = document.getElementById('password');
+
+        if (userIn) {
+            userIn.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && passIn) passIn.focus();
             });
-            
-            // Fix especial para los inputs de login
-            setTimeout(() => {
-                const username = document.getElementById('username');
-                const password = document.getElementById('password');
-                
-                [username, password].forEach(input => {
-                    if (!input) return;
-                    
-                    // Doble seguridad: manejar click también
-                    input.addEventListener('click', function(e) {
-                        this.removeAttribute('readonly');
-                        this.focus();
-                    }, false);
-                    
-                    // Triple seguridad: manejar mousedown
-                    input.addEventListener('mousedown', function(e) {
-                        this.removeAttribute('readonly');
-                    }, false);
-                });
-            }, 300);
+        }
+
+        if (passIn) {
+            passIn.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') attemptLogin();
+            });
         }
     });
 
