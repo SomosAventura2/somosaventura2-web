@@ -40,8 +40,8 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            /* Mismo tono que el header para scroll elástico iOS (rebote sin blanco) */
-            background: var(--green-dark);
+            /* Mismo tono que el fondo detrás de las cards (app) para scroll elástico iOS */
+            background: var(--bg-dark);
             color: var(--text-primary);
             /* Safe area para iPhone con notch */
             padding-top: env(safe-area-inset-top);
@@ -1692,7 +1692,20 @@
             </div>
             <div class="btn-group" style="margin-top: 16px; gap: 8px; display: flex !important; visibility: visible !important;">
                 <button class="btn btn-outline" style="flex: 1; display: block !important; visibility: visible !important;" onclick="if (confirmModalResolve) { confirmModalResolve(false); cerrarConfirmModal(); }">Cancelar</button>
-                <button class="btn btn-primary" style="flex: 1; display: block !important; visibility: visible !important;" onclick="if (confirmModalResolve) { confirmModalResolve(true); cerrarConfirmModal(); }">Confirmar</button>
+                <button id="confirmModalBtn" class="btn btn-primary" style="flex: 1; display: block !important; visibility: visible !important;" onclick="if (confirmModalResolve) { confirmModalResolve(true); cerrarConfirmModal(); }">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL HISTORIAL CLIENTE RECURRENTE -->
+    <div id="modalHistorialRecurrente" class="modal" onclick="closeModalOnBackdrop(event, 'modalHistorialRecurrente')">
+        <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 400px;">
+            <div class="modal-header confirm-title" id="modalHistorialRecurrenteTitulo">⭐ Cliente recurrente</div>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <p id="modalHistorialRecurrenteCuerpo" style="font-size: 14px; color: var(--text-primary); white-space: pre-line; line-height: 1.6;"></p>
+            </div>
+            <div class="btn-group" style="margin-top: 16px;">
+                <button class="btn btn-primary" style="width: 100%;" onclick="cerrarModalHistorialRecurrente()">Cerrar</button>
             </div>
         </div>
     </div>
@@ -1755,7 +1768,9 @@
 
         <!-- RUTAS -->
         <div id="rutas" class="section active">
-            <input type="text" class="search-box-standalone" id="searchRutas" placeholder="Buscar rutas..." oninput="renderRutas()">
+            <div class="search-filter-container">
+                <input type="text" class="search-box" id="searchRutas" placeholder="Buscar rutas..." oninput="renderRutas()">
+            </div>
             <div id="listaRutas"></div>
         </div>
 
@@ -1822,7 +1837,9 @@
 
         <!-- HISTORIAL -->
         <div id="historial" class="section">
-            <input type="text" class="search-box-standalone" id="searchHistorial" placeholder="Buscar en historial..." oninput="renderHistorial()">
+            <div class="search-filter-container">
+                <input type="text" class="search-box" id="searchHistorial" placeholder="Buscar en historial..." oninput="renderHistorial()">
+            </div>
             <div id="listaHistorial"></div>
         </div>
     </div>
@@ -2178,7 +2195,13 @@ async function loadUsuarios() {
         // 5. LOGOUT
         // =============================================
         window.logout = async function() {
-            if (!confirm('¿Cerrar sesión?')) return;
+            const ok = await openConfirmModal({
+                titulo: 'Cerrar sesión',
+                mensaje: '¿Estás seguro de que deseas cerrar sesión?',
+                tipo: 'pregunta',
+                confirmarLabel: 'Cerrar sesión'
+            });
+            if (!ok) return;
             try {
                 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 await client.auth.signOut();
@@ -2194,7 +2217,7 @@ async function loadUsuarios() {
         // Modal de confirmación (reemplazo visual de confirm())
         let confirmModalResolve = null;
 
-        function openConfirmModal({ titulo, mensaje, tipo = 'pregunta' }) {
+        function openConfirmModal({ titulo, mensaje, tipo = 'pregunta', confirmarLabel }) {
             return new Promise(resolve => {
                 confirmModalResolve = resolve;
 
@@ -2210,9 +2233,11 @@ async function loadUsuarios() {
                 
                 const titleEl = modal.querySelector('.confirm-title');
                 const messageEl = modal.querySelector('.confirm-message');
+                const confirmBtn = document.getElementById('confirmModalBtn');
                 
                 if (titleEl) titleEl.textContent = titulo || 'Confirmar acción';
                 if (messageEl) messageEl.textContent = mensaje;
+                if (confirmBtn) confirmBtn.textContent = confirmarLabel || 'Confirmar';
 
                 // Estilos por tipo (solo clases, colores manejados en CSS inline)
                 modal.setAttribute('data-tipo', tipo);
@@ -4845,17 +4870,20 @@ function formatearFechaCorta(fechaString) {
             
             const rutasLista = rutasDetalle.map(r => {
                 const fechaStr = r.fecha ? new Date(r.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Sin fecha';
-                const numeroStr = r.numero ? `#${String(r.numero).padStart(4, '0')}` : '';
-                const estadoStr = r.archivada ? ' (Archivada)' : '';
-                return `• ${numeroStr} ${r.nombre} - ${fechaStr}${estadoStr}\n  ${r.participaciones} participación${r.participaciones !== 1 ? 'es' : ''} con ${r.lideres.length} líder${r.lideres.length !== 1 ? 'es' : ''} diferente${r.lideres.length !== 1 ? 's' : ''}`;
-            }).join('\n\n');
+                return `• ${r.nombre} - ${fechaStr}`;
+            }).join('\n');
             
-            alert(
-                `⭐ CLIENTE RECURRENTE: ${nombrePersona}\n\n` +
-                `📊 Total de rutas diferentes: ${historial.totalRutas}\n` +
-                `📝 Total de participaciones: ${historial.totalParticipaciones}\n\n` +
-                `🗺️ RUTAS REALIZADAS:\n\n${rutasLista}`
-            );
+            const tituloEl = document.getElementById('modalHistorialRecurrenteTitulo');
+            const cuerpoEl = document.getElementById('modalHistorialRecurrenteCuerpo');
+            if (tituloEl) tituloEl.textContent = `⭐ Cliente recurrente: ${nombrePersona}`;
+            if (cuerpoEl) cuerpoEl.textContent = `📊 Total de rutas: ${historial.totalRutas}\n\n🗺️ RUTAS REALIZADAS:\n\n${rutasLista}`;
+            const modal = document.getElementById('modalHistorialRecurrente');
+            if (modal) modal.classList.add('active');
+        }
+
+        function cerrarModalHistorialRecurrente() {
+            const modal = document.getElementById('modalHistorialRecurrente');
+            if (modal) modal.classList.remove('active');
         }
 
         // RENDER PARTICIPANTES
