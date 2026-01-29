@@ -140,9 +140,16 @@
             transition: all 0.3s;
             background: rgba(255, 255, 255, 0.1);
             color: var(--text-primary);
-            /* Prevenir zoom en iOS */
+            /* Prevenir zoom en iOS pero permitir interacción */
             -webkit-appearance: none;
+            appearance: none;
+            /* CRÍTICO para iOS PWA */
+            -webkit-user-select: auto;
+            user-select: auto;
+            -webkit-touch-callout: default;
             touch-action: manipulation;
+            /* Asegurar que el cursor sea visible */
+            caret-color: var(--accent);
         }
 
         .login-form input::placeholder {
@@ -1769,21 +1776,32 @@
             }
         }
         
-        /* Optimizaciones táctiles para iPhone - SIN bloquear selección en inputs */
+        /* Optimizaciones táctiles para iPhone - PERMITIR TECLADO EN INPUTS */
         @media (max-width: 768px) {
-            /* Permitir interacción completa con inputs y campos de texto */
-            input, textarea, select, [contenteditable] {
-                -webkit-user-select: text !important;
-                user-select: text !important;
+            /* CRÍTICO: Inputs deben ser completamente interactivos */
+            input, 
+            textarea, 
+            select, 
+            [contenteditable="true"],
+            [contenteditable] {
+                -webkit-user-select: auto !important;
+                user-select: auto !important;
                 -webkit-touch-callout: default !important;
+                touch-callout: default !important;
                 pointer-events: auto !important;
-                /* Asegurar que el teclado aparezca */
-                -webkit-tap-highlight-color: rgba(118, 200, 147, 0.2);
+                -webkit-tap-highlight-color: rgba(118, 200, 147, 0.2) !important;
+                /* Forzar que iOS reconozca estos como campos editables */
+                cursor: text !important;
             }
             
-            /* Prevenir selección accidental solo en elementos NO interactivos */
-            body, div:not([contenteditable]), span, p, h1, h2, h3, h4, h5, h6, 
-            label:not([for]), img, svg {
+            /* Solo prevenir selección en elementos de interfaz NO editables */
+            body:not(input):not(textarea):not(select), 
+            div:not([contenteditable]), 
+            span:not([contenteditable]), 
+            p, h1, h2, h3, h4, h5, h6,
+            button, a,
+            label:not([for]), 
+            img, svg {
                 -webkit-user-select: none;
                 user-select: none;
                 -webkit-touch-callout: none;
@@ -1814,8 +1832,21 @@
             <img src="../logo.png" alt="SomosAventura2" class="logo-img">
             
             <div class="login-form">
-                <input type="text" id="username" placeholder="Usuario" autocomplete="username" onkeypress="if(event.key==='Enter') { document.getElementById('password').focus(); }">
-                <input type="password" id="password" placeholder="Contraseña" autocomplete="current-password" onkeypress="if(event.key==='Enter') { event.preventDefault(); if(window.login) window.login(); }">
+                <input 
+                    type="text" 
+                    id="username" 
+                    placeholder="Usuario" 
+                    autocomplete="username" 
+                    inputmode="text"
+                    enterkeyhint="next"
+                    onkeypress="if(event.key==='Enter') { document.getElementById('password').focus(); }">
+                <input 
+                    type="password" 
+                    id="password" 
+                    placeholder="Contraseña" 
+                    autocomplete="current-password"
+                    enterkeyhint="done"
+                    onkeypress="if(event.key==='Enter') { event.preventDefault(); if(window.login) window.login(); }">
                 <button class="login-btn" onclick="window.login && window.login()">Iniciar Sesión</button>
             </div>
             
@@ -5713,6 +5744,64 @@ async function marcarTodosPresentes() {
         conectarBaseDeDatos();
         if (sessionStorage.getItem('authenticated') === 'true') {
             showApp();
+        }
+        
+        // FIX CRÍTICO PARA iOS PWA: Forzar enfoque en inputs
+        // iOS PWA a veces bloquea el teclado, este código lo soluciona
+        if (navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+            console.log('PWA detectada - Aplicando fix para iOS keyboard');
+            
+            // Agregar event listeners a todos los inputs
+            const allInputs = document.querySelectorAll('input, textarea, select');
+            allInputs.forEach(input => {
+                // Prevenir comportamiento por defecto y forzar enfoque
+                input.addEventListener('touchstart', function(e) {
+                    e.stopPropagation();
+                }, { passive: true });
+                
+                input.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    // Forzar enfoque con un pequeño delay
+                    setTimeout(() => {
+                        this.focus();
+                        // En iOS, a veces necesitas hacer click() también
+                        if (this.setSelectionRange && this.type !== 'password') {
+                            try {
+                                this.setSelectionRange(this.value.length, this.value.length);
+                            } catch(err) {
+                                console.log('setSelectionRange no disponible');
+                            }
+                        }
+                    }, 10);
+                }, false);
+                
+                // Agregar estilo visual cuando se enfoca
+                input.addEventListener('focus', function() {
+                    this.style.borderColor = 'var(--accent)';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.style.borderColor = '';
+                });
+            });
+            
+            // Fix especial para los inputs de login
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            
+            if (usernameInput) {
+                usernameInput.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    this.focus();
+                }, false);
+            }
+            
+            if (passwordInput) {
+                passwordInput.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    this.focus();
+                }, false);
+            }
         }
     });
 
