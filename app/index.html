@@ -46,19 +46,19 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            /* Mismo color que .app y cards: overscroll arriba/abajo muestra oscuro, sin gap verde */
             background-color: var(--bg-dark);
             color: var(--text-primary);
-            /* Safe area para iPhone con notch */
             padding-top: env(safe-area-inset-top);
-            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+            padding-bottom: env(safe-area-inset-bottom);
             padding-left: env(safe-area-inset-left);
             padding-right: env(safe-area-inset-right);
             -webkit-font-smoothing: antialiased;
             line-height: 1.6;
-            /* Scroll fluido iOS */
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
+            /* Solo .app-scroll hace scroll; overscroll/elasticidad abajo, sin gap entre banner y nav */
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .app-header-logo {
@@ -74,15 +74,18 @@
             margin: 0 auto;
             display: none;
             background: var(--bg-dark);
-            min-height: 100vh;
-            /* Altura del contenido visual del header (sin safe-area) para calcular espaciadores */
+            /* Altura del header (sin safe-area) para spacer y sticky */
             --app-header-content-height: 60px;
-            /* Altura total: contenido (60px) + padding extra (10px) + 1 sola vez safe-area (PWA/notch) */
             --app-header-total-height: calc(var(--app-header-content-height) + 10px + env(safe-area-inset-top));
+            /* Layout: header+nav fijos arriba, solo .app-scroll hace scroll (sin gap, overscroll abajo) */
+            flex: 1;
+            min-height: 0;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         .app.active {
-            display: block;
+            display: flex;
         }
 
         /* Header: fijo arriba con z-index alto; overscroll arriba muestra body oscuro detrás del header verde */
@@ -150,19 +153,39 @@
             color: var(--green-mountain);
         }
 
-        /* Tabs: en flujo normal; -1px evita línea blanca por redondeo (unión perfecta) */
+        /* Spacer: ocupa la altura del header (fixed) para que .nav-tabs quede justo debajo, sin gap */
+        .app-header-spacer {
+            height: var(--app-header-total-height);
+            flex-shrink: 0;
+        }
+
+        /* Nav-tabs: pegado al borde inferior del banner; sticky por si algún scroll llegara aquí */
         .nav-tabs {
             background: var(--bg-card);
             display: grid;
             grid-template-columns: repeat(6, 1fr);
             border-bottom: 2px solid var(--border);
-            position: relative;
+            position: sticky;
+            top: 0;
             z-index: 50;
-            margin-top: calc(var(--app-header-total-height) - 1px);
+            flex-shrink: 0;
             box-shadow: 0 2px 8px var(--shadow);
             width: 100%;
             padding-left: env(safe-area-inset-left);
             padding-right: env(safe-area-inset-right);
+        }
+
+        /* Si se revela espacio arriba de .nav-tabs (overscroll), mismo color que el header */
+        .nav-tabs::before {
+            content: '';
+            position: absolute;
+            top: calc(-1 * var(--app-header-total-height));
+            left: 0;
+            right: 0;
+            height: var(--app-header-total-height);
+            background: linear-gradient(135deg, var(--green-mountain) 0%, var(--green-dark) 100%);
+            z-index: -1;
+            pointer-events: none;
         }
 
         .nav-tab {
@@ -217,16 +240,22 @@
             display: none !important;
         }
 
+        /* Único contenedor que hace scroll: overscroll/elasticidad solo aquí (búsqueda + contenido) */
+        .app-scroll {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+
         /* Content */
         .section {
             display: none;
             padding: 20px 16px;
-            /* Safe area lateral y inferior: última card no tapada por barra de navegación / gestos */
             padding-left: calc(16px + env(safe-area-inset-left));
             padding-right: calc(16px + env(safe-area-inset-right));
             padding-bottom: calc(24px + env(safe-area-inset-bottom));
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
         }
 
         .section.active {
@@ -1712,9 +1741,10 @@
             </div>
             <button class="logout-btn" onclick="logout()">Salir</button>
         </div>
+        <!-- Spacer: altura del header para que .nav-tabs quede pegado al borde inferior del banner (sin gap) -->
+        <div class="app-header-spacer" aria-hidden="true"></div>
 
-        <!-- MODIFICAR los botones de navegación en .nav-tabs: -->
-<div class="nav-tabs">
+        <div class="nav-tabs">
     <button class="nav-tab active" onclick="showTab('rutas')">
         📍 <span class="text">Rutas</span>
     </button>
@@ -1735,8 +1765,9 @@
     </button>
 </div>
 
-        <!-- AGREGAR después de .nav-tabs (antes del primer .section): -->
-<div id="checkinRapido" class="checkin-rapido">
+        <!-- Contenedor único de scroll: overscroll/elasticidad solo aquí (búsqueda + contenido) -->
+        <div class="app-scroll">
+        <div id="checkinRapido" class="checkin-rapido">
     <div class="checkin-header">
         <div class="checkin-title">
             📋 Check-in rápido
@@ -1828,6 +1859,8 @@
             <input type="text" class="search-box-standalone" id="searchHistorial" placeholder="Buscar en historial..." oninput="renderHistorial()">
             <div id="listaHistorial"></div>
         </div>
+        </div>
+        <!-- /.app-scroll -->
     </div>
 
     <!-- MODAL: NUEVA RUTA -->
