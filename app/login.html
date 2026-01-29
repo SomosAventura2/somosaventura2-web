@@ -21,12 +21,20 @@
             -webkit-overflow-scrolling: touch;
         }
 
+        /* Evitar que capas fantasma bloqueen clics */
+        body::before,
+        body::after {
+            pointer-events: none !important;
+        }
+
         .login-card {
             background: #1a3d47;
             padding: 30px;
             border-radius: 20px;
             width: 85%;
             max-width: 350px;
+            position: relative;
+            z-index: 1;
         }
 
         .login-card h1 {
@@ -49,9 +57,15 @@
             border-radius: 10px;
             border: 1px solid #ccc;
             font-size: 16px;
-            -webkit-user-select: text;
-            user-select: text;
             transform: translate3d(0, 0, 0);
+
+            /* Desbloqueo de interacción (CSS blocking / capas) */
+            pointer-events: auto !important;
+            touch-action: manipulation !important;
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            position: relative !important;
+            z-index: 9999 !important;
         }
 
         input::placeholder {
