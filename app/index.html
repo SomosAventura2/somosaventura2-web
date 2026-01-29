@@ -1769,19 +1769,21 @@
             }
         }
         
-        /* Prevenir selección de texto accidental en iPhone */
+        /* Prevenir selección de texto accidental en iPhone (sin bloquear teclado en inputs) */
         @media (max-width: 768px) {
+            /* Se elimina la restricción global de selección para evitar bugs con el teclado */
             * {
-    -webkit-touch-callout: none;
-    /* -webkit-user-select: none;  <-- BORRA O COMENTA ESTO */
-    /* user-select: none;          <-- BORRA O COMENTA ESTO */
-}
+                -webkit-touch-callout: none;
+            }
 
-/* Agrega esto para asegurar que los inputs funcionen */
-input, textarea {
-    -webkit-user-select: text !important;
-    user-select: text !important;
-}
+            /* Forzamos que los inputs sean seleccionables y editables */
+            input, textarea, [contenteditable] {
+                -webkit-user-select: text !important;
+                user-select: text !important;
+                /* Asegura que el clic funcione para hacer foco */
+                pointer-events: auto !important;
+            }
+        }
 
             .reserva-compact {
                 flex-direction: column;
