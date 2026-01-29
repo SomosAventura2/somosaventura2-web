@@ -76,8 +76,6 @@
             background: var(--bg-dark);
             --app-header-content-height: 60px;
             --app-header-total-height: calc(var(--app-header-content-height) + 10px + env(safe-area-inset-top));
-            /* Compensar header fixed: padding-top = altura total del header para que el contenido no quede oculto */
-            padding-top: var(--app-header-total-height);
             flex: 1;
             min-height: 0;
             flex-direction: column;
@@ -154,33 +152,26 @@
             color: var(--green-mountain);
         }
 
-        /* REGLA 2: Navegación sticky — se detiene justo debajo del header fijo; contenido pasa por debajo */
+        /* Spacer: altura exacta del header para que nav-tabs quede justo debajo (sin hueco) */
+        .app-header-spacer {
+            height: var(--app-header-total-height);
+            flex-shrink: 0;
+        }
+
+        /* Navegación sticky: justo debajo del header; la barra de búsqueda y contenido van debajo */
         .nav-tabs {
             position: sticky;
             top: var(--app-header-total-height);
             z-index: 9990;
+            flex-shrink: 0;
             background: var(--bg-card);
             display: grid;
             grid-template-columns: repeat(6, 1fr);
             border-bottom: 2px solid var(--border);
-            flex-shrink: 0;
             box-shadow: 0 2px 8px var(--shadow);
             width: 100%;
             padding-left: env(safe-area-inset-left);
             padding-right: env(safe-area-inset-right);
-        }
-
-        /* Si se revela espacio arriba de .nav-tabs (overscroll), mismo color que el header */
-        .nav-tabs::before {
-            content: '';
-            position: absolute;
-            top: calc(-1 * var(--app-header-total-height));
-            left: 0;
-            right: 0;
-            height: var(--app-header-total-height);
-            background: linear-gradient(135deg, var(--green-mountain) 0%, var(--green-dark) 100%);
-            z-index: -1;
-            pointer-events: none;
         }
 
         .nav-tab {
@@ -1736,6 +1727,7 @@
             </div>
             <button class="logout-btn" onclick="logout()">Salir</button>
         </div>
+        <div class="app-header-spacer" aria-hidden="true"></div>
         <div class="nav-tabs">
     <button class="nav-tab active" onclick="showTab('rutas')">
         📍 <span class="text">Rutas</span>
