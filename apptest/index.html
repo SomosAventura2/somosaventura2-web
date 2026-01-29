@@ -40,7 +40,8 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: var(--bg-dark);
+            /* Mismo tono que el header para scroll elástico iOS (rebote sin blanco) */
+            background: var(--green-dark);
             color: var(--text-primary);
             /* Safe area para iPhone con notch */
             padding-top: env(safe-area-inset-top);
@@ -202,6 +203,8 @@
             min-height: 100vh;
             /* Altura del contenido visual del header (sin safe-area) para calcular espaciadores */
             --app-header-content-height: 60px;
+            /* Altura total: contenido (60px) + padding extra (10px) + 1 sola vez safe-area (PWA/notch) */
+            --app-header-total-height: calc(var(--app-header-content-height) + 10px + env(safe-area-inset-top));
         }
 
         .app.active {
@@ -276,7 +279,7 @@
             color: var(--green-mountain);
         }
 
-        /* Tabs: en flujo normal; al hacer scroll sube y se oculta (header fijo queda encima) */
+        /* Tabs: en flujo normal; -1px evita línea blanca por redondeo (unión perfecta) */
         .nav-tabs {
             background: var(--bg-card);
             display: grid;
@@ -284,8 +287,7 @@
             border-bottom: 2px solid var(--border);
             position: relative;
             z-index: 50;
-            /* Margen superior = altura del contenido del header + safe-area (igual que min-height del header) */
-            margin-top: calc(var(--app-header-content-height) + env(safe-area-inset-top));
+            margin-top: calc(var(--app-header-total-height) - 1px);
             box-shadow: 0 2px 8px var(--shadow);
             width: 100%;
             padding-left: env(safe-area-inset-left);
@@ -2163,10 +2165,37 @@
 const SUPABASE_URL = 'https://dgubxitmqegounjyeciw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_EY4EoqiHn7om0Qf-HYpJZQ_HwDJXlan';
 
-let db = null; // Cambiamos el nombre a 'db' para evitar conflictos
+let db = null;
 let usuariosCache = [];
-let liderActualParaNuevoParticipante = null; // líder asociado al formulario de nuevo participante
-let rutaActualParaNuevoParticipante = null;  // ruta asociada al formulario de nuevo participante
+let liderActualParaNuevoParticipante = null;
+let rutaActualParaNuevoParticipante = null;
+
+// Al cargar: comprobar sesión y mostrar login o app (sin redirigir nunca)
+document.addEventListener('DOMContentLoaded', async () => {
+    const loginScreen = document.getElementById('loginScreen');
+    const appEl = document.getElementById('app');
+
+    try {
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { data } = await client.auth.getSession();
+
+        if (data?.session) {
+            loginScreen.style.display = 'none';
+            appEl.classList.add('active');
+            conectarBaseDeDatos();
+            await loadData();
+            updateSelects();
+            renderAll();
+        } else {
+            loginScreen.style.display = 'flex';
+            appEl.classList.remove('active');
+        }
+    } catch (error) {
+        console.error('Error verificando sesión:', error);
+        if (loginScreen) loginScreen.style.display = 'flex';
+        if (appEl) appEl.classList.remove('active');
+    }
+});
 
 // --- 2. CONEXIÓN ---
 function conectarBaseDeDatos() {
@@ -2203,24 +2232,33 @@ async function loadUsuarios() {
     }
 }
 
-    // --- 4. FUNCIÓN LOGIN ---
+    // --- 4. FUNCIÓN LOGIN (Supabase: signInWithPassword) ---
     window.login = async function() {
-        const userIn = document.getElementById('username').value.trim().toLowerCase();
+        const userIn = document.getElementById('username').value.trim();
         const passIn = document.getElementById('password').value.trim();
+        if (!passIn) {
+            showToast('Introduce la contraseña', 'error', 'Login');
+            return;
+        }
 
-        if (usuariosCache.length === 0) await loadUsuarios();
+        // Mapeo temporal Usuario -> Email (Supabase usa email)
+        const usuarioNorm = (userIn || '').toLowerCase();
+        let email = usuarioNorm;
+        if (usuarioNorm === 'luifer') email = 'luisfer@somosaventura2.com';
+        if (usuarioNorm === 'chanti') email = 'chantal@somosaventura2.com';
 
-        const usuario = usuariosCache.find(u => {
-            const dbU = (u.username || u.usuario || "").toLowerCase();
-            const dbP = (u.password || u.clave || "").toString();
-            return dbU === userIn && dbP === passIn;
-        });
-
-        if (usuario) {
-            sessionStorage.setItem('authenticated', 'true');
-            showApp();
-        } else {
+        try {
+            const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            const { data, error } = await client.auth.signInWithPassword({ email, password: passIn });
+            if (error) throw error;
+            if (data?.session) {
+                location.reload();
+                return;
+            }
             showToast('Usuario o contraseña incorrectos', 'error', 'Error de Login');
+        } catch (err) {
+            console.error('Login error:', err);
+            showToast(err?.message || 'Usuario o contraseña incorrectos', 'error', 'Error de Login');
         }
     };
          
@@ -2342,9 +2380,13 @@ async function loadUsuarios() {
         // 6. LOGOUT
         // =============================================
         window.logout = async function() {
-            const ok = await confirmarAccion('¿Estás seguro de que quieres cerrar sesión?', 'pregunta');
-            if (!ok) return;
-            sessionStorage.clear();
+            if (!confirm('¿Cerrar sesión?')) return;
+            try {
+                const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                await client.auth.signOut();
+            } catch (error) {
+                console.error('Error al cerrar sesión en Supabase:', error);
+            }
             location.reload();
         };
 
