@@ -1720,8 +1720,8 @@
             <button class="logout-btn" onclick="logout()">Salir</button>
         </div>
 
-        <!-- MODIFICAR los botones de navegación en .nav-tabs: -->
-<div class="nav-tabs">
+        <!-- Nav tabs -->
+        <div class="nav-tabs">
     <button class="nav-tab active" onclick="showTab('rutas')">
         📍 <span class="text">Rutas</span>
     </button>
@@ -1740,10 +1740,10 @@
     <button class="nav-tab" onclick="showTab('historial')">
         📚 <span class="text">Historial</span>
     </button>
-</div>
+        </div>
 
-        <!-- AGREGAR después de .nav-tabs (antes del primer .section): -->
-<div id="checkinRapido" class="checkin-rapido">
+        <!-- Check-in rápido -->
+        <div id="checkinRapido" class="checkin-rapido">
     <div class="checkin-header">
         <div class="checkin-title">
             📋 Check-in rápido
@@ -2068,32 +2068,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// --- 2. CONEXIÓN ---
+/** Inicializa el cliente Supabase y carga la lista de usuarios. */
 function conectarBaseDeDatos() {
     // Verificamos si la librería de Supabase cargó en el navegador
     if (typeof supabase !== 'undefined') {
         try {
             // Usamos la librería para crear el cliente en nuestra variable 'db'
             db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('✅ Conexión establecida con Supabase');
             loadUsuarios();
         } catch (error) {
             console.error('❌ Error en la configuración:', error);
         }
     } else {
-        console.log('⏳ Reintentando conexión...');
         setTimeout(conectarBaseDeDatos, 500);
     }
 }
 
-// --- 3. CARGAR USUARIOS ---
+/** Carga usuarios desde Supabase y los guarda en usuariosCache. */
 async function loadUsuarios() {
     try {
         if (!db) return;
         const { data: users, error } = await db.from('usuarios').select('*');
         if (error) throw error;
         usuariosCache = users || [];
-        console.log("✅ Usuarios listos:", usuariosCache.length);
     } catch (err) {
         console.error("Error cargando usuarios", err);
         usuariosCache = [];
@@ -2341,13 +2338,6 @@ async function loadUsuarios() {
                 data.participantes = datosNormalizados.participantes;
                 data.gastos = datosNormalizados.gastos;
 
-                console.log('✅ Datos cargados:', {
-                    rutas: data.rutas.length,
-                    reservas: data.reservas.length,
-                    participantes: data.participantes.length,
-                    gastos: data.gastos.length
-                });
-                
                 // Inicializar sincronización en tiempo real (no crítico si falla)
                 try {
                     initRealtimeSync();
@@ -2356,8 +2346,7 @@ async function loadUsuarios() {
                 }
                 
                 hideLoader();
-                // 🔇 SILENCIOSO: No mostrar toast de éxito (las acciones específicas ya muestran su propio mensaje)
-                
+
             } catch (error) {
                 console.error('❌ Error cargando datos:', error);
                 hideLoader();
@@ -2460,17 +2449,13 @@ async function loadUsuarios() {
                 data.reservas = datosNormalizados.reservas;
                 data.participantes = datosNormalizados.participantes;
                 data.gastos = datosNormalizados.gastos;
-
-                console.log('✅ Datos sincronizados con base de datos');
             } catch (error) {
                 console.error('❌ Error al sincronizar datos:', error);
                 throw error;
             }
         }
 
-        // =============================================
-        // 10. SINCRONIZACIÓN EN TIEMPO REAL
-        // =============================================
+        /** Suscribe a cambios en tiempo real de rutas, reservas y gastos en Supabase. */
         function initRealtimeSync() {
             if (!db || realtimeChannel) return;
             
@@ -4057,8 +4042,8 @@ function abrirAgregarPersonaAReserva(lider, nombreRuta) {
     }, 50);
 }
 
-        // ARCHIVAR RUTA (versión final) - ahora usa ID para soportar nombres duplicados
-async function archivarRuta(idRuta) {
+        /** Archiva una ruta (la mueve al historial). Usa ID para soportar nombres duplicados. */
+        async function archivarRuta(idRuta) {
     const ruta = data.rutas.find(r => r.id === idRuta);
     if (!ruta) return;
 
@@ -4150,7 +4135,6 @@ async function archivarRuta(idRuta) {
         if (participantes.length > 0) {
             if (otrasReservas.length > 0) {
                 // El líder tiene otras reservas, no eliminar participantes (pertenecen a otras reservas)
-                console.log(`⚠️ El líder "${lider}" tiene ${otrasReservas.length} otra(s) reserva(s). Los participantes no se eliminarán.`);
             } else {
                 // Es la única reserva del líder, eliminar todos sus participantes
                 // 🔥 CORRECCIÓN: Eliminar solo participantes de esta ruta específica
@@ -4269,8 +4253,8 @@ async function archivarRuta(idRuta) {
             }
         }
 
-        // RENDER RUTAS (cards desplegables: vista compacta + extendida)
-function renderRutas() {
+        /** Renderiza la lista de rutas en la pestaña Rutas (cards desplegables). */
+        function renderRutas() {
     const search = document.getElementById('searchRutas').value.toLowerCase();
 
     // Filtrar solo rutas no archivadas
@@ -4418,7 +4402,7 @@ function renderRutas() {
     document.getElementById('listaRutas').innerHTML = html;
 }
 
-// FORMATEAR FECHA LARGA (RUTAS) - Con parseo manual para evitar timezone issues
+/** Formatea fecha para mostrar en rutas (formato largo). Parseo manual para evitar problemas de timezone. */
 function formatearFechaRuta(fechaString) {
     try {
         // Parseo manual para evitar problemas de timezone
@@ -4452,7 +4436,7 @@ function formatearFechaRuta(fechaString) {
     }
 }
 
-// FORMATEAR FECHA CORTA (ASISTENCIA / LISTAS) - Con parseo manual para evitar timezone issues
+/** Formatea fecha para listas y asistencia (formato corto). Parseo manual para evitar problemas de timezone. */
 function formatearFechaCorta(fechaString) {
     try {
         // Parseo manual para evitar problemas de timezone

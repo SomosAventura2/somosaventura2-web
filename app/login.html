@@ -257,7 +257,7 @@
                     return;
                 }
             } catch (e) {
-                console.warn('No sesión previa');
+                // Sin sesión previa, continuar al formulario
             }
 
             document.getElementById('btnLogin').addEventListener('click', doLogin);
