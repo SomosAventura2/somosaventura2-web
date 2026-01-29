@@ -9,16 +9,26 @@
     <style>
         * { box-sizing: border-box; }
 
+        /* Regla de oro: todo seleccionable para que el teclado no se bloquee en iOS PWA */
+        html, body {
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            -webkit-touch-callout: default !important;
+            min-height: 100vh;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+
         body {
             background-color: #0e2f36;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            color: #fff;
-            -webkit-overflow-scrolling: touch;
         }
 
         /* Evitar que capas fantasma bloqueen clics */
@@ -121,11 +131,9 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Asegurar que el contenedor padre no bloquee los clics */
-        body, .login-card, .login-form {
+        /* Contenedores: permitir clics, NUNCA user-select: none (bloquea teclado en iOS) */
+        .login-card, .login-form {
             pointer-events: auto !important;
-            -webkit-user-select: none;
-            user-select: none;
         }
 
         /* Si hay algún pseudo-elemento de fondo, mandarlo al fondo y que no capture clics */
@@ -144,8 +152,8 @@
         <img src="../logo.png" alt="SomosAventura2" onerror="this.style.display='none'">
         <h1>Iniciar sesión</h1>
         <form id="loginForm" onsubmit="return false;">
-            <input type="text" id="username" placeholder="Usuario" autocomplete="username">
-            <input type="password" id="password" placeholder="Contraseña" autocomplete="current-password">
+            <input type="text" id="username" placeholder="Usuario" autocomplete="username" onclick="this.focus()">
+            <input type="password" id="password" placeholder="Contraseña" autocomplete="current-password" onclick="this.focus()">
             <button type="button" class="login-btn" id="btnLogin">Iniciar sesión</button>
         </form>
         <div id="errorMsg" class="error-msg"></div>
