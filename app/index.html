@@ -38,19 +38,21 @@
             box-sizing: border-box;
         }
 
+        html {
+            background-color: var(--bg-dark);
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
-            /* Mismo tono que el fondo detrás de las cards (app) para scroll elástico iOS */
-            background: var(--bg-dark);
+            /* Fondo oscuro "infinito": rebote arriba/abajo muestra mismo color; verde solo en .app-header */
+            background-color: var(--bg-dark);
             color: var(--text-primary);
-            /* Safe area para iPhone con notch */
-            padding-top: env(safe-area-inset-top);
+            /* Sin padding-top: el header es fixed y la compensación va en .app */
             padding-bottom: calc(80px + env(safe-area-inset-bottom));
             padding-left: env(safe-area-inset-left);
             padding-right: env(safe-area-inset-right);
             -webkit-font-smoothing: antialiased;
             line-height: 1.6;
-            /* Scroll optimizado para iOS */
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
         }
@@ -69,9 +71,9 @@
             display: none;
             background: var(--bg-dark);
             min-height: 100vh;
-            /* Altura del contenido visual del header (sin safe-area) para calcular espaciadores */
+            /* Compensación: el header es fixed y no ocupa espacio; evita que la primera tarjeta quede detrás */
+            padding-top: var(--app-header-total-height);
             --app-header-content-height: 60px;
-            /* Altura total: contenido (60px) + padding extra (10px) + 1 sola vez safe-area (PWA/notch) */
             --app-header-total-height: calc(var(--app-header-content-height) + 10px + env(safe-area-inset-top));
         }
 
@@ -79,29 +81,23 @@
             display: block;
         }
 
-        /* Header: fijo con Safe Area completo para iOS; fondo cubre notch, contenido en zona segura */
+        /* Header: FIJO (sticky header definitivo) — no se mueve con el scroll; evita gaps en overscroll iOS */
         .app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 9999;
             background: linear-gradient(135deg, var(--green-mountain) 0%, var(--green-dark) 100%);
             color: white;
-            /* Padding inteligente: Safe Area arriba (fondo cubre notch y barra de estado) */
             padding-top: env(safe-area-inset-top);
-            /* Espacio extra para que el contenido no quede pegado al notch */
             padding-bottom: 10px;
             padding-left: calc(12px + env(safe-area-inset-left));
             padding-right: calc(12px + env(safe-area-inset-right));
-            height: auto;
-            /* Altura visual mínima segura: contenido (60px) + safe-area se suma automáticamente */
-            min-height: calc(var(--app-header-content-height) + env(safe-area-inset-top));
+            min-height: calc(var(--app-header-content-height) + 10px + env(safe-area-inset-top));
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: fixed;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 480px;
-            z-index: 1000;
             box-shadow: 0 4px 16px var(--shadow);
         }
 
@@ -147,15 +143,16 @@
             color: var(--green-mountain);
         }
 
-        /* Tabs: en flujo normal; -1px evita línea blanca por redondeo (unión perfecta) */
+        /* Tabs: sticky debajo del header fijo; top = altura visual del header */
         .nav-tabs {
+            position: sticky;
+            top: var(--app-header-total-height);
+            z-index: 9990;
             background: var(--bg-card);
             display: grid;
             grid-template-columns: repeat(6, 1fr);
             border-bottom: 2px solid var(--border);
-            position: relative;
-            z-index: 50;
-            margin-top: calc(var(--app-header-total-height) - 1px);
+            margin-top: 0;
             box-shadow: 0 2px 8px var(--shadow);
             width: 100%;
             padding-left: env(safe-area-inset-left);
