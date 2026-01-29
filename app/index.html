@@ -74,10 +74,10 @@
             margin: 0 auto;
             display: none;
             background: var(--bg-dark);
-            /* Altura del header (sin safe-area) para spacer y sticky */
             --app-header-content-height: 60px;
             --app-header-total-height: calc(var(--app-header-content-height) + 10px + env(safe-area-inset-top));
-            /* Layout: header+nav fijos arriba, solo .app-scroll hace scroll (sin gap, overscroll abajo) */
+            /* Compensar header fixed: padding-top = altura total del header para que el contenido no quede oculto */
+            padding-top: var(--app-header-total-height);
             flex: 1;
             min-height: 0;
             flex-direction: column;
@@ -88,26 +88,27 @@
             display: flex;
         }
 
-        /* Header: fijo arriba con z-index alto; overscroll arriba muestra body oscuro detrás del header verde */
+        /* REGLA 1: Header fijo y seguro (z-index máximo) — no se mueve con el scroll elástico iOS */
         .app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            max-width: 480px;
+            margin-left: auto;
+            margin-right: auto;
+            z-index: 9999;
             background: linear-gradient(135deg, var(--green-mountain) 0%, var(--green-dark) 100%);
             color: white;
             padding-top: env(safe-area-inset-top);
             padding-bottom: 10px;
             padding-left: calc(12px + env(safe-area-inset-left));
             padding-right: calc(12px + env(safe-area-inset-right));
-            height: auto;
             min-height: calc(var(--app-header-content-height) + env(safe-area-inset-top));
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: fixed;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 480px;
-            z-index: 1000;
             box-shadow: 0 4px 16px var(--shadow);
         }
 
@@ -153,21 +154,15 @@
             color: var(--green-mountain);
         }
 
-        /* Spacer: ocupa la altura del header (fixed) para que .nav-tabs quede justo debajo, sin gap */
-        .app-header-spacer {
-            height: var(--app-header-total-height);
-            flex-shrink: 0;
-        }
-
-        /* Nav-tabs: pegado al borde inferior del banner; sticky por si algún scroll llegara aquí */
+        /* REGLA 2: Navegación sticky — se detiene justo debajo del header fijo; contenido pasa por debajo */
         .nav-tabs {
+            position: sticky;
+            top: var(--app-header-total-height);
+            z-index: 9990;
             background: var(--bg-card);
             display: grid;
             grid-template-columns: repeat(6, 1fr);
             border-bottom: 2px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 50;
             flex-shrink: 0;
             box-shadow: 0 2px 8px var(--shadow);
             width: 100%;
@@ -1741,9 +1736,6 @@
             </div>
             <button class="logout-btn" onclick="logout()">Salir</button>
         </div>
-        <!-- Spacer: altura del header para que .nav-tabs quede pegado al borde inferior del banner (sin gap) -->
-        <div class="app-header-spacer" aria-hidden="true"></div>
-
         <div class="nav-tabs">
     <button class="nav-tab active" onclick="showTab('rutas')">
         📍 <span class="text">Rutas</span>
