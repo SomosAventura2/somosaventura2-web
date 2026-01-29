@@ -200,34 +200,44 @@
             display: none;
             background: var(--bg-dark);
             min-height: 100vh;
+            /* Altura del contenido visual del header (sin safe-area) para calcular espaciadores */
+            --app-header-content-height: 60px;
         }
 
         .app.active {
             display: block;
         }
 
-        /* Header */
+        /* Header: fijo con Safe Area completo para iOS; fondo cubre notch, contenido en zona segura */
         .app-header {
             background: linear-gradient(135deg, var(--green-mountain) 0%, var(--green-dark) 100%);
             color: white;
-            padding: 24px 20px;
-            /* Safe area para iPhone con notch */
-            padding-top: calc(24px + env(safe-area-inset-top));
-            padding-left: calc(20px + env(safe-area-inset-left));
-            padding-right: calc(20px + env(safe-area-inset-right));
+            /* Padding inteligente: Safe Area arriba (fondo cubre notch y barra de estado) */
+            padding-top: env(safe-area-inset-top);
+            /* Espacio extra para que el contenido no quede pegado al notch */
+            padding-bottom: 10px;
+            padding-left: calc(12px + env(safe-area-inset-left));
+            padding-right: calc(12px + env(safe-area-inset-right));
+            height: auto;
+            /* Altura visual mínima segura: contenido (60px) + safe-area se suma automáticamente */
+            min-height: calc(var(--app-header-content-height) + env(safe-area-inset-top));
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: sticky;
+            position: fixed;
             top: 0;
-            z-index: 100;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            z-index: 1000;
             box-shadow: 0 4px 16px var(--shadow);
         }
 
         .app-header .logo-text {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .app-header .logo-text img {
@@ -238,8 +248,9 @@
         }
 
         .app-header h1 {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 800;
+            line-height: 1.2;
         }
 
         .logout-btn {
@@ -247,17 +258,17 @@
             backdrop-filter: blur(10px);
             border: 2px solid white;
             color: white;
-            padding: 10px 18px;
-            min-height: 44px; /* Touch target mínimo para iPhone */
-            min-width: 44px;
-            border-radius: 12px;
-            font-size: 14px;
+            padding: 8px 14px;
+            min-height: 38px;
+            min-width: 38px;
+            border-radius: 10px;
+            font-size: 13px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
-            /* Touch optimizado para iOS */
             -webkit-tap-highlight-color: rgba(255, 255, 255, 0.3);
             touch-action: manipulation;
+            white-space: nowrap;
         }
 
         .logout-btn:hover {
@@ -265,19 +276,18 @@
             color: var(--green-mountain);
         }
 
-        /* Tabs */
+        /* Tabs: en flujo normal; al hacer scroll sube y se oculta (header fijo queda encima) */
         .nav-tabs {
             background: var(--bg-card);
             display: grid;
             grid-template-columns: repeat(6, 1fr);
             border-bottom: 2px solid var(--border);
-            position: sticky;
-            top: 72px;
-            top: calc(72px + env(safe-area-inset-top));
-            z-index: 99;
+            position: relative;
+            z-index: 50;
+            /* Margen superior = altura del contenido del header + safe-area (igual que min-height del header) */
+            margin-top: calc(var(--app-header-content-height) + env(safe-area-inset-top));
             box-shadow: 0 2px 8px var(--shadow);
             width: 100%;
-            /* Safe area para iPhone */
             padding-left: env(safe-area-inset-left);
             padding-right: env(safe-area-inset-right);
         }
@@ -1179,24 +1189,47 @@
             color: var(--text-primary);
         }
 
-        /* Bottom Action */
+        /* Bottom Action - DEPRECADO: Reemplazado por FAB */
         .bottom-action {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            /* Safe area para iPhone con notch */
-            bottom: env(safe-area-inset-bottom);
-            left: env(safe-area-inset-left);
-            right: env(safe-area-inset-right);
-            background: var(--bg-card);
-            padding: 16px;
-            padding-bottom: calc(16px + env(safe-area-inset-bottom));
-            box-shadow: 0 -4px 16px var(--shadow);
-            max-width: 480px;
-            margin: 0 auto;
-            border-top: 1px solid var(--border);
+            display: none; /* Ocultamos los botones estáticos antiguos */
         }
+
+        /* FAB (Floating Action Button) - Material Design */
+        .fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-mountain) 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 8px 24px rgba(76, 175, 80, 0.5);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 700;
+            z-index: 1000;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            /* Safe area para iPhone */
+            bottom: calc(24px + env(safe-area-inset-bottom));
+            right: calc(24px + env(safe-area-inset-right));
+            max-width: calc(100vw - 48px - env(safe-area-inset-right) - env(safe-area-inset-left));
+        }
+
+        .fab:hover {
+            transform: scale(1.1) translateY(-4px);
+            box-shadow: 0 12px 32px rgba(76, 175, 80, 0.6);
+        }
+
+        .fab:active {
+            transform: scale(0.95);
+        }
+
+        /* El FAB se oculta/muestra dinámicamente con JavaScript según la pestaña activa */
 
         /* Modal */
         .modal {
@@ -1543,7 +1576,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 10000;
+            z-index: 9999;
             backdrop-filter: blur(4px);
         }
 
@@ -1570,8 +1603,8 @@
         /* TOAST NOTIFICATIONS - MOBILE OPTIMIZED (BOTTOM & DARK GLASS) */
         .toast-container {
             position: fixed;
-            /* Ajuste clave: Subimos de 30px a 110px para librar el botón inferior */
-            bottom: calc(110px + env(safe-area-inset-bottom));
+            /* Ajuste para respetar la barra de gestos (safe area) en iOS */
+            bottom: calc(20px + env(safe-area-inset-bottom));
             left: 50%;
             transform: translateX(-50%); /* Centrado horizontalmente */
             z-index: 99999;
@@ -1579,16 +1612,16 @@
             flex-direction: column-reverse; /* Los nuevos aparecen abajo y empujan hacia arriba */
             gap: 10px;
             pointer-events: none; /* Permite clicks a través del contenedor vacío */
-            width: 90%; /* Ancho cómodo en móviles */
-            max-width: 400px;
+            width: fit-content; /* Compacto: solo lo que ocupa el contenido */
+            max-width: 80%; /* No ocupar todo el ancho */
         }
 
         .toast {
             /* Fondo 'Dark Glass': Petróleo oscuro con transparencia */
             background: rgba(14, 47, 54, 0.95) !important;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px; /* Bordes redondeados estilo iOS */
-            padding: 16px;
+            border-radius: 50px; /* Mini: pill shape */
+            padding: 8px 16px; /* Mini: menos invasivo */
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); /* Sombra profunda */
             backdrop-filter: blur(10px); /* Efecto vidrio */
             /* Animación de entrada: Sube desde abajo */
@@ -1596,7 +1629,9 @@
             pointer-events: auto; /* El toast sí recibe clicks */
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
+            width: fit-content; /* Evitar que estire al ancho del contenedor */
+            max-width: 100%;
         }
 
         @keyframes slideInUp {
@@ -1643,7 +1678,7 @@
         }
 
         .toast-icon {
-            font-size: 22px;
+            font-size: 18px;
             flex-shrink: 0;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
         }
@@ -1656,14 +1691,14 @@
 
         .toast-title {
             font-weight: 700;
-            font-size: 14px;
-            margin-bottom: 3px;
+            font-size: 13px;
+            margin-bottom: 1px;
             color: #ffffff; /* Blanco puro para título */
             letter-spacing: 0.3px;
         }
 
         .toast-message {
-            font-size: 13px;
+            font-size: 12px;
             color: #cfd8d3; /* Gris perla suave para lectura cómoda */
             line-height: 1.3;
         }
@@ -1862,9 +1897,6 @@
         <div id="rutas" class="section active">
             <input type="text" class="search-box-standalone" id="searchRutas" placeholder="Buscar rutas..." oninput="renderRutas()">
             <div id="listaRutas"></div>
-            <div class="bottom-action">
-                <button class="btn btn-primary" onclick="openModal('modalNuevaRuta')">+ Nueva Ruta</button>
-            </div>
         </div>
 
         <!-- RESERVAS -->
@@ -1879,9 +1911,6 @@
                 </div>
             </div>
             <div id="listaReservas"></div>
-            <div class="bottom-action">
-                <button class="btn btn-primary" onclick="openModal('modalNuevaReserva')">+ Nueva Reserva</button>
-            </div>
         </div>
 
         <!-- PARTICIPANTES -->
@@ -1924,10 +1953,12 @@
                 </div>
             </div>
             <div id="listaGastos"></div>
-            <div class="bottom-action">
-                <button class="btn btn-primary" onclick="openModal('modalNuevoGasto')">+ Nuevo Gasto</button>
-            </div>
         </div>
+
+        <!-- BOTÓN FLOTANTE (FAB) CONTEXTUAL -->
+        <button class="fab" id="fab-main" onclick="handleFabClick()">
+            +
+        </button>
 
         <!-- HISTORIAL -->
         <div id="historial" class="section">
@@ -1951,12 +1982,12 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Cupos</label>
-                    <input type="number" id="rutaCupos" class="form-input" placeholder="20" min="0" step="1" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
+                    <input type="number" id="rutaCupos" class="form-input" placeholder="20" min="0" step="1" inputmode="numeric" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
                 </div>
             </div>
             <div class="form-group">
                 <label class="form-label">Precio en Euros (€)</label>
-                <input type="number" id="rutaPrecioEuros" class="form-input" placeholder="10.00" step="0.01" min="0" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
+                <input type="number" id="rutaPrecioEuros" class="form-input" placeholder="10.00" step="0.01" min="0" inputmode="decimal" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
             </div>
             <div class="form-group">
                 <label class="form-label">Flyer / Foto de Portada</label>
@@ -1990,11 +2021,11 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Cupos Reservados</label>
-                    <input type="number" id="reservaCantidad" class="form-input" placeholder="5" min="0" step="1" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();" onchange="actualizarPersonasEnReserva()">
+                    <input type="number" id="reservaCantidad" class="form-input" placeholder="5" min="0" step="1" inputmode="numeric" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();" onchange="actualizarPersonasEnReserva()">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Monto Inicial</label>
-                    <input type="number" id="reservaMontoPagado" class="form-input" placeholder="17500" step="0.01" min="0" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
+                    <input type="number" id="reservaMontoPagado" class="form-input" placeholder="17500" step="0.01" min="0" inputmode="decimal" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
                 </div>
             </div>
             <div class="form-group">
@@ -2033,6 +2064,30 @@
         </div>
     </div>
 
+    <!-- MODAL: EDITAR RESERVA -->
+    <div id="modalEditarReserva" class="modal" onclick="closeModalOnBackdrop(event, 'modalEditarReserva')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">✏️ Editar Reserva</div>
+            <input type="hidden" id="editarReservaId">
+            <div class="form-group">
+                <label class="form-label">Nombre del Líder</label>
+                <input type="text" id="editarReservaLider" class="form-input" placeholder="Ej: Valeria">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Ruta</label>
+                <input type="text" id="editarReservaRutaNombre" class="form-input" disabled>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Cantidad de Cupos</label>
+                <input type="number" id="editarReservaCantidad" class="form-input" placeholder="5" min="0" step="1" inputmode="numeric" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-outline" onclick="closeModal('modalEditarReserva')">Cancelar</button>
+                <button class="btn btn-primary" onclick="guardarEdicionReserva()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: NUEVO PARTICIPANTE (asociado a una reserva, sin campo de líder) -->
     <div id="modalNuevoParticipante" class="modal" onclick="closeModalOnBackdrop(event, 'modalNuevoParticipante')">
         <div class="modal-content" onclick="event.stopPropagation()">
@@ -2051,7 +2106,7 @@
                 <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">💰 Pago Opcional</div>
                 <div class="form-group" style="margin-bottom: 12px;">
                     <label class="form-label" style="font-size: 12px;">Monto</label>
-                    <input type="number" id="participanteMonto" class="form-input" placeholder="0.00" step="0.01" min="0" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
+                    <input type="number" id="participanteMonto" class="form-input" placeholder="0.00" step="0.01" min="0" inputmode="decimal" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
                 </div>
                 <div class="form-group" style="margin-bottom: 12px;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px;">
@@ -2095,7 +2150,7 @@
             </div>
             <div class="form-group">
                 <label class="form-label">Monto (Bs)</label>
-                <input type="number" id="gastoMonto" class="form-input" placeholder="0.00" step="0.01" min="0" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
+                <input type="number" id="gastoMonto" class="form-input" placeholder="0.00" step="0.01" min="0" inputmode="decimal" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
             </div>
             <div class="btn-group">
                 <button class="btn btn-outline" onclick="closeModal('modalNuevoGasto')">Cancelar</button>
@@ -2104,6 +2159,9 @@
         </div>
     </div>
     <script>
+// CONFIGURACIÓN DE RUTAS
+const URL_LANDING_DESTINO = 'index.html'; // Para volver al login
+
 // --- 1. CONFIGURACIÓN ---
 const SUPABASE_URL = 'https://dgubxitmqegounjyeciw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_EY4EoqiHn7om0Qf-HYpJZQ_HwDJXlan';
@@ -2112,6 +2170,28 @@ let db = null; // Cambiamos el nombre a 'db' para evitar conflictos
 let usuariosCache = [];
 let liderActualParaNuevoParticipante = null; // líder asociado al formulario de nuevo participante
 let rutaActualParaNuevoParticipante = null;  // ruta asociada al formulario de nuevo participante
+
+// Protección de ruta: solo permite acceso si hay sesión activa
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { data } = await client.auth.getSession();
+
+        // Si NO hay sesión, patada a la landing
+        if (!data?.session) {
+            window.location.href = URL_LANDING_DESTINO;
+            return;
+        }
+
+        // Si hay sesión, ejecuta la lógica normal de carga
+        if (typeof conectarBaseDeDatos === 'function') {
+            conectarBaseDeDatos();
+        }
+    } catch (error) {
+        console.error('Error verificando la sesión en la app:', error);
+        window.location.href = URL_LANDING_DESTINO;
+    }
+});
 
 // --- 2. CONEXIÓN ---
 function conectarBaseDeDatos() {
@@ -2244,7 +2324,7 @@ async function loadUsuarios() {
 
             container.appendChild(toast);
 
-            // Auto-remover después de 2 segundos
+            // Auto-remover después de 1.2 segundos
             setTimeout(() => {
                 toast.classList.add('fade-out');
                 setTimeout(() => {
@@ -2252,7 +2332,7 @@ async function loadUsuarios() {
                         toast.parentNode.removeChild(toast);
                     }
                 }, 300);
-            }, 2000);
+            }, 1200);
         }
 
         // =============================================
@@ -2287,10 +2367,14 @@ async function loadUsuarios() {
         // 6. LOGOUT
         // =============================================
         window.logout = async function() {
-            const ok = await confirmarAccion('¿Estás seguro de que quieres cerrar sesión?', 'pregunta');
-            if (!ok) return;
-            sessionStorage.clear();
-            location.reload();
+            if (!confirm('¿Cerrar sesión?')) return;
+            try {
+                const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                await client.auth.signOut();
+            } catch (error) {
+                console.error('Error al cerrar sesión en Supabase:', error);
+            }
+            window.location.href = URL_LANDING_DESTINO;
         };
 
         // =============================================
@@ -2493,6 +2577,9 @@ async function loadUsuarios() {
                     ...r,
                     rutaId: rutaId, // 🔥 NUEVO: Usar ID de ruta en lugar de nombre
                     ruta: ruta ? ruta.nombre : null, // 🔥 Campo derivado para compatibilidad
+                    // 🔒 Seguridad/compatibilidad: normalizar cupos desde la columna real de la tabla 'reservas'
+                    // Soporta: cantidad_personas | cupos | cantidad (fallback)
+                    cantidad: Number((r.cantidad_personas ?? r.cupos ?? r.cantidad) ?? 0),
                     montoPagado: r.monto_pagado || 0, // Normalizado: usar solo montoPagado después
                     pagos: r.pagos || []
                 };
@@ -2600,7 +2687,61 @@ async function loadUsuarios() {
             // Actualizar y renderizar
             updateSelects();
             renderAll();
+            
+            // Actualizar visibilidad del FAB según la pestaña activa
+            if (typeof updateFabVisibility === 'function') {
+                updateFabVisibility();
+            }
         };
+        
+        // Función para manejar el clic del FAB según la pestaña activa
+        window.handleFabClick = function() {
+            const activeSection = document.querySelector('.section.active');
+            if (!activeSection) return;
+            
+            const sectionId = activeSection.id;
+            
+            // Mapear cada pestaña a su modal correspondiente
+            const modalMap = {
+                'rutas': 'modalNuevaRuta',
+                'reservas': 'modalNuevaReserva',
+                'gastos': 'modalNuevoGasto'
+            };
+            
+            const modalId = modalMap[sectionId];
+            if (modalId) {
+                openModal(modalId);
+            }
+        };
+        
+        // Función para actualizar la visibilidad del FAB según la pestaña activa
+        window.updateFabVisibility = function() {
+            const fab = document.getElementById('fab-main');
+            if (!fab) return;
+            
+            const activeSection = document.querySelector('.section.active');
+            if (!activeSection) {
+                fab.style.display = 'none';
+                return;
+            }
+            
+            const sectionId = activeSection.id;
+            // Mostrar FAB solo en pestañas con acción de creación
+            if (sectionId === 'rutas' || sectionId === 'reservas' || sectionId === 'gastos') {
+                fab.style.display = 'flex';
+            } else {
+                fab.style.display = 'none';
+            }
+        };
+        
+        // Inicializar visibilidad del FAB al cargar la página
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(updateFabVisibility, 100);
+            });
+        } else {
+            setTimeout(updateFabVisibility, 100);
+        }
 
         // =============================================
         // 12. MODALES
@@ -2773,20 +2914,22 @@ function updateSelects() {
         // CÁLCULOS
         /**
          * Calcula el número de cupos ocupados en una ruta específica
-         * Cuenta solo participantes de reservas activas (no archivadas) y agrupados por líder+ruta
-         * @param {string} nombreRuta - Nombre de la ruta a calcular
-         * @returns {number} Número de participantes registrados en la ruta
+         * SUMA la columna 'cantidad' de todas las reservas confirmadas (igual que Landing)
+         * @param {string} rutaId - ID (UUID) de la ruta a calcular
+         * @returns {number} Suma de cupos reservados (cantidad) de todas las reservas de la ruta
          */
         function calcularCuposOcupados(rutaId) {
             // Solo contar reservas de rutas no archivadas
             const ruta = data.rutas.find(r => r.id === rutaId);
             if (!ruta || ruta.archivada) return 0;
             
-            // 🔥 CORRECCIÓN: Contar participantes directamente por rutaId
-            // Esto garantiza que no se mezclen participantes de rutas diferentes con el mismo nombre
-            return data.participantes.filter(p => 
-                (p.rutaId === rutaId || p.ruta_id === rutaId) // Compatibilidad con ambos formatos
-            ).length;
+            // 🔥 NUEVA LÓGICA: Sumar la columna 'cantidad' de todas las reservas de esta ruta
+            // Esto refleja la ocupación real independientemente de si se han cargado nombres o no
+            const cuposReservados = data.reservas
+                .filter(r => r.rutaId === rutaId)
+                .reduce((sum, r) => sum + (getCuposReserva(r) || 0), 0);
+            
+            return cuposReservados;
         }
 
         /**
@@ -2812,6 +2955,31 @@ function updateSelects() {
         function contarParticipantes(lider) {
             // Conteo global por líder (se mantiene para usos generales)
             return data.participantes.filter(p => p.lider === lider).length;
+        }
+
+        /**
+         * Devuelve el nombre de la columna real de cupos en la tabla 'reservas'
+         * Prioridad: cantidad_personas -> cupos -> cantidad
+         * @param {Object} reserva
+         * @returns {string}
+         */
+        function getCantidadColumnName(reserva) {
+            if (reserva && ('cantidad_personas' in reserva)) return 'cantidad_personas';
+            if (reserva && ('cupos' in reserva)) return 'cupos';
+            return 'cantidad';
+        }
+
+        /**
+         * Obtiene cupos/cantidad de una reserva (compatible con distintas columnas)
+         * @param {Object} reserva
+         * @returns {number}
+         */
+        function getCuposReserva(reserva) {
+            if (!reserva) return 0;
+            const col = getCantidadColumnName(reserva);
+            const val = reserva[col] ?? reserva.cantidad_personas ?? reserva.cupos ?? reserva.cantidad ?? 0;
+            const n = Number(val);
+            return Number.isFinite(n) ? n : 0;
         }
 
         // Nuevo: contar participantes por reserva específica (líder + ruta)
@@ -3155,12 +3323,12 @@ function updateSelects() {
         await saveData(true); // Usar saveData sin loader para evitar parpadeo
         updateSelects();
         renderRutas();
-        hideLoader();
         showToast(`Ruta creada: ${nombre} #${String(nuevoNumero).padStart(4, '0')}`, 'success', 'Éxito');
     } catch (error) {
-        hideLoader();
         console.error('Error:', error);
         showToast('Error al crear la ruta: ' + error.message, 'error', 'Error');
+    } finally {
+        hideLoader();
     }
 }
 
@@ -3348,6 +3516,8 @@ function updateSelects() {
             } catch (error) {
                 console.error('Error:', error);
                 showToast('Error al crear la reserva: ' + error.message, 'error', 'Error');
+            } finally {
+                hideLoader();
             }
         }
 
@@ -3573,7 +3743,6 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
         document.getElementById('participanteReferencia').value = '';
         if (document.getElementById('participanteEnDolares')) document.getElementById('participanteEnDolares').checked = false;
         
-        hideLoader();
         closeModal('modalNuevoParticipante');
         await saveData(true);
         renderAll();
@@ -3581,9 +3750,10 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
         const msg = monto > 0 ? 'Persona y pago registrados exitosamente' : 'Persona registrada exitosamente';
         showToast(msg, 'success');
     } catch (error) {
-        hideLoader();
         console.error(error);
         showToast('Error: ' + error.message, 'error');
+    } finally {
+        hideLoader();
     }
 }
 
@@ -3721,6 +3891,88 @@ async function agregarPersonaRapida(lider, ruta) {
             }
         }
 
+        // ACTUALIZAR CANTIDAD DE CUPOS DE UNA RESERVA
+        async function actualizarCantidadReserva(lider, rutaId, nuevaCantidad) {
+            if (!nuevaCantidad || nuevaCantidad < 1 || nuevaCantidad > 100) {
+                showToast('La cantidad de cupos debe estar entre 1 y 100', 'warning', 'Validación');
+                return;
+            }
+            
+            const reserva = data.reservas.find(r => r.lider === lider && r.rutaId === rutaId);
+            if (!reserva) {
+                showToast('No se encontró la reserva', 'error', 'Error');
+                return;
+            }
+
+            const cantidadActual = getCuposReserva(reserva);
+            
+            // Verificar si hay cambio
+            if (cantidadActual === nuevaCantidad) {
+                showToast('No hay cambios en la cantidad', 'info', 'Información');
+                return;
+            }
+            
+            // Obtener la ruta para validar cupos disponibles
+            const ruta = data.rutas.find(r => r.id === rutaId);
+            if (!ruta) {
+                showToast('No se encontró la información de la ruta', 'error', 'Error');
+                return;
+            }
+            
+            // Calcular cupos ocupados actuales (sin contar esta reserva)
+            const ocupadosSinEstaReserva = calcularCuposOcupados(rutaId) - cantidadActual;
+            const nuevosOcupados = ocupadosSinEstaReserva + nuevaCantidad;
+            const disponibles = ruta.cupos - nuevosOcupados;
+            
+            // Advertencia si hay sobreventa
+            if (nuevosOcupados > ruta.cupos) {
+                const continuar = await confirmarAccion(
+                    `⚠️ Esta acción creará sobreventa.\n\n` +
+                    `Cupos de la ruta: ${ruta.cupos}\n` +
+                    `Cupos ocupados (sin esta reserva): ${ocupadosSinEstaReserva}\n` +
+                    `Nueva cantidad a reservar: ${nuevaCantidad}\n` +
+                    `Total después del cambio: ${nuevosOcupados}/${ruta.cupos}\n\n` +
+                    `¿Deseas continuar?`,
+                    'peligro'
+                );
+                if (!continuar) {
+                    // Restaurar el valor original en el input
+                    document.getElementById('editarCantidadReserva').value = cantidadActual;
+                    return;
+                }
+            }
+            
+            try {
+                const cantidadColumn = getCantidadColumnName(reserva);
+                const updatePayload = {};
+                updatePayload[cantidadColumn] = nuevaCantidad;
+                const { error } = await db
+                    .from('reservas')
+                    .update(updatePayload)
+                    .eq('lider', lider)
+                    .eq('ruta_id', rutaId);
+                
+                if (error) throw error;
+                
+                // Actualizar en memoria local
+                reserva[cantidadColumn] = nuevaCantidad;
+                reserva.cantidad = nuevaCantidad; // mantener campo normalizado usado por el frontend
+                
+                // Recargar datos para actualizar cálculos de cupos en toda la app
+                await loadData();
+                
+                // Refrescar el modal para mostrar el nuevo valor
+                verDetalleReserva(lider, rutaId);
+                
+                showToast(`Cantidad de cupos actualizada a ${nuevaCantidad}`, 'success', 'Éxito');
+            } catch (error) {
+                console.error('Error al actualizar cantidad de cupos:', error);
+                showToast('Error al actualizar la cantidad: ' + error.message, 'error', 'Error');
+                // Restaurar el valor original en el input
+                document.getElementById('editarCantidadReserva').value = cantidadActual;
+            }
+        }
+
         // VER DETALLE RESERVA
         function verDetalleReserva(lider, rutaId) {
             // 🔥 CORRECCIÓN: Buscar por rutaId (UUID), no por nombre
@@ -3776,8 +4028,19 @@ async function agregarPersonaRapida(lider, ruta) {
                     <div class="divider"></div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                         <div>
-                            <div style="font-size: 12px; color: var(--text-secondary);">Cupos Reservados</div>
-                            <div style="font-size: 20px; font-weight: 800; color: var(--text-primary);">${reserva.cantidad}</div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Cupos Reservados</div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="number" id="editarCantidadReserva" 
+                                       value="${reserva.cantidad}" 
+                                       min="1" max="100" 
+                                       style="width: 80px; padding: 8px; background: rgba(255,255,255,0.1); border: 2px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 18px; font-weight: 800; text-align: center;"
+                                       onchange="actualizarCantidadReserva('${lider}', '${reserva.rutaId}', parseInt(this.value))">
+                                <button class="btn btn-success" style="padding: 6px 12px; font-size: 12px; min-height: auto;" 
+                                        onclick="actualizarCantidadReserva('${lider}', '${reserva.rutaId}', parseInt(document.getElementById('editarCantidadReserva').value))"
+                                        title="Guardar cambios">
+                                    💾
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <div style="font-size: 12px; color: var(--text-secondary);">Precio Referencial</div>
@@ -3814,7 +4077,7 @@ async function agregarPersonaRapida(lider, ruta) {
                     <label class="form-label">💵 Registrar Nuevo Pago</label>
                     <input type="number" id="nuevoPago" class="form-input" 
                            placeholder="Monto" 
-                           step="0.01" min="0" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
+                           step="0.01" min="0" inputmode="decimal" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
                 </div>
                 <div class="form-group">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
@@ -3842,8 +4105,9 @@ async function agregarPersonaRapida(lider, ruta) {
             openModal('modalDetalleReserva');
         }
 
-        // COMPARTIR RESERVA POR WHATSAPP (Versión con Unicode para emojis)
-        function compartirReservaWhatsApp(lider) {
+        // COMPARTIR RESERVA POR WHATSAPP (robusto por ID; no lee del DOM)
+        // Recibe el ID de la reserva para evitar ambigüedades cuando un líder tiene varias reservas
+        function compartirReservaPorWhatsapp(reservaId) {
             // Constantes Unicode para emojis (evita problemas de codificación en URL)
             const eReserva = '\ud83d\udccb'; // 📋
             const eLider = '\ud83d\udc64'; // 👤
@@ -3854,54 +4118,58 @@ async function agregarPersonaRapida(lider, ruta) {
             const eGente = '\ud83d\udc65'; // 👥
             const ePagos = '\ud83d\udcb5'; // 💵
             
-            // Buscar la reserva por líder (si hay múltiples, usar la primera)
-            const reserva = data.reservas.find(r => r.lider === lider);
+            // Buscar la reserva específica por ID (sin depender del DOM)
+            const reserva = (data.reservas || []).find(r => String(r.id) === String(reservaId));
             if (!reserva) {
-                showToast('No se encontró la reserva para este líder', 'error', 'Error');
+                console.error('No se encontró la reserva para compartir. ID:', reservaId);
+                showToast('No se encontró la reserva seleccionada', 'error', 'Error');
                 return;
             }
             
-            // 🔥 CORRECCIÓN: Obtener datos de la ruta por ID
+            // Obtener datos de la ruta por ID
             const ruta = data.rutas.find(r => r.id === reserva.rutaId);
             if (!ruta) {
+                console.error('No se encontró la ruta para la reserva. rutaId:', reserva.rutaId, 'reservaId:', reservaId);
                 showToast('No se encontró la información de la ruta', 'error', 'Error');
                 return;
             }
             
-            // Obtener lista de participantes del líder
-            // 🔥 CORRECCIÓN: Participantes asociados a este líder y a esta ruta específica (por ID)
-            const participantes = data.participantes.filter(p => 
-                p.lider === lider && 
-                (p.rutaId === reserva.rutaId || p.ruta_id === reserva.rutaId) // Por ID (preferido)
+            // Participantes asociados a este líder y a esta ruta específica (por ID)
+            const participantes = (data.participantes || []).filter(p => 
+                p.lider === reserva.lider && 
+                (p.rutaId === reserva.rutaId || p.ruta_id === reserva.rutaId)
             );
             
-            // Calcular monto total pagado (solo Bs)
-            const montoTotalPagado = (reserva.pagos || [])
+            // Totales por moneda (para mostrar pagos)
+            const totalBs = (reserva.pagos || [])
                 .filter(p => !p.enDolares)
+                .reduce((sum, p) => sum + (p.monto || 0), 0);
+            const totalUsd = (reserva.pagos || [])
+                .filter(p => p.enDolares)
                 .reduce((sum, p) => sum + (p.monto || 0), 0);
             
             // Formatear fecha de la ruta usando formatearFechaRuta para evitar timezone issues
             const fechaFormateada = formatearFechaRuta(ruta.fecha);
             
-            // Construir mensaje con formato exacto
-            let mensaje = `${eReserva} *DETALLES DE RESERVA*\n\n`;
-            mensaje += `${eLider} *Líder:* ${lider}\n`;
-            mensaje += `${eRuta} *Ruta:* ${ruta.nombre}\n`;
-            mensaje += `${eFecha} *Fecha:* ${fechaFormateada}\n`;
-            mensaje += `${eCupos} *Cupos Reservados:* ${reserva.cantidad}\n`;
-            mensaje += `${ePrecio} *Precio Referencial:* ${ruta.precioEuros || 0}€\n`;
-            
-            // Agregar participantes
+            // Construir mensaje con el formato solicitado (sin leer del DOM)
+            let mensaje = `*${eReserva} RESERVA CONFIRMADA*\n\n`;
+            mensaje += `${eLider} Líder: ${reserva.lider}\n`;
+            mensaje += `${eRuta} Ruta: ${ruta.nombre}\n`;
+            mensaje += `${eFecha} Fecha: ${fechaFormateada}\n`;
+            mensaje += `${eCupos} Cupos Reservados: ${getCuposReserva(reserva)}\n`;
+            mensaje += `${ePrecio} Precio REF: ${ruta.precioEuros || 0}€\n\n`;
+
+            mensaje += `${eGente} Participantes:\n`;
             if (participantes.length > 0) {
-                mensaje += `\n${eGente} *Participantes:*\n`;
                 participantes.forEach(p => {
                     mensaje += `• ${p.nombre}\n`;
                 });
+            } else {
+                mensaje += `• (sin participantes registrados)\n`;
             }
-            
-            // Agregar historial de pagos
+
+            mensaje += `\n${ePagos} Pagos:\n`;
             if (reserva.pagos && reserva.pagos.length > 0) {
-                mensaje += `\n${ePagos} *Pagos:*\n`;
                 reserva.pagos.forEach((pago, index) => {
                     const simbolo = pago.enDolares ? '$' : 'Bs';
                     const fecha = new Date(pago.fecha).toLocaleDateString('es-ES', { 
@@ -3915,17 +4183,19 @@ async function agregarPersonaRapida(lider, ruta) {
                     mensaje += `\n`;
                 });
             } else {
-                mensaje += `\n${ePagos} *Pagos:* Bs ${montoTotalPagado.toLocaleString()}`;
+                // Mantener el bloque aunque esté vacío, pero dar contexto mínimo
+                mensaje += `• Bs ${Number(totalBs || 0).toLocaleString()}${totalUsd > 0 ? ` + $${Number(totalUsd || 0).toLocaleString()}` : ''}\n`;
             }
             
-            // Codificar mensaje para URL
             const mensajeCodificado = encodeURIComponent(mensaje);
             const urlWhatsApp = 'https://wa.me/?text=' + mensajeCodificado;
-            
-            // Abrir WhatsApp
             window.open(urlWhatsApp, '_blank');
-            
             showToast('Abriendo WhatsApp...', 'info');
+        }
+
+        // Alias de compatibilidad: por si algún onclick antiguo sigue llamando a este nombre
+        function compartirReservaWhatsApp(reservaId) {
+            return compartirReservaPorWhatsapp(reservaId);
         }
 
         // AGREGAR función para abrir modal de agregar persona desde un card de reserva
@@ -4205,7 +4475,7 @@ function renderRutas() {
                 reservasRuta.some(r => r.lider === p.lider && (p.ruta_nombre || p.ruta) === ruta.nombre)
             );
             const presentes = participantesRuta.filter(p => p.asiste).length;
-            const cuposReservados = reservasRuta.reduce((sum, r) => sum + r.cantidad, 0);
+            const cuposReservados = reservasRuta.reduce((sum, r) => sum + getCuposReserva(r), 0);
             const porcentajeAsistencia = cuposReservados > 0 ? (presentes / cuposReservados * 100).toFixed(0) : 0;
 
             const cardId = `ruta-${ruta.id || ruta.nombre.replace(/\s+/g, '-').toLowerCase()}`;
@@ -4456,9 +4726,14 @@ function formatearFechaCorta(fechaString) {
                                             ${tienePagos ? `<span>💰 Bs ${totalBs.toLocaleString()}${totalDolares > 0 ? ` + $${totalDolares.toLocaleString()}` : ''}</span>` : '<span style="color: var(--text-tertiary);">Sin pagos</span>'}
                                         </div>
                                     </div>
-                                    <button class="btn-expand-reserva" onclick="toggleReservaCard('${cardId}')" title="Ver detalles">
-                                        <span class="expand-icon">▼</span>
-                                    </button>
+                                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                                        <button class="btn-expand-reserva" onclick="abrirModalEditarReserva('${reserva.id}')" title="Editar reserva">
+                                            ✏️
+                                        </button>
+                                        <button class="btn-expand-reserva" onclick="toggleReservaCard('${cardId}')" title="Ver detalles">
+                                            <span class="expand-icon">▼</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -4510,7 +4785,7 @@ function formatearFechaCorta(fechaString) {
                                     </button>
                                 </div>
                                 <button class="btn btn-success btn-small" style="margin-top: 8px; width: 100%; background: #25D366; border-color: #25D366; color: white; display: flex; align-items: center; justify-content: center; gap: 6px;" 
-                                        onclick="compartirReservaWhatsApp('${reserva.lider}')">
+                                        onclick="compartirReservaPorWhatsapp('${reserva.id}')">
                                     <span style="font-size: 16px;">📱</span> Compartir por WhatsApp
                                 </button>
                             </div>
@@ -4519,6 +4794,102 @@ function formatearFechaCorta(fechaString) {
                 }).filter(html => html !== '').join('');
             
             document.getElementById('listaReservas').innerHTML = html;
+        }
+
+        // EDITAR RESERVA (líder + cupos)
+        function abrirModalEditarReserva(reservaId) {
+            const reserva = (data.reservas || []).find(r => String(r.id) === String(reservaId));
+            if (!reserva) {
+                showToast('No se encontró la reserva', 'error', 'Error');
+                return;
+            }
+
+            const ruta = data.rutas.find(r => r.id === reserva.rutaId);
+            document.getElementById('editarReservaId').value = reserva.id;
+            document.getElementById('editarReservaLider').value = reserva.lider || '';
+            document.getElementById('editarReservaRutaNombre').value = ruta ? ruta.nombre : (reserva.ruta || '');
+            document.getElementById('editarReservaCantidad').value = getCuposReserva(reserva);
+
+            openModal('modalEditarReserva');
+            setTimeout(() => document.getElementById('editarReservaLider')?.focus(), 50);
+        }
+
+        async function guardarEdicionReserva() {
+            const reservaId = document.getElementById('editarReservaId').value;
+            const nuevoLider = (document.getElementById('editarReservaLider').value || '').trim();
+            const nuevaCantidad = parseInt(document.getElementById('editarReservaCantidad').value, 10);
+
+            if (!reservaId) {
+                showToast('No se pudo identificar la reserva', 'error', 'Error');
+                return;
+            }
+            if (!nuevoLider || nuevoLider.length < 2) {
+                showToast('Ingresa un nombre de líder válido', 'warning', 'Validación');
+                document.getElementById('editarReservaLider').focus();
+                return;
+            }
+            if (!Number.isFinite(nuevaCantidad) || nuevaCantidad < 1 || nuevaCantidad > 100) {
+                showToast('La cantidad de cupos debe estar entre 1 y 100', 'warning', 'Validación');
+                document.getElementById('editarReservaCantidad').focus();
+                return;
+            }
+
+            const reserva = (data.reservas || []).find(r => String(r.id) === String(reservaId));
+            if (!reserva) {
+                showToast('No se encontró la reserva', 'error', 'Error');
+                return;
+            }
+
+            // Validar cupos de ruta (permitir sobreventa con confirmación)
+            const ruta = data.rutas.find(r => r.id === reserva.rutaId);
+            if (ruta) {
+                const cantidadActual = getCuposReserva(reserva);
+                const ocupadosSinEstaReserva = calcularCuposOcupados(ruta.id) - cantidadActual;
+                const nuevosOcupados = ocupadosSinEstaReserva + nuevaCantidad;
+                if (nuevosOcupados > ruta.cupos) {
+                    const continuar = await confirmarAccion(
+                        `⚠️ Esta edición creará sobreventa.\n\n` +
+                        `Ruta: ${ruta.nombre}\n` +
+                        `Cupos de la ruta: ${ruta.cupos}\n` +
+                        `Cupos ocupados (sin esta reserva): ${ocupadosSinEstaReserva}\n` +
+                        `Nueva cantidad: ${nuevaCantidad}\n` +
+                        `Total después del cambio: ${nuevosOcupados}/${ruta.cupos}\n\n` +
+                        `¿Deseas continuar?`,
+                        'peligro'
+                    );
+                    if (!continuar) return;
+                }
+            }
+
+            try {
+                showLoader('Guardando cambios...');
+
+                const cantidadColumn = getCantidadColumnName(reserva);
+                const updatePayload = { lider: nuevoLider };
+                updatePayload[cantidadColumn] = nuevaCantidad;
+
+                const { error } = await db
+                    .from('reservas')
+                    .update(updatePayload)
+                    .eq('id', reservaId);
+
+                if (error) throw error;
+
+                closeModal('modalEditarReserva');
+
+                // CRUCIAL: recargar lista y recalcular cupos inmediatamente
+                await saveData(true);
+                updateSelects();
+                renderReservas();
+                renderRutas();
+
+                showToast('Reserva actualizada correctamente', 'success', 'Éxito');
+            } catch (error) {
+                console.error('Error actualizando reserva:', error);
+                showToast('Error al actualizar la reserva: ' + error.message, 'error', 'Error');
+            } finally {
+                hideLoader();
+            }
         }
 
         // TOGGLE EXPANDIR/COLAPSAR CARD DE RESERVA
@@ -4926,8 +5297,6 @@ function formatearFechaCorta(fechaString) {
                     }]);
 
                 if (error) throw error;
-                
-                hideLoader();
 
                 document.getElementById('gastoConcepto').value = '';
                 document.getElementById('gastoRuta').value = '';
@@ -4940,9 +5309,10 @@ function formatearFechaCorta(fechaString) {
                 renderRutas();
                 showToast('Gasto registrado exitosamente', 'success', 'Éxito');
             } catch (error) {
-                hideLoader();
                 console.error('Error:', error);
                 showToast('Error al registrar el gasto: ' + error.message, 'error', 'Error');
+            } finally {
+                hideLoader();
             }
         }
 
