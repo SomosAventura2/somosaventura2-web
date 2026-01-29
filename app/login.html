@@ -97,6 +97,42 @@
         .error-msg.show {
             display: block;
         }
+
+        /* --- FIX CRÍTICO PARA IOS PWA --- */
+        /* Forzamos que los inputs sean la capa más alta y tocable */
+        input {
+            /* Romper cualquier herencia de bloqueo */
+            pointer-events: auto !important;
+            touch-action: manipulation !important;
+
+            /* Habilitar selección de texto (Vital para que salga el teclado) */
+            -webkit-user-select: text !important;
+            user-select: text !important;
+
+            /* Asegurar posición física sobre fondos */
+            position: relative !important;
+            z-index: 99999 !important;
+
+            /* Eliminar estilos nativos que a veces bugean el foco */
+            -webkit-appearance: none !important;
+            appearance: none !important;
+
+            /* Fix para que el tap sea instantáneo */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Asegurar que el contenedor padre no bloquee los clics */
+        body, .login-card, .login-form {
+            pointer-events: auto !important;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* Si hay algún pseudo-elemento de fondo, mandarlo al fondo y que no capture clics */
+        body::before, .login-screen::before {
+            z-index: -1 !important;
+            pointer-events: none !important;
+        }
     </style>
 
     <link rel="manifest" href="manifest.json">
