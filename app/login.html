@@ -141,6 +141,42 @@
             z-index: -1 !important;
             pointer-events: none !important;
         }
+
+        /* --- FIX DE EMERGENCIA PARA IOS --- */
+
+        /* 1. Habilitar selección en TODO el documento */
+        html, body, .login-card, form {
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            pointer-events: auto !important;
+            cursor: auto !important;
+        }
+
+        /* 2. Inputs supremos: Encima de todo y seleccionables */
+        input, textarea {
+            /* Fuerza bruta para interacción */
+            pointer-events: auto !important;
+            -webkit-user-select: text !important;
+            user-select: text !important;
+
+            /* Evitar zoom automático al enfocar (mínimo 16px) */
+            font-size: 16px !important;
+
+            /* Capa superior absoluta */
+            position: relative !important;
+            z-index: 2147483647 !important;
+
+            /* Apariencia nativa limpia */
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            color: black !important;
+        }
+
+        /* 3. MATAR CAPAS FANTASMA */
+        body::before, body::after, .login-card::before, .login-card::after {
+            display: none !important;
+            pointer-events: none !important;
+            z-index: -999 !important;
+        }
     </style>
 
     <link rel="manifest" href="manifest.json">
