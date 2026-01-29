@@ -67,7 +67,7 @@
             overflow: hidden;
         }
 
-        /* Fondo animado: no debe interceptar toques (CRÍTICO para teclado en iOS) */
+        /* Fondo animado: DESACTIVADO temporalmente para aislar problema de teclado en iOS */
         .login-screen::before {
             content: '';
             position: absolute;
@@ -76,8 +76,9 @@
             width: 200%;
             height: 200%;
             background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: rotate 30s linear infinite;
+            /* animation: rotate 30s linear infinite; */
             pointer-events: none;
+            display: none;
         }
 
         @keyframes rotate {
@@ -133,21 +134,13 @@
 
         .login-form input {
             width: 100%;
-            padding: 16px 20px;
+            padding: 16px;
             margin-bottom: 16px;
-            border-radius: 16px;
             border: 2px solid var(--border);
             background: rgba(255, 255, 255, 0.1);
-            color: var(--text-primary);
-            font-size: 16px; /* Vital para evitar zoom en iOS */
+            font-size: 16px; /* Importante para iOS */
 
-            position: relative;
-            z-index: 101;
-
-            -webkit-appearance: none;
-            appearance: none;
-
-            pointer-events: auto;
+            transform: translateZ(0);
         }
 
         .login-form input::placeholder {
