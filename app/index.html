@@ -2095,11 +2095,8 @@ async function loadUsuarios() {
         usuariosCache = users || [];
         console.log("✅ Usuarios listos:", usuariosCache.length);
     } catch (err) {
-        console.error("❌ Error de red, usando locales");
-        usuariosCache = [
-            { username: 'Luifer', password: '2612' },
-            { username: 'Chanti', password: '0526' }
-        ];
+        console.error("Error cargando usuarios", err);
+        usuariosCache = [];
     }
 }
 
