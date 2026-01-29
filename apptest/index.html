@@ -1233,26 +1233,21 @@
 
         /* El FAB se oculta/muestra dinámicamente con JavaScript según la pestaña activa */
 
-        /* Modal */
+        /* Modal: cubre toda la pantalla física (PWA/iPhone sin hueco inferior) */
         .modal {
+            top: 0 !important;
+            bottom: 0 !important;
+            height: 100% !important;
+            padding-bottom: 0 !important;
             display: none;
             position: fixed;
-            top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            /* Safe area para iPhone con notch */
-            top: env(safe-area-inset-top);
-            left: env(safe-area-inset-left);
-            right: env(safe-area-inset-right);
-            bottom: env(safe-area-inset-bottom);
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(4px);
             z-index: 1000;
             align-items: flex-end;
             justify-content: center;
-            padding: 0;
-            padding-bottom: env(safe-area-inset-bottom);
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(4px);
         }
 
         /* Modal de confirmación debe estar por encima de otros modales */
@@ -1278,17 +1273,19 @@
             background: var(--bg-card);
             border-radius: 24px 24px 0 0;
             padding: 28px 20px;
-            /* Safe area para iPhone */
-            padding-bottom: calc(28px + env(safe-area-inset-bottom));
+            /* Safe area solo aquí (texto no se tapa en iPhone) */
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
             padding-left: calc(20px + env(safe-area-inset-left));
             padding-right: calc(20px + env(safe-area-inset-right));
+            margin-bottom: 0;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
             max-width: 480px;
             width: 100%;
             max-height: calc(85vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
             overflow-y: auto;
             animation: slideUp 0.3s ease;
             border: 1px solid var(--border);
-            /* Scroll optimizado para iOS */
             -webkit-overflow-scrolling: touch;
         }
 
