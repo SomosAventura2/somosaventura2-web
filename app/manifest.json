@@ -1,7 +1,7 @@
 {
   "name": "SomosAventura2",
   "short_name": "Rutas",
-  "start_url": "app/index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#25d366",
