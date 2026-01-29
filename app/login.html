@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SomosAventura - Iniciar sesión</title>
+    <link rel="icon" type="image/png" href="favicon.png?v=99" sizes="32x32">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: #0e2f36;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #fff;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .login-card {
+            background: #1a3d47;
+            padding: 30px;
+            border-radius: 20px;
+            width: 85%;
+            max-width: 350px;
+        }
+
+        .login-card h1 {
+            margin: 0 0 24px;
+            font-size: 22px;
+            text-align: center;
+            color: #76c893;
+        }
+
+        .login-card img {
+            display: block;
+            max-width: 200px;
+            margin: 0 auto 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            -webkit-user-select: text;
+            user-select: text;
+            transform: translate3d(0, 0, 0);
+        }
+
+        input::placeholder {
+            color: #999;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            background: #4CAF50;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .error-msg {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            display: none;
+        }
+
+        .error-msg.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <img src="../logo.png" alt="SomosAventura2" onerror="this.style.display='none'">
+        <h1>Iniciar sesión</h1>
+        <form id="loginForm" onsubmit="return false;">
+            <input type="text" id="username" placeholder="Usuario" autocomplete="username">
+            <input type="password" id="password" placeholder="Contraseña" autocomplete="current-password">
+            <button type="button" class="login-btn" id="btnLogin">Iniciar sesión</button>
+        </form>
+        <div id="errorMsg" class="error-msg"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://dgubxitmqegounjyeciw.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_EY4EoqiHn7om0Qf-HYpJZQ_HwDJXlan';
+
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            if (el) {
+                el.textContent = msg || '';
+                el.classList.toggle('show', !!msg);
+            }
+        }
+
+        async function doLogin() {
+            const userIn = document.getElementById('username').value.trim();
+            const passIn = document.getElementById('password').value.trim();
+            showError('');
+
+            if (!passIn) {
+                showError('Introduce la contraseña');
+                return;
+            }
+
+            const usuarioNorm = (userIn || '').toLowerCase();
+            let email = usuarioNorm;
+            if (usuarioNorm === 'luifer') email = 'luisfer@somosaventura2.com';
+            if (usuarioNorm === 'chanti') email = 'chantal@somosaventura2.com';
+
+            try {
+                const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                const { data, error } = await client.auth.signInWithPassword({ email, password: passIn });
+                if (error) throw error;
+                if (data?.session) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                showError('Usuario o contraseña incorrectos');
+            } catch (err) {
+                console.error('Login error:', err);
+                showError(err?.message || 'Usuario o contraseña incorrectos');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                const { data } = await client.auth.getSession();
+                if (data?.session) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+            } catch (e) {
+                console.warn('No sesión previa');
+            }
+
+            document.getElementById('btnLogin').addEventListener('click', doLogin);
+
+            document.getElementById('password').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') doLogin();
+            });
+        });
+    </script>
+</body>
+</html>
