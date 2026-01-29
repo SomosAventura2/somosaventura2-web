@@ -10,6 +10,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SomosAventura">
+    <meta name="theme-color" content="#2d5a3d">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -38,10 +39,15 @@
             box-sizing: border-box;
         }
 
+        /* Fondo infinito: mismo color que las cards para que el overscroll (rebote) no muestre otro tono */
+        html {
+            background-color: var(--bg-dark);
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
-            /* Mismo tono que el header para scroll elástico iOS (rebote sin blanco) */
-            background: var(--green-dark);
+            /* Mismo color que .app y cards: overscroll arriba/abajo muestra oscuro, sin gap verde */
+            background-color: var(--bg-dark);
             color: var(--text-primary);
             /* Safe area para iPhone con notch */
             padding-top: env(safe-area-inset-top);
@@ -50,7 +56,7 @@
             padding-right: env(safe-area-inset-right);
             -webkit-font-smoothing: antialiased;
             line-height: 1.6;
-            /* Scroll optimizado para iOS */
+            /* Scroll fluido iOS */
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
         }
@@ -79,18 +85,15 @@
             display: block;
         }
 
-        /* Header: fijo con Safe Area completo para iOS; fondo cubre notch, contenido en zona segura */
+        /* Header: fijo arriba con z-index alto; overscroll arriba muestra body oscuro detrás del header verde */
         .app-header {
             background: linear-gradient(135deg, var(--green-mountain) 0%, var(--green-dark) 100%);
             color: white;
-            /* Padding inteligente: Safe Area arriba (fondo cubre notch y barra de estado) */
             padding-top: env(safe-area-inset-top);
-            /* Espacio extra para que el contenido no quede pegado al notch */
             padding-bottom: 10px;
             padding-left: calc(12px + env(safe-area-inset-left));
             padding-right: calc(12px + env(safe-area-inset-right));
             height: auto;
-            /* Altura visual mínima segura: contenido (60px) + safe-area se suma automáticamente */
             min-height: calc(var(--app-header-content-height) + env(safe-area-inset-top));
             display: flex;
             justify-content: space-between;
@@ -218,10 +221,10 @@
         .section {
             display: none;
             padding: 20px 16px;
-            /* Safe area para iPhone */
+            /* Safe area lateral y inferior: última card no tapada por barra de navegación / gestos */
             padding-left: calc(16px + env(safe-area-inset-left));
             padding-right: calc(16px + env(safe-area-inset-right));
-            /* Scroll optimizado para iOS */
+            padding-bottom: calc(24px + env(safe-area-inset-bottom));
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
         }
