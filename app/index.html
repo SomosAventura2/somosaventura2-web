@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no">
     <title>SomosAventura - Gestión</title>
     <link rel="icon" type="image/png" href="/favicon.png?v=99" sizes="32x32">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=99">
@@ -132,24 +133,17 @@
         .login-form input {
             width: 100%;
             padding: 16px 20px;
-            min-height: 44px; /* Touch target mínimo para iPhone */
+            min-height: 44px;
             border: 2px solid var(--border);
             border-radius: 16px;
-            font-size: 16px; /* Mínimo 16px para evitar zoom en iOS */
+            font-size: 16px;
             margin-bottom: 16px;
             transition: all 0.3s;
             background: rgba(255, 255, 255, 0.1);
             color: var(--text-primary);
-            /* Prevenir zoom en iOS pero permitir interacción */
+            /* SOLO las propiedades esenciales para iOS */
             -webkit-appearance: none;
             appearance: none;
-            /* CRÍTICO para iOS PWA */
-            -webkit-user-select: auto;
-            user-select: auto;
-            -webkit-touch-callout: default;
-            touch-action: manipulation;
-            /* Asegurar que el cursor sea visible */
-            caret-color: var(--accent);
         }
 
         .login-form input::placeholder {
@@ -1776,36 +1770,10 @@
             }
         }
         
-        /* Optimizaciones táctiles para iPhone - PERMITIR TECLADO EN INPUTS */
+        /* iOS PWA FIX - NO bloquear NADA en móviles */
         @media (max-width: 768px) {
-            /* CRÍTICO: Inputs deben ser completamente interactivos */
-            input, 
-            textarea, 
-            select, 
-            [contenteditable="true"],
-            [contenteditable] {
-                -webkit-user-select: auto !important;
-                user-select: auto !important;
-                -webkit-touch-callout: default !important;
-                touch-callout: default !important;
-                pointer-events: auto !important;
-                -webkit-tap-highlight-color: rgba(118, 200, 147, 0.2) !important;
-                /* Forzar que iOS reconozca estos como campos editables */
-                cursor: text !important;
-            }
-            
-            /* Solo prevenir selección en elementos de interfaz NO editables */
-            body:not(input):not(textarea):not(select), 
-            div:not([contenteditable]), 
-            span:not([contenteditable]), 
-            p, h1, h2, h3, h4, h5, h6,
-            button, a,
-            label:not([for]), 
-            img, svg {
-                -webkit-user-select: none;
-                user-select: none;
-                -webkit-touch-callout: none;
-            }
+            /* NO aplicar user-select: none a NADA */
+            /* Dejar que iOS maneje todo naturalmente */
         }
 
             .reserva-compact {
@@ -1831,24 +1799,29 @@
         <div class="login-card">
             <img src="../logo.png" alt="SomosAventura2" class="logo-img">
             
-            <div class="login-form">
+            <form class="login-form" onsubmit="event.preventDefault(); window.login && window.login(); return false;">
                 <input 
                     type="text" 
                     id="username" 
+                    name="username"
                     placeholder="Usuario" 
                     autocomplete="username" 
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
                     inputmode="text"
-                    enterkeyhint="next"
-                    onkeypress="if(event.key==='Enter') { document.getElementById('password').focus(); }">
+                    required
+                    onkeypress="if(event.key==='Enter') { event.preventDefault(); document.getElementById('password').focus(); }">
                 <input 
                     type="password" 
                     id="password" 
+                    name="password"
                     placeholder="Contraseña" 
                     autocomplete="current-password"
-                    enterkeyhint="done"
+                    required
                     onkeypress="if(event.key==='Enter') { event.preventDefault(); if(window.login) window.login(); }">
-                <button class="login-btn" onclick="window.login && window.login()">Iniciar Sesión</button>
-            </div>
+                <button type="submit" class="login-btn">Iniciar Sesión</button>
+            </form>
             
             <div id="errorMsg" class="error-msg">❌ Usuario o contraseña incorrectos</div>
         </div>
@@ -5746,62 +5719,91 @@ async function marcarTodosPresentes() {
             showApp();
         }
         
-        // FIX CRÍTICO PARA iOS PWA: Forzar enfoque en inputs
-        // iOS PWA a veces bloquea el teclado, este código lo soluciona
-        if (navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
-            console.log('PWA detectada - Aplicando fix para iOS keyboard');
+        // ========== FIX DEFINITIVO PARA iOS PWA ==========
+        // Detectar si estamos en PWA
+        const isPWA = window.navigator.standalone === true || 
+                      window.matchMedia('(display-mode: standalone)').matches;
+        
+        if (isPWA || /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+            console.log('🔧 Aplicando FIX para iOS PWA keyboard');
             
-            // Agregar event listeners a todos los inputs
-            const allInputs = document.querySelectorAll('input, textarea, select');
+            // Función para forzar enfoque en iOS
+            function forceIOSFocus(element) {
+                // Crear un evento sintético de toque
+                element.style.transform = 'scale(1)';
+                element.focus();
+                
+                // Forzar que iOS reconozca el input como editable
+                element.click();
+                
+                // Intentar posicionar el cursor
+                setTimeout(() => {
+                    element.focus();
+                    element.setSelectionRange(element.value.length, element.value.length);
+                }, 50);
+                
+                // Segundo intento por si acaso
+                setTimeout(() => {
+                    element.focus();
+                }, 150);
+            }
+            
+            // Aplicar a TODOS los inputs
+            const allInputs = document.querySelectorAll('input, textarea');
             allInputs.forEach(input => {
-                // Prevenir comportamiento por defecto y forzar enfoque
+                // Remover cualquier bloqueo de eventos
+                input.style.pointerEvents = 'auto';
+                input.style.userSelect = 'text';
+                input.style.webkitUserSelect = 'text';
+                
+                // Touchstart - preparar para enfoque
                 input.addEventListener('touchstart', function(e) {
                     e.stopPropagation();
-                }, { passive: true });
+                    this.style.pointerEvents = 'auto';
+                }, {passive: true});
                 
+                // Touchend - forzar enfoque AQUÍ
+                input.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    forceIOSFocus(this);
+                }, false);
+                
+                // Click - backup
                 input.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    // Forzar enfoque con un pequeño delay
-                    setTimeout(() => {
-                        this.focus();
-                        // En iOS, a veces necesitas hacer click() también
-                        if (this.setSelectionRange && this.type !== 'password') {
-                            try {
-                                this.setSelectionRange(this.value.length, this.value.length);
-                            } catch(err) {
-                                console.log('setSelectionRange no disponible');
-                            }
-                        }
-                    }, 10);
+                    forceIOSFocus(this);
                 }, false);
                 
-                // Agregar estilo visual cuando se enfoca
-                input.addEventListener('focus', function() {
-                    this.style.borderColor = 'var(--accent)';
-                });
-                
-                input.addEventListener('blur', function() {
-                    this.style.borderColor = '';
-                });
+                // Mousedown - otro backup
+                input.addEventListener('mousedown', function(e) {
+                    e.stopPropagation();
+                }, false);
             });
             
-            // Fix especial para los inputs de login
-            const usernameInput = document.getElementById('username');
-            const passwordInput = document.getElementById('password');
-            
-            if (usernameInput) {
-                usernameInput.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    this.focus();
-                }, false);
-            }
-            
-            if (passwordInput) {
-                passwordInput.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    this.focus();
-                }, false);
-            }
+            // FIX ESPECIAL para inputs de login
+            setTimeout(() => {
+                const username = document.getElementById('username');
+                const password = document.getElementById('password');
+                
+                if (username) {
+                    username.addEventListener('touchend', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('👆 Touch en username');
+                        forceIOSFocus(this);
+                    }, false);
+                }
+                
+                if (password) {
+                    password.addEventListener('touchend', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('👆 Touch en password');
+                        forceIOSFocus(this);
+                    }, false);
+                }
+            }, 500);
         }
     });
 
