@@ -202,6 +202,8 @@
             min-height: 100vh;
             /* Altura del contenido visual del header (sin safe-area) para calcular espaciadores */
             --app-header-content-height: 60px;
+            /* Altura total del header (padding-top + contenido + padding-bottom) para unión exacta con .nav-tabs */
+            --app-header-total-height: calc(var(--app-header-content-height) + 10px + 2*env(safe-area-inset-top, 0px));
         }
 
         .app.active {
@@ -276,7 +278,7 @@
             color: var(--green-mountain);
         }
 
-        /* Tabs: en flujo normal; al hacer scroll sube y se oculta (header fijo queda encima) */
+        /* Tabs: en flujo normal; top = altura total del header para unión perfecta sin hueco */
         .nav-tabs {
             background: var(--bg-card);
             display: grid;
@@ -284,8 +286,8 @@
             border-bottom: 2px solid var(--border);
             position: relative;
             z-index: 50;
-            /* Margen superior = altura del contenido del header + safe-area (igual que min-height del header) */
-            margin-top: calc(var(--app-header-content-height) + env(safe-area-inset-top));
+            /* Margen superior = altura total del header (coincide exactamente con el final del banner) */
+            margin-top: var(--app-header-total-height);
             box-shadow: 0 2px 8px var(--shadow);
             width: 100%;
             padding-left: env(safe-area-inset-left);
@@ -2159,37 +2161,39 @@
         </div>
     </div>
     <script>
-// CONFIGURACIÓN DE RUTAS
-const URL_LANDING_DESTINO = 'index.html'; // Para volver al login
-
 // --- 1. CONFIGURACIÓN ---
 const SUPABASE_URL = 'https://dgubxitmqegounjyeciw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_EY4EoqiHn7om0Qf-HYpJZQ_HwDJXlan';
 
-let db = null; // Cambiamos el nombre a 'db' para evitar conflictos
+let db = null;
 let usuariosCache = [];
-let liderActualParaNuevoParticipante = null; // líder asociado al formulario de nuevo participante
-let rutaActualParaNuevoParticipante = null;  // ruta asociada al formulario de nuevo participante
+let liderActualParaNuevoParticipante = null;
+let rutaActualParaNuevoParticipante = null;
 
-// Protección de ruta: solo permite acceso si hay sesión activa
+// Al cargar: comprobar sesión y mostrar login o app (sin redirigir nunca)
 document.addEventListener('DOMContentLoaded', async () => {
+    const loginScreen = document.getElementById('loginScreen');
+    const appEl = document.getElementById('app');
+
     try {
         const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const { data } = await client.auth.getSession();
 
-        // Si NO hay sesión, patada a la landing
-        if (!data?.session) {
-            window.location.href = URL_LANDING_DESTINO;
-            return;
-        }
-
-        // Si hay sesión, ejecuta la lógica normal de carga
-        if (typeof conectarBaseDeDatos === 'function') {
+        if (data?.session) {
+            loginScreen.style.display = 'none';
+            appEl.classList.add('active');
             conectarBaseDeDatos();
+            await loadData();
+            updateSelects();
+            renderAll();
+        } else {
+            loginScreen.style.display = 'flex';
+            appEl.classList.remove('active');
         }
     } catch (error) {
-        console.error('Error verificando la sesión en la app:', error);
-        window.location.href = URL_LANDING_DESTINO;
+        console.error('Error verificando sesión:', error);
+        if (loginScreen) loginScreen.style.display = 'flex';
+        if (appEl) appEl.classList.remove('active');
     }
 });
 
@@ -2228,24 +2232,33 @@ async function loadUsuarios() {
     }
 }
 
-    // --- 4. FUNCIÓN LOGIN ---
+    // --- 4. FUNCIÓN LOGIN (Supabase: signInWithPassword) ---
     window.login = async function() {
-        const userIn = document.getElementById('username').value.trim().toLowerCase();
+        const userIn = document.getElementById('username').value.trim();
         const passIn = document.getElementById('password').value.trim();
+        if (!passIn) {
+            showToast('Introduce la contraseña', 'error', 'Login');
+            return;
+        }
 
-        if (usuariosCache.length === 0) await loadUsuarios();
+        // Mapeo temporal Usuario -> Email (Supabase usa email)
+        const usuarioNorm = (userIn || '').toLowerCase();
+        let email = usuarioNorm;
+        if (usuarioNorm === 'luifer') email = 'luisfer@somosaventura2.com';
+        if (usuarioNorm === 'chanti') email = 'chantal@somosaventura2.com';
 
-        const usuario = usuariosCache.find(u => {
-            const dbU = (u.username || u.usuario || "").toLowerCase();
-            const dbP = (u.password || u.clave || "").toString();
-            return dbU === userIn && dbP === passIn;
-        });
-
-        if (usuario) {
-            sessionStorage.setItem('authenticated', 'true');
-            showApp();
-        } else {
+        try {
+            const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            const { data, error } = await client.auth.signInWithPassword({ email, password: passIn });
+            if (error) throw error;
+            if (data?.session) {
+                location.reload();
+                return;
+            }
             showToast('Usuario o contraseña incorrectos', 'error', 'Error de Login');
+        } catch (err) {
+            console.error('Login error:', err);
+            showToast(err?.message || 'Usuario o contraseña incorrectos', 'error', 'Error de Login');
         }
     };
          
@@ -2374,7 +2387,7 @@ async function loadUsuarios() {
             } catch (error) {
                 console.error('Error al cerrar sesión en Supabase:', error);
             }
-            window.location.href = URL_LANDING_DESTINO;
+            location.reload();
         };
 
         // =============================================
