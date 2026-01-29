@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>SomosAventura - Gestión</title>
     <link rel="icon" type="image/png" href="/favicon.png?v=99" sizes="32x32">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=99">
@@ -1769,19 +1769,24 @@
             }
         }
         
-        /* Prevenir selección de texto accidental en iPhone (sin bloquear teclado en inputs) */
+        /* Optimizaciones táctiles para iPhone - SIN bloquear selección en inputs */
         @media (max-width: 768px) {
-            /* Se elimina la restricción global de selección para evitar bugs con el teclado */
-            * {
-                -webkit-touch-callout: none;
-            }
-
-            /* Forzamos que los inputs sean seleccionables y editables */
-            input, textarea, [contenteditable] {
+            /* Permitir interacción completa con inputs y campos de texto */
+            input, textarea, select, [contenteditable] {
                 -webkit-user-select: text !important;
                 user-select: text !important;
-                /* Asegura que el clic funcione para hacer foco */
+                -webkit-touch-callout: default !important;
                 pointer-events: auto !important;
+                /* Asegurar que el teclado aparezca */
+                -webkit-tap-highlight-color: rgba(118, 200, 147, 0.2);
+            }
+            
+            /* Prevenir selección accidental solo en elementos NO interactivos */
+            body, div:not([contenteditable]), span, p, h1, h2, h3, h4, h5, h6, 
+            label:not([for]), img, svg {
+                -webkit-user-select: none;
+                user-select: none;
+                -webkit-touch-callout: none;
             }
         }
 
