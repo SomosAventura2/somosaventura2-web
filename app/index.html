@@ -150,7 +150,7 @@
             z-index: 9990;
             background: var(--bg-card);
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(7, 1fr);
             border-bottom: 2px solid var(--border);
             margin-top: 0;
             box-shadow: 0 2px 8px var(--shadow);
@@ -402,11 +402,6 @@
             padding-top: 16px;
             border-top: 1px solid var(--border);
             animation: slideDown 0.3s ease;
-        }
-            color: var(--text-secondary);
-            margin-top: 4px;
-            display: block;
-            font-weight: 600;
         }
 
         /* Payment Progress */
@@ -1121,18 +1116,37 @@
             backdrop-filter: blur(4px);
         }
 
-        /* Modal de confirmación debe estar por encima de otros modales */
-        #modalConfirm {
-            z-index: 10001 !important;
+        /* Modales principales: por encima del header (9999) y nav (9990) */
+        #modalNuevaReserva,
+        #modalNuevoParticipante,
+        #modalDetalleReserva,
+        #modalNuevaRuta,
+        #modalEditarReserva,
+        #modalNuevoGasto {
+            z-index: 10002 !important;
         }
         
-        /* Asegurar que el backdrop del modal de confirmación esté por encima */
-        #modalConfirm.modal.active {
-            z-index: 10001 !important;
+        #modalNuevaReserva.modal.active,
+        #modalNuevoParticipante.modal.active,
+        #modalDetalleReserva.modal.active,
+        #modalNuevaRuta.modal.active,
+        #modalEditarReserva.modal.active,
+        #modalNuevoGasto.modal.active {
+            z-index: 10002 !important;
         }
         
-        /* Cuando el modal de confirmación está activo, otros modales deben estar detrás pero visibles */
-        .modal.active:not(#modalConfirm) {
+        /* Modales de confirmación/alerta SIEMPRE delante de cualquier otro modal */
+        #modalConfirm,
+        #modalHistorialRecurrente {
+            z-index: 10100 !important;
+        }
+        
+        #modalConfirm.modal.active,
+        #modalHistorialRecurrente.modal.active {
+            z-index: 10100 !important;
+        }
+        
+        .modal.active:not(#modalConfirm):not(#modalHistorialRecurrente):not(#modalNuevaReserva):not(#modalNuevoParticipante):not(#modalDetalleReserva):not(#modalNuevaRuta):not(#modalEditarReserva):not(#modalNuevoGasto) {
             z-index: 1000;
         }
 
@@ -1141,6 +1155,7 @@
         }
 
         .modal-content {
+            position: relative;
             background: var(--bg-card);
             border-radius: 24px 24px 0 0;
             padding: 28px 20px;
@@ -1558,7 +1573,7 @@
             
             /* Nav tabs más compactos en iPhone - solo iconos, tamaño más grande */
             .nav-tabs {
-                grid-template-columns: repeat(6, 1fr);
+                grid-template-columns: repeat(7, 1fr);
                 gap: 0;
             }
             
@@ -1681,7 +1696,7 @@
     </div>
 
     <!-- MODAL DE CONFIRMACIÓN GENÉRICO -->
-    <div id="modalConfirm" class="modal" onclick="closeModalOnBackdrop(event, 'modalConfirm')" style="z-index: 10001 !important;">
+    <div id="modalConfirm" class="modal" onclick="closeModalOnBackdrop(event, 'modalConfirm')" style="z-index: 10100 !important;">
         <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 400px; display: block !important; visibility: visible !important;">
             <div class="modal-header confirm-title">Confirmar acción</div>
             <div class="form-group" style="margin-bottom: 16px;">
@@ -1739,6 +1754,9 @@
     </button>
     <button class="nav-tab" onclick="showTab('historial')">
         📚 <span class="text">Historial</span>
+    </button>
+    <button class="nav-tab" onclick="showTab('ranking')">
+        🏆 <span class="text">Ranking</span>
     </button>
         </div>
 
@@ -1809,6 +1827,12 @@
                         <option value="">Todos los líderes</option>
                     </select>
                 </div>
+                <div class="search-filter-separator"></div>
+                <div class="search-filter-wrapper">
+                    <select id="filtroRutaAsistencia" class="search-filter-select" onchange="renderAsistencia(); ajustarSelectFiltro(this);">
+                        <option value="">Todas las rutas</option>
+                    </select>
+                </div>
             </div>
             <div id="listaAsistencia"></div>
         </div>
@@ -1838,6 +1862,36 @@
                 <input type="text" class="search-box" id="searchHistorial" placeholder="Buscar en historial..." oninput="renderHistorial()">
             </div>
             <div id="listaHistorial"></div>
+        </div>
+
+        <!-- RANKING -->
+        <div id="ranking" class="section">
+            <div class="search-filter-container">
+                <input type="text" class="search-box" id="searchRanking" placeholder="Buscar aventurado..." oninput="renderRanking()">
+                <div class="search-filter-separator"></div>
+                <div class="search-filter-wrapper">
+                    <select id="filtroRangoRanking" class="search-filter-select" onchange="renderRanking(); ajustarSelectFiltro(this);">
+                        <option value="">Todos los rangos</option>
+                        <option value="Diamante">✨ Diamante</option>
+                        <option value="Platino">💎 Platino</option>
+                        <option value="Oro">🥇 Oro</option>
+                        <option value="Plata">🥈 Plata</option>
+                        <option value="Bronce">🥉 Bronce</option>
+                    </select>
+                </div>
+            </div>
+            <div id="estadisticasGlobales" class="card" style="margin-bottom: 16px;">
+                <div class="card-title">📈 Estadísticas Globales</div>
+                <div id="statsGlobalesContent" style="padding: 16px 0;">Cargando...</div>
+            </div>
+            <div id="top10Aventurados" class="card" style="margin-bottom: 16px;">
+                <div class="card-title">🏆 TOP 10 AVENTURADOS</div>
+                <div id="top10Content" style="padding: 16px 0;">Cargando...</div>
+            </div>
+            <div class="card">
+                <div class="card-title">📊 Ranking Completo</div>
+                <div id="listaRanking" style="padding: 16px 0;">Cargando...</div>
+            </div>
         </div>
     </div>
 
@@ -2107,6 +2161,8 @@ async function loadUsuarios() {
 
     // --- ESTADO DE CARDS EXPANDIDOS (para mantener estado al actualizar) ---
     let cardsAsistenciaExpandidos = new Set();
+    /** IDs de participantes modificados por nosotros (para no mostrar toast en Realtime) */
+    let misAccionesRecientes = new Set();
 
     let personasTemporales = [];
     let realtimeChannel = null;
@@ -2233,9 +2289,9 @@ async function loadUsuarios() {
                 // Estilos por tipo (solo clases, colores manejados en CSS inline)
                 modal.setAttribute('data-tipo', tipo);
 
-                // Asegurar que el modal esté visible y por encima - forzar visibilidad
+                // Asegurar que el modal esté visible y por encima de cualquier otro modal
                 modal.style.display = 'flex';
-                modal.style.zIndex = '10001';
+                modal.style.zIndex = '10100';
                 modal.style.visibility = 'visible';
                 modal.style.opacity = '1';
                 modal.style.pointerEvents = 'auto';
@@ -2365,6 +2421,52 @@ async function loadUsuarios() {
         }
 
         // =============================================
+        // 8b. MIGRACIÓN Y CÁLCULO DE PAGOS (cuposPagados)
+        // =============================================
+        /** Migra pagos antiguos sin cuposPagados: asigna 0 para $ o calcula aproximado para Bs */
+        function migrarPagosAntiguos(reserva, ruta) {
+            if (!reserva.pagos || !Array.isArray(reserva.pagos)) return reserva;
+            const precioCupo = ruta && (ruta.precioEuros != null) ? ruta.precioEuros : 10;
+            reserva.pagos = reserva.pagos.map(pago => {
+                if (pago.cuposPagados !== undefined) return pago;
+                if (pago.enDolares) return { ...pago, cuposPagados: 0 };
+                const tasaPromedio = 400;
+                const eurosAprox = (pago.monto || 0) / tasaPromedio;
+                const cuposAprox = Math.floor(eurosAprox / precioCupo);
+                return { ...pago, cuposPagados: Math.max(1, cuposAprox), _cuposCalculado: true };
+            });
+            return reserva;
+        }
+
+        function calcularCuposPagados(reserva) {
+            if (!reserva.pagos || !Array.isArray(reserva.pagos)) return 0;
+            return reserva.pagos
+                .filter(p => !p.enDolares)
+                .reduce((sum, p) => sum + (p.cuposPagados || 0), 0);
+        }
+
+        function calcularEurosRecibidos(reserva, ruta) {
+            const cuposPagados = calcularCuposPagados(reserva);
+            const precioCupoEuros = ruta ? (ruta.precioEuros || 0) : 0;
+            return cuposPagados * precioCupoEuros;
+        }
+
+        function calcularTotalesPorMoneda(reserva) {
+            if (!reserva.pagos || !Array.isArray(reserva.pagos)) {
+                return { totalBs: 0, totalDolares: 0, cuposPagados: 0 };
+            }
+            return reserva.pagos.reduce((totales, pago) => {
+                if (pago.enDolares) {
+                    totales.totalDolares += pago.monto || 0;
+                } else {
+                    totales.totalBs += pago.monto || 0;
+                    totales.cuposPagados += pago.cuposPagados || 0;
+                }
+                return totales;
+            }, { totalBs: 0, totalDolares: 0, cuposPagados: 0 });
+        }
+
+        // =============================================
         // 9. NORMALIZACIÓN DE DATOS (función auxiliar reutilizable)
         // =============================================
         /**
@@ -2387,22 +2489,26 @@ async function loadUsuarios() {
                 numero: r.numero || (index + 1)
             }));
 
-            // Normalizar reservas
-            const reservas = (reservasResult.data || []).map(r => {
+            // Normalizar reservas (incluye normalizar pagos con cuposPagados)
+            let reservas = (reservasResult.data || []).map(r => {
                 const rutaId = r.ruta_id || r.rutaId;
-                // Buscar la ruta para obtener el nombre (compatibilidad)
                 const ruta = rutas.find(rt => rt.id === rutaId);
+                const pagosRaw = r.pagos || [];
+                const pagos = pagosRaw.map(p => ({
+                    ...p,
+                    cuposPagados: p.cuposPagados !== undefined ? p.cuposPagados : 0
+                }));
                 return {
                     ...r,
-                    rutaId: rutaId, // 🔥 NUEVO: Usar ID de ruta en lugar de nombre
-                    ruta: ruta ? ruta.nombre : null, // 🔥 Campo derivado para compatibilidad
-                    // 🔒 Seguridad/compatibilidad: normalizar cupos desde la columna real de la tabla 'reservas'
-                    // Soporta: cantidad_personas | cupos | cantidad (fallback)
+                    rutaId: rutaId,
+                    ruta: ruta ? ruta.nombre : null,
                     cantidad: Number((r.cantidad_personas ?? r.cupos ?? r.cantidad) ?? 0),
-                    montoPagado: r.monto_pagado || 0, // Normalizado: usar solo montoPagado después
-                    pagos: r.pagos || []
+                    montoPagado: r.monto_pagado || 0,
+                    pagos: pagos
                 };
             });
+            // Migrar pagos antiguos (sin cuposPagados) a valor calculado o 0
+            reservas = reservas.map(r => migrarPagosAntiguos(r, rutas.find(rt => rt.id === r.rutaId)));
 
             // Normalizar participantes
             const participantes = (participantesResult.data || []).map(p => ({
@@ -2469,14 +2575,60 @@ async function loadUsuarios() {
                     { event: '*', schema: 'public', table: 'reservas' },
                     () => { loadData().then(() => renderAll()); }
                 )
-                // Nota: quitamos la suscripción Realtime sobre 'participantes'
-                // para evitar que al marcar/desmarcar asistencia se dispare
-                // un loadData() completo con loader y un re-render global.
                 .on('postgres_changes',
                     { event: '*', schema: 'public', table: 'gastos' },
                     () => { loadData().then(() => renderAll()); }
                 )
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'participantes' },
+                    (payload) => { manejarCambioParticipanteEnTiempoReal(payload); }
+                )
                 .subscribe();
+        }
+
+        function esMiAccion(payload) {
+            const id = payload.new?.id || payload.old?.id;
+            return id && misAccionesRecientes.has(id);
+        }
+
+        function getMensajeCambioParticipante(payload) {
+            const { eventType, new: nuevo, old: viejo } = payload;
+            if (eventType === 'INSERT') return 'Nuevo participante agregado';
+            if (eventType === 'DELETE') return 'Participante eliminado';
+            if (eventType === 'UPDATE' && nuevo?.asiste !== viejo?.asiste) return 'Asistencia actualizada';
+            return 'Participante actualizado';
+        }
+
+        function manejarCambioParticipanteEnTiempoReal(payload) {
+            const { eventType, new: nuevo, old: viejo } = payload;
+            const norm = (row) => row ? { ...row, rutaId: row.ruta_id || row.rutaId } : null;
+            switch (eventType) {
+                case 'INSERT':
+                    if (nuevo) data.participantes.push(norm(nuevo));
+                    break;
+                case 'UPDATE':
+                    if (nuevo) {
+                        const idx = data.participantes.findIndex(p => p.id === nuevo.id);
+                        if (idx !== -1) data.participantes[idx] = norm({ ...data.participantes[idx], ...nuevo });
+                    }
+                    break;
+                case 'DELETE':
+                    if (viejo) data.participantes = data.participantes.filter(p => p.id !== viejo.id);
+                    break;
+            }
+            const cardsAActualizar = new Set();
+            if (eventType === 'UPDATE' || eventType === 'DELETE') {
+                const p = eventType === 'UPDATE' ? norm(nuevo) : norm(viejo);
+                const cardId = encontrarCardPorParticipante(p);
+                if (cardId) cardsAActualizar.add(cardId);
+            }
+            if (eventType === 'INSERT' && nuevo) {
+                const cardId = encontrarCardPorParticipante(norm(nuevo));
+                if (cardId) cardsAActualizar.add(cardId);
+            }
+            cardsAActualizar.forEach(cardId => actualizarCardAsistencia(cardId));
+            actualizarContadorCheckin();
+            if (!esMiAccion(payload)) showToast(getMensajeCambioParticipante(payload), 'info', 'Asistencia actualizada');
         }
 
         // =============================================
@@ -2698,6 +2850,16 @@ function updateSelects() {
         });
     }
 
+    // 🔄 FILTRO ASISTENCIA - RUTAS ACTIVAS
+    const filtroRutaAsistencia = document.getElementById('filtroRutaAsistencia');
+    if (filtroRutaAsistencia) {
+        filtroRutaAsistencia.innerHTML = '<option value="">Todas las rutas</option>';
+        rutasActivas.forEach(ruta => {
+            const numeroRuta = ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
+            filtroRutaAsistencia.innerHTML += `<option value="${ruta.id}">${ruta.nombre} ${numeroRuta} - ${formatearFechaRuta(ruta.fecha)}</option>`;
+        });
+    }
+
     // 🔄 FILTRO GASTOS - SOLO RUTAS ACTIVAS
     const filtroRutaGastos = document.getElementById('filtroRutaGastos');
     if (filtroRutaGastos) {
@@ -2727,6 +2889,19 @@ function updateSelects() {
     setTimeout(ajustarSelectsFiltro, 50);
 }
         // CÁLCULOS
+        /**
+         * Devuelve color y estado de completitud para X/Y (registrados vs cupos).
+         * @param {number} registrados - Número de participantes registrados
+         * @param {number} total - Cupos de la reserva
+         * @returns {{ color: string, label: string }} color CSS y texto para tooltip/label
+         */
+        function getColorCompletitud(registrados, total) {
+            if (registrados === 0) return { color: 'var(--danger)', label: 'Sin participantes' };
+            if (registrados < total) return { color: '#f59e0b', label: 'Faltan ' + (total - registrados) };
+            if (registrados === total) return { color: '#10b981', label: 'Completo' };
+            return { color: 'var(--danger)', label: 'Sobrevendido' };
+        }
+
         /**
          * Calcula el número de cupos ocupados en una ruta específica
          * SUMA la columna 'cantidad' de todas las reservas confirmadas (igual que Landing)
@@ -2805,11 +2980,35 @@ function updateSelects() {
          * @returns {number} Cantidad de participantes para esa reserva específica
          */
         function contarParticipantesReserva(lider, rutaId) {
-            // 🔥 CORRECCIÓN: Usar rutaId directamente para contar participantes
             return data.participantes.filter(p => 
                 p.lider === lider && 
-                (p.rutaId === rutaId || p.ruta_id === rutaId) // Compatibilidad con ambos formatos
+                (p.rutaId === rutaId || p.ruta_id === rutaId)
             ).length;
+        }
+
+        /** Devuelve array de participantes de una reserva (líder + rutaId), ordenado por nombre */
+        function obtenerParticipantesReserva(lider, rutaId) {
+            const list = (data.participantes || []).filter(p => 
+                p.lider === lider && 
+                (p.rutaId === rutaId || p.ruta_id === rutaId)
+            );
+            return list.slice().sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
+        }
+
+        /** ID estable del card de asistencia (líder + rutaId) */
+        function getAsistenciaCardId(lider, rutaId) {
+            const slug = (lider || '').replace(/\s+/g, '-').toLowerCase();
+            return `asistencia-card-${slug}-${rutaId || ''}`;
+        }
+
+        /** Dado un participante, devuelve el cardId del card de asistencia que lo contiene */
+        function encontrarCardPorParticipante(participante) {
+            if (!participante) return null;
+            const rutaId = participante.rutaId || participante.ruta_id;
+            const lider = participante.lider;
+            if (!lider || !rutaId) return null;
+            const reserva = data.reservas.find(r => r.lider === lider && r.rutaId === rutaId);
+            return reserva ? getAsistenciaCardId(lider, rutaId) : null;
         }
 
         function getRutaParticipante(lider) {
@@ -2823,30 +3022,162 @@ function updateSelects() {
             return 'Sin ruta';
         }
 
+        /** Rango del aventurado según rutas asistidas (2+). null si &lt; 2 */
+        function calcularRangoAventurado(rutasAsistidas) {
+            if (rutasAsistidas < 2) return null;
+            if (rutasAsistidas <= 4) return { nombre: 'Bronce', emoji: '🥉', color: '#CD7F32', minRutas: 2 };
+            if (rutasAsistidas <= 9) return { nombre: 'Plata', emoji: '🥈', color: '#C0C0C0', minRutas: 5 };
+            if (rutasAsistidas <= 14) return { nombre: 'Oro', emoji: '🥇', color: '#FFD700', minRutas: 10 };
+            if (rutasAsistidas <= 19) return { nombre: 'Platino', emoji: '💎', color: '#E5E4E2', minRutas: 15 };
+            return { nombre: 'Diamante', emoji: '✨', color: '#b9f2ff', minRutas: 20 };
+        }
+
+        /** Siguiente rango en la escala (para barra de progreso) */
+        function getSiguienteRango(rango) {
+            if (!rango) return null;
+            if (rango.nombre === 'Bronce') return calcularRangoAventurado(5);
+            if (rango.nombre === 'Plata') return calcularRangoAventurado(10);
+            if (rango.nombre === 'Oro') return calcularRangoAventurado(15);
+            if (rango.nombre === 'Platino') return calcularRangoAventurado(20);
+            return null; // Diamante es el máximo
+        }
+
         // Calcular cuántas rutas ha hecho una persona (cliente recurrente)
+        // totalRutas = solo rutas con asistencia; totalTodasLasRutas = todas las participadas
         function calcularRutasPorPersona(nombrePersona) {
-            // Normalizar nombre para comparación (sin espacios extra, lowercase)
-            const nombreNormalizado = nombrePersona.toLowerCase().trim();
-            
-            // Encontrar todas las participaciones de esta persona
-            const participaciones = data.participantes.filter(p => 
-                p.nombre.toLowerCase().trim() === nombreNormalizado
+            const nombreNormalizado = (nombrePersona || '').toLowerCase().trim();
+            const todasParticipaciones = (data.participantes || []).filter(p =>
+                (p.nombre || '').toLowerCase().trim() === nombreNormalizado
             );
-            
-            // Obtener las rutas únicas a partir de la ruta asociada directamente al participante
-            const rutasUnicas = new Set();
-            participaciones.forEach(p => {
-                const nombreRuta = (p.ruta_nombre || p.ruta || '').trim();
-                if (nombreRuta) {
-                    rutasUnicas.add(nombreRuta);
+
+            if (todasParticipaciones.length === 0) {
+                return {
+                    totalRutas: 0, totalRutasAsistidas: 0, totalTodasLasRutas: 0,
+                    totalParticipaciones: 0, totalAsistidas: 0, totalNoAsistidas: 0, porcentajeAsistencia: 0,
+                    rutasAsistidas: [], todasLasRutas: [], participacionesDetalladas: [],
+                    rango: null, siguienteRango: null, progresoHaciaSiguiente: 0, totalParaSiguiente: 0
+                };
+            }
+
+            const totalParticipaciones = todasParticipaciones.length;
+            const totalAsistidas = todasParticipaciones.filter(p => p.asiste === true).length;
+            const totalNoAsistidas = todasParticipaciones.filter(p => p.asiste === false).length;
+            const porcentajeAsistencia = totalParticipaciones > 0
+                ? ((totalAsistidas / totalParticipaciones) * 100).toFixed(0)
+                : 0;
+
+            const todasLasRutasUnicas = new Set();
+            const rutasAsistidasUnicas = new Set();
+            const rutasAsistidasDetalle = [];
+
+            todasParticipaciones.forEach(p => {
+                const rutaObj = data.rutas.find(r => r.id === (p.rutaId || p.ruta_id));
+                const nombreRuta = (rutaObj && rutaObj.nombre) ? rutaObj.nombre : ((p.ruta_nombre || p.ruta || '').trim());
+                if (!nombreRuta) return;
+
+                todasLasRutasUnicas.add(nombreRuta);
+
+                if (p.asiste === true) {
+                    if (!rutasAsistidasUnicas.has(nombreRuta)) {
+                        rutasAsistidasUnicas.add(nombreRuta);
+                        const ruta = data.rutas.find(r => r.nombre === nombreRuta || r.id === (p.rutaId || p.ruta_id));
+                        rutasAsistidasDetalle.push({
+                            nombre: nombreRuta,
+                            fecha: ruta ? ruta.fecha : null,
+                            archivada: ruta ? ruta.archivada : false,
+                            vecesAsistio: todasParticipaciones.filter(pa => {
+                                const ro = data.rutas.find(r => r.id === (pa.rutaId || pa.ruta_id));
+                                const nr = (ro && ro.nombre) ? ro.nombre : (pa.ruta_nombre || pa.ruta);
+                                return nr === nombreRuta && pa.asiste === true;
+                            }).length,
+                            ultimaAsistencia: p.fecha || null,
+                            lider: p.lider
+                        });
+                    }
                 }
             });
-            
+
+            rutasAsistidasDetalle.sort((a, b) => {
+                if (!a.fecha && !b.fecha) return 0;
+                if (!a.fecha) return 1;
+                if (!b.fecha) return -1;
+                return new Date(b.fecha) - new Date(a.fecha);
+            });
+
+            const rutasAsistidasCount = rutasAsistidasUnicas.size;
+            const rango = calcularRangoAventurado(rutasAsistidasCount);
+            const siguienteRango = rango ? getSiguienteRango(rango) : null;
+
             return {
-                totalRutas: rutasUnicas.size,
-                totalParticipaciones: participaciones.length,
-                rutas: Array.from(rutasUnicas)
+                totalRutas: rutasAsistidasCount,
+                totalRutasAsistidas: rutasAsistidasCount,
+                totalTodasLasRutas: todasLasRutasUnicas.size,
+                totalParticipaciones: totalParticipaciones,
+                totalAsistidas: totalAsistidas,
+                totalNoAsistidas: totalNoAsistidas,
+                porcentajeAsistencia: porcentajeAsistencia,
+                rutasAsistidas: rutasAsistidasDetalle,
+                todasLasRutas: Array.from(todasLasRutasUnicas),
+                participacionesDetalladas: todasParticipaciones.map(p => ({
+                    ruta: (data.rutas.find(r => r.id === (p.rutaId || p.ruta_id)) || {}).nombre || p.ruta_nombre || p.ruta,
+                    asiste: p.asiste,
+                    fecha: p.fecha,
+                    lider: p.lider,
+                    rutaId: p.rutaId || p.ruta_id
+                })),
+                rango: rango,
+                siguienteRango: siguienteRango,
+                progresoHaciaSiguiente: rango ? rutasAsistidasCount - rango.minRutas : 0,
+                totalParaSiguiente: rango && siguienteRango ? siguienteRango.minRutas - rango.minRutas : 0
             };
+        }
+
+        function generarRankingAventurados() {
+            const personasMap = new Map();
+            (data.participantes || []).forEach(p => {
+                const nombre = (p.nombre || '').trim();
+                if (!nombre) return;
+                if (!personasMap.has(nombre)) {
+                    personasMap.set(nombre, { nombre: nombre, rutasAsistidasSet: new Set(), participaciones: [] });
+                }
+                const persona = personasMap.get(nombre);
+                persona.participaciones.push(p);
+                if (p.asiste === true) {
+                    const claveRuta = p.rutaId || p.ruta_id || (p.ruta_nombre || p.ruta);
+                    if (claveRuta) persona.rutasAsistidasSet.add(claveRuta);
+                }
+            });
+
+            const ordenRangos = { 'Diamante': 5, 'Platino': 4, 'Oro': 3, 'Plata': 2, 'Bronce': 1 };
+            let ranking = Array.from(personasMap.values()).map(persona => {
+                const rutasAsistidas = persona.rutasAsistidasSet.size;
+                const totalParticipaciones = persona.participaciones.length;
+                const totalAsistidas = persona.participaciones.filter(pa => pa.asiste === true).length;
+                const porcentajeAsistencia = totalParticipaciones > 0 ? Math.round((totalAsistidas / totalParticipaciones) * 100) : 0;
+                const rango = calcularRangoAventurado(rutasAsistidas);
+                const siguienteRango = rango ? getSiguienteRango(rango) : null;
+                return {
+                    nombre: persona.nombre,
+                    rutasAsistidas: rutasAsistidas,
+                    totalParticipaciones: totalParticipaciones,
+                    totalAsistidas: totalAsistidas,
+                    porcentajeAsistencia: porcentajeAsistencia,
+                    rango: rango,
+                    siguienteRango: siguienteRango,
+                    progreso: rango ? rutasAsistidas - rango.minRutas : 0,
+                    totalParaSiguiente: rango && siguienteRango ? siguienteRango.minRutas - rango.minRutas : 0
+                };
+            }).filter(p => p.rango !== null && p.rutasAsistidas >= 2);
+
+            ranking.sort((a, b) => {
+                const pesoA = ordenRangos[a.rango.nombre] || 0;
+                const pesoB = ordenRangos[b.rango.nombre] || 0;
+                if (pesoB !== pesoA) return pesoB - pesoA;
+                if (b.rutasAsistidas !== a.rutasAsistidas) return b.rutasAsistidas - a.rutasAsistidas;
+                if (b.porcentajeAsistencia !== a.porcentajeAsistencia) return b.porcentajeAsistencia - a.porcentajeAsistencia;
+                return (a.nombre || '').localeCompare(b.nombre || '', 'es');
+            });
+            return ranking.slice(0, 50);
         }
 
         function calcularTotalRecaudado(rutaId) {
@@ -3585,64 +3916,85 @@ async function agregarPersonaRapida(lider, ruta) {
 }
 
 
-        // ACTUALIZAR PAGOS
-        async function actualizarPagos(lider, nuevoMonto, referencia, enDolares = false, ruta = null) {
-            // Si no se proporciona ruta, buscar la primera reserva del líder (compatibilidad)
-            let reserva;
-            if (ruta) {
-                reserva = data.reservas.find(r => r.lider === lider && r.rutaId === ruta);
+        /** Toggle Bs / $ efectivo en formulario de pago: muestra/oculta campos de cupos */
+        function toggleTipoPago(tipo) {
+            const camposBs = document.getElementById('camposBsPago');
+            const camposDolares = document.getElementById('camposDolaresPago');
+            if (!camposBs || !camposDolares) return;
+            if (tipo === 'bs') {
+                camposBs.style.display = 'block';
+                camposDolares.style.display = 'none';
             } else {
-                reserva = data.reservas.find(r => r.lider === lider);
+                camposBs.style.display = 'none';
+                camposDolares.style.display = 'block';
             }
+        }
+
+        /** Lee el formulario de pago (Bs/$) y llama a actualizarPagos */
+        function registrarPagoConTipo(lider, rutaId) {
+            const tipoBs = (document.querySelector('input[name="tipoPago"]:checked') || {}).value === 'bs';
+            const referencia = (document.getElementById('nuevoPagoReferencia') || {}).value.trim() || '';
+            if (tipoBs) {
+                const monto = parseFloat((document.getElementById('nuevoPagoMontoBs') || {}).value);
+                const cupos = parseInt((document.getElementById('nuevoPagoCupos') || {}).value, 10) || 0;
+                if (!monto || monto < 0) {
+                    showToast('Ingresa un monto en Bs válido', 'warning', 'Monto Inválido');
+                    return;
+                }
+                actualizarPagos(lider, rutaId, 'bs', monto, cupos, referencia);
+            } else {
+                const monto = parseFloat((document.getElementById('nuevoPagoMontoDolares') || {}).value);
+                if (!monto || monto < 0) {
+                    showToast('Ingresa un monto en $ válido', 'warning', 'Monto Inválido');
+                    return;
+                }
+                actualizarPagos(lider, rutaId, 'dolares', monto, 0, referencia);
+            }
+        }
+
+        // ACTUALIZAR PAGOS (con cuposPagados: Bs = cupos, $ = 0)
+        async function actualizarPagos(lider, rutaId, tipoPago, monto, cupos, referencia) {
+            const reserva = data.reservas.find(r => r.lider === lider && r.rutaId === rutaId);
             if (!reserva) return;
-            
-            if (!nuevoMonto || nuevoMonto < 0) {
+            if (monto == null || monto < 0) {
                 showToast('Ingresa un monto válido', 'warning', 'Monto Inválido');
                 return;
             }
-            
+            const enDolares = tipoPago === 'dolares';
+            const pago = {
+                monto: parseFloat(monto),
+                referencia: referencia || '',
+                fecha: new Date().toISOString(),
+                enDolares: enDolares,
+                cuposPagados: enDolares ? 0 : (parseInt(cupos, 10) || 0)
+            };
             try {
-                // Agregar el nuevo pago al historial
                 const pagosActuales = reserva.pagos || [];
-                pagosActuales.push({
-                    monto: nuevoMonto,
-                    referencia: referencia || '',
-                    fecha: new Date().toISOString(),
-                    enDolares: enDolares || false
-                });
-                
-                // Actualizar monto total pagado (solo Bs para compatibilidad)
+                pagosActuales.push(pago);
                 const montoPagadoBs = pagosActuales
                     .filter(p => !p.enDolares)
-                    .reduce((sum, p) => sum + p.monto, 0);
-                
+                    .reduce((sum, p) => sum + (p.monto || 0), 0);
                 const { error } = await db
                     .from('reservas')
-                    .update({ 
-                        pagos: pagosActuales,
-                        monto_pagado: montoPagadoBs // Solo Bs para cálculo de profit
-                    })
+                    .update({ pagos: pagosActuales, monto_pagado: montoPagadoBs })
                     .eq('lider', lider)
                     .eq('ruta_id', reserva.rutaId);
-
                 if (error) throw error;
-
-                // Limpiar campos del formulario
-                const nuevoPagoInput = document.getElementById('nuevoPago');
-                const nuevoPagoRefInput = document.getElementById('nuevoPagoReferencia');
-                const nuevoPagoEnDolaresInput = document.getElementById('nuevoPagoEnDolares');
-                if (nuevoPagoInput) nuevoPagoInput.value = '';
-                if (nuevoPagoRefInput) nuevoPagoRefInput.value = '';
-                if (nuevoPagoEnDolaresInput) nuevoPagoEnDolaresInput.checked = false;
-                
-                // 🔇 Usar saveData en lugar de loadData para evitar toasts redundantes
-                await saveData(true); // Silencioso, sin loader
+                // Limpiar formulario
+                const elBs = document.getElementById('nuevoPagoMontoBs');
+                const elCupos = document.getElementById('nuevoPagoCupos');
+                const elDol = document.getElementById('nuevoPagoMontoDolares');
+                const elRef = document.getElementById('nuevoPagoReferencia');
+                if (elBs) elBs.value = '';
+                if (elCupos) elCupos.value = '';
+                if (elDol) elDol.value = '';
+                if (elRef) elRef.value = '';
+                await saveData(true);
                 renderReservas();
                 renderRutas();
-                verDetalleReserva(lider, reserva.rutaId); // Refrescar el modal
-                // ✅ Solo un toast específico del pago
+                verDetalleReserva(lider, reserva.rutaId);
                 const simbolo = enDolares ? '$' : 'Bs';
-                showToast(`Pago de ${simbolo} ${nuevoMonto.toLocaleString()} registrado`, 'success', 'Éxito');
+                showToast(`Pago de ${simbolo} ${monto.toLocaleString()} registrado`, 'success', 'Éxito');
             } catch (error) {
                 console.error('Error:', error);
                 showToast('Error al registrar el pago: ' + error.message, 'error', 'Error');
@@ -3788,134 +4140,155 @@ async function agregarPersonaRapida(lider, ruta) {
             }
         }
 
-        // VER DETALLE RESERVA
-        function verDetalleReserva(lider, rutaId) {
-            // 🔥 CORRECCIÓN: Buscar por rutaId (UUID), no por nombre
-            const reserva = data.reservas.find(r => r.lider === lider && r.rutaId === rutaId);
-            if (!reserva) return;
-            
-            // 🔥 CORRECCIÓN: Buscar ruta por ID
-            const ruta = data.rutas.find(r => r.id === reserva.rutaId);
-            // Usar campo normalizado (después de loadData/saveData siempre está normalizado)
-            const montoPagado = reserva.montoPagado || 0;
-            
-            // Calcular totales separados
-            const totalBs = (reserva.pagos || [])
-                .filter(p => !p.enDolares)
-                .reduce((sum, p) => sum + p.monto, 0);
-            const totalDolares = (reserva.pagos || [])
-                .filter(p => p.enDolares)
-                .reduce((sum, p) => sum + p.monto, 0);
-            
-            const historialPagos = (reserva.pagos || []).map((pago, index) => {
-                const esDolares = pago.enDolares || false;
-                const simbolo = esDolares ? '$' : 'Bs';
-                const color = esDolares ? '#f59e0b' : 'var(--success)';
-                return `
-                <div style="padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border);">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-                        <div style="flex: 1;">
-                            <div style="font-weight: 700; color: ${color}; margin-bottom: 4px;">
-                                ${simbolo} ${pago.monto.toLocaleString()} ${esDolares ? '(USD efectivo)' : ''}
-                            </div>
-                            ${pago.referencia ? `<div style="font-size: 12px; color: var(--accent); margin-bottom: 4px;">📎 Ref: ${pago.referencia}</div>` : ''}
-                            <div style="font-size: 12px; color: var(--text-secondary);">${new Date(pago.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
-                        </div>
-                        <button 
-                            class="person-delete-btn"
-                            title="Eliminar pago"
-                            onclick="eliminarPago('${lider}', '${reserva.rutaId}', ${index})">
-                            🗑️
-                        </button>
-                    </div>
-                </div>
-            `;
-            }).join('');
-            
-            const html = `
+        /** Genera HTML del resumen de pagos (cupos pagados, € recibidos/esperados, Bs/$, barra) */
+        function crearResumenPagos(reserva, ruta) {
+            const { totalBs, totalDolares, cuposPagados } = calcularTotalesPorMoneda(reserva);
+            const precioCupo = ruta ? (ruta.precioEuros || 0) : 0;
+            const cuposReservados = reserva.cantidad || 0;
+            const eurosRecibidos = cuposPagados * precioCupo;
+            const eurosEsperados = cuposReservados * precioCupo;
+            const pendiente = eurosEsperados - eurosRecibidos;
+            const porcentaje = cuposReservados > 0 ? (cuposPagados / cuposReservados * 100) : 0;
+            return `
                 <div class="payment-item">
-                    <div class="payment-header">
-                        <div>
-                            <div style="font-weight: 700; margin-bottom: 4px;">📊 Resumen de Pagos</div>
-                            <div style="font-size: 13px; color: var(--text-secondary);">Ruta: ${ruta ? ruta.nombre : 'N/A'}</div>
+                    <div style="font-weight: 700; margin-bottom: 12px;">💰 RESUMEN DE PAGOS</div>
+                    <div style="margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span style="font-size: 13px;">Cupos pagados</span>
+                            <span style="font-size: 13px; font-weight: 600;">${cuposPagados}/${cuposReservados} (${porcentaje.toFixed(0)}%)</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${porcentaje}%"></div>
                         </div>
                     </div>
-                    <div class="divider"></div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <div>
-                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Cupos Reservados</div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <input type="number" id="editarCantidadReserva" 
-                                       value="${reserva.cantidad}" 
-                                       min="1" max="100" 
-                                       style="width: 80px; padding: 8px; background: rgba(255,255,255,0.1); border: 2px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 18px; font-weight: 800; text-align: center;"
-                                       onchange="actualizarCantidadReserva('${lider}', '${reserva.rutaId}', parseInt(this.value))">
-                                <button class="btn btn-success" style="padding: 6px 12px; font-size: 12px; min-height: auto;" 
-                                        onclick="actualizarCantidadReserva('${lider}', '${reserva.rutaId}', parseInt(document.getElementById('editarCantidadReserva').value))"
-                                        title="Guardar cambios">
-                                    💾
-                                </button>
-                            </div>
+                            <div style="font-size: 11px; color: var(--text-secondary);">Precio/cupo</div>
+                            <div style="font-size: 16px; font-weight: 800;">${precioCupo}€</div>
                         </div>
                         <div>
-                            <div style="font-size: 12px; color: var(--text-secondary);">Precio Referencial</div>
-                            <div style="font-size: 20px; font-weight: 800; color: var(--text-primary);">${ruta ? (ruta.precioEuros || 0) : 0}€</div>
+                            <div style="font-size: 11px; color: var(--text-secondary);">Total esperado</div>
+                            <div style="font-size: 16px; font-weight: 800;">${eurosEsperados}€</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; color: var(--text-secondary);">Total recibido</div>
+                            <div style="font-size: 16px; font-weight: 800; color: var(--success);">${eurosRecibidos}€</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; color: var(--text-secondary);">Pendiente</div>
+                            <div style="font-size: 16px; font-weight: 800; color: var(--warning);">${pendiente}€</div>
                         </div>
                     </div>
-                    <div class="divider"></div>
-                    <div style="margin-bottom: 12px;">
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Total Pagado</div>
+                    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                             <div>
-                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">Bs</div>
-                                <div style="font-size: 20px; font-weight: 800; color: var(--success);">Bs ${totalBs.toLocaleString()}</div>
+                                <div style="font-size: 11px; color: var(--text-secondary);">Bs recibidos</div>
+                                <div style="font-size: 16px; font-weight: 800; color: var(--success);">Bs ${totalBs.toLocaleString()}</div>
                             </div>
                             ${totalDolares > 0 ? `
                             <div>
-                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">USD Efectivo</div>
-                                <div style="font-size: 20px; font-weight: 800; color: #f59e0b;">$${totalDolares.toLocaleString()}</div>
+                                <div style="font-size: 11px; color: var(--text-secondary);">$ efectivo</div>
+                                <div style="font-size: 16px; font-weight: 800; color: #f59e0b;">$${totalDolares.toLocaleString()}</div>
                             </div>
                             ` : ''}
                         </div>
                     </div>
                 </div>
-                
+            `;
+        }
+
+        // VER DETALLE RESERVA
+        function verDetalleReserva(lider, rutaId) {
+            const reserva = data.reservas.find(r => r.lider === lider && r.rutaId === rutaId);
+            if (!reserva) return;
+            const ruta = data.rutas.find(r => r.id === reserva.rutaId);
+            const precioCupo = ruta ? (ruta.precioEuros || 0) : 0;
+
+            const historialPagos = (reserva.pagos || []).map((pago, index) => {
+                const esDolares = pago.enDolares || false;
+                const simbolo = esDolares ? '$' : 'Bs';
+                const color = esDolares ? '#f59e0b' : 'var(--success)';
+                const cuposTexto = esDolares ? '' : (` (${pago.cuposPagados || 0} cupo${(pago.cuposPagados || 0) !== 1 ? 's' : ''} = ${(pago.cuposPagados || 0) * precioCupo}€)`);
+                const migrado = pago._cuposCalculado ? ' <span style="font-size: 10px; color: var(--text-secondary);">(calculado automáticamente)</span>' : '';
+                return `
+                <div style="padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: ${color}; margin-bottom: 4px;">
+                                ${simbolo} ${(pago.monto || 0).toLocaleString()} ${esDolares ? '(USD efectivo)' : cuposTexto}${migrado}
+                            </div>
+                            ${pago.referencia ? `<div style="font-size: 12px; color: var(--accent); margin-bottom: 4px;">📎 Ref: ${pago.referencia}</div>` : ''}
+                            <div style="font-size: 12px; color: var(--text-secondary);">${new Date(pago.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                        </div>
+                        <button class="person-delete-btn" title="Eliminar pago" onclick="eliminarPago('${lider}', '${reserva.rutaId}', ${index})">🗑️</button>
+                    </div>
+                </div>
+            `;
+            }).join('');
+
+            const html = `
+                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">Ruta: ${ruta ? ruta.nombre : 'N/A'}</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Cupos Reservados</div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="number" id="editarCantidadReserva" value="${reserva.cantidad}" min="1" max="100"
+                                   style="width: 80px; padding: 8px; background: rgba(255,255,255,0.1); border: 2px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 18px; font-weight: 800; text-align: center;"
+                                   onchange="actualizarCantidadReserva('${lider}', '${reserva.rutaId}', parseInt(this.value))">
+                            <button class="btn btn-success" style="padding: 6px 12px; font-size: 12px; min-height: auto;"
+                                    onclick="actualizarCantidadReserva('${lider}', '${reserva.rutaId}', parseInt(document.getElementById('editarCantidadReserva').value))" title="Guardar cambios">💾</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Precio Referencial</div>
+                        <div style="font-size: 20px; font-weight: 800; color: var(--text-primary);">${precioCupo}€</div>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                ${crearResumenPagos(reserva, ruta)}
                 ${(reserva.pagos && reserva.pagos.length > 0) ? `
                     <div style="margin-top: 20px;">
                         <div style="font-weight: 700; margin-bottom: 12px; color: var(--text-primary);">📝 Historial de Pagos</div>
                         ${historialPagos}
                     </div>
                 ` : ''}
-                
                 <div class="divider"></div>
-                <div class="form-group">
-                    <label class="form-label">💵 Registrar Nuevo Pago</label>
-                    <input type="number" id="nuevoPago" class="form-input" 
-                           placeholder="Monto" 
-                           step="0.01" min="0" inputmode="decimal" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
+                <div style="margin-top: 20px; padding: 16px; background: rgba(118, 200, 147, 0.1); border-radius: 12px;">
+                    <div style="font-weight: 700; margin-bottom: 12px;">💵 Registrar Nuevo Pago</div>
+                    <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="tipoPago" value="bs" checked onchange="toggleTipoPago('bs')">
+                            <span>Bs (cupos)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="tipoPago" value="dolares" onchange="toggleTipoPago('dolares')">
+                            <span>$ Efectivo (solo monto)</span>
+                        </label>
+                    </div>
+                    <div id="camposBsPago">
+                        <div class="form-group">
+                            <label class="form-label">Monto en Bs</label>
+                            <input type="number" id="nuevoPagoMontoBs" class="form-input" placeholder="Ej: 8000" step="0.01" min="0" inputmode="decimal">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cupos pagados con este monto</label>
+                            <input type="number" id="nuevoPagoCupos" class="form-input" placeholder="Ej: 2" min="1" step="1">
+                        </div>
+                    </div>
+                    <div id="camposDolaresPago" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">Monto en $ efectivo</label>
+                            <input type="number" id="nuevoPagoMontoDolares" class="form-input" placeholder="Ej: 100" step="0.01" min="0" inputmode="decimal">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">📎 Referencia (Opcional)</label>
+                        <input type="text" id="nuevoPagoReferencia" class="form-input" placeholder="Número de referencia" inputmode="numeric">
+                    </div>
+                    <button class="btn btn-success" onclick="registrarPagoConTipo('${lider}', '${reserva.rutaId}')">✅ Registrar Pago</button>
                 </div>
-                <div class="form-group">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="nuevoPagoEnDolares" style="width: 18px; height: 18px; cursor: pointer;">
-                        <span>💵 Pagar en dólares efectivo</span>
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">📎 Referencia (Opcional)</label>
-                    <input type="text" id="nuevoPagoReferencia" class="form-input" 
-                           placeholder="Número de referencia del pago" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                </div>
-                <button class="btn btn-success" onclick="actualizarPagos('${lider}', parseFloat(document.getElementById('nuevoPago').value), document.getElementById('nuevoPagoReferencia').value.trim(), document.getElementById('nuevoPagoEnDolares').checked, '${reserva.rutaId}')">
-                    ✅ Registrar Pago
-                </button>
-                
-<button class="btn btn-outline" style="margin-top: 12px; width: 100%;"
-        onclick="closeModal('modalDetalleReserva')">
-    Cerrar
-</button>
-
+                <button class="btn btn-outline" style="margin-top: 12px; width: 100%;" onclick="closeModal('modalDetalleReserva')">Cerrar</button>
             `;
-            
             document.getElementById('detalleReservaContent').innerHTML = html;
             openModal('modalDetalleReserva');
         }
@@ -4215,42 +4588,88 @@ function abrirAgregarPersonaAReserva(lider, nombreRuta) {
 }
 
 
-        // ASISTENCIA
-        async function toggleAsistencia(id, cardId) {
-            const participante = data.participantes.find(p => p.id === id);
+        // ASISTENCIA (actualización granular sin parpadeo)
+        async function toggleAsistenciaGranular(participanteId, cardId) {
+            const participante = data.participantes.find(p => p.id === participanteId);
             if (!participante) return;
-            
-            // Guardar el estado de expansión del card ANTES de actualizar
-            if (cardId) {
-                const card = document.getElementById(cardId);
-                if (card) {
-                    const expanded = card.querySelector('.asistencia-expanded');
-                    if (expanded && expanded.style.display !== 'none') {
-                        cardsAsistenciaExpandidos.add(cardId);
-                    }
-                }
-            }
-            
+
+            misAccionesRecientes.add(participanteId);
+            setTimeout(() => misAccionesRecientes.delete(participanteId), 3000);
+
+            const nuevoEstado = !participante.asiste;
+            participante.asiste = nuevoEstado;
+
+            const checkbox = document.querySelector(`input.attendance-checkbox-compact[data-participante-id="${participanteId}"]`);
+            if (checkbox) checkbox.checked = nuevoEstado;
+            const nombreSpan = document.querySelector(`.attendance-item-compact[data-participante-id="${participanteId}"] .attendance-name-compact`);
+            if (nombreSpan) nombreSpan.classList.toggle('checked', nuevoEstado);
+
+            actualizarCardAsistencia(cardId);
+            actualizarContadorCheckin();
+
             try {
-                const nuevoEstado = !participante.asiste;
-                
-                // Actualizar en Supabase
                 const { error } = await db
                     .from('participantes')
                     .update({ asiste: nuevoEstado })
-                    .eq('id', id);
-
+                    .eq('id', participanteId);
                 if (error) throw error;
-
-                // Actualizar también el estado en memoria para evitar recargar todo y reordenar
-                participante.asiste = nuevoEstado;
-
-                // Re-renderizar solo la sección de asistencia (sin llamar a loadData)
-                renderAsistencia();
             } catch (error) {
+                participante.asiste = !nuevoEstado;
+                if (checkbox) checkbox.checked = !nuevoEstado;
+                if (nombreSpan) nombreSpan.classList.toggle('checked', !nuevoEstado);
+                actualizarCardAsistencia(cardId);
+                actualizarContadorCheckin();
                 console.error('Error:', error);
                 showToast('Error al actualizar la asistencia: ' + error.message, 'error', 'Error');
             }
+        }
+
+        /** Actualiza solo los datos visibles de un card (contador, barra, %, lista si expandido) */
+        function actualizarCardAsistencia(cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            const lider = card.dataset.lider;
+            const rutaId = card.dataset.rutaId;
+            if (!lider || !rutaId) return;
+
+            const participantes = obtenerParticipantesReserva(lider, rutaId);
+            const presentes = participantes.filter(p => p.asiste).length;
+            const total = participantes.length;
+            const porcentaje = total > 0 ? Math.round((presentes / total) * 100) : 0;
+
+            const contador = card.querySelector('.contador-presentes');
+            if (contador) contador.textContent = `📊 ${presentes}/${total} presentes`;
+
+            const barra = card.querySelector('.attendance-progress-fill');
+            if (barra) {
+                barra.style.width = `${porcentaje}%`;
+                barra.style.background = porcentaje >= 80 ? 'var(--success)' : porcentaje >= 50 ? '#fbbf24' : 'var(--danger)';
+            }
+
+            const porcentajeEl = card.querySelector('.porcentaje-presentes');
+            if (porcentajeEl) porcentajeEl.textContent = `${porcentaje}%`;
+
+            const expanded = card.querySelector('.asistencia-expanded');
+            if (expanded && expanded.style.display !== 'none') {
+                actualizarListaParticipantesCard(cardId, participantes);
+            }
+        }
+
+        /** Rellena la lista de participantes de un card (solo cuando está expandido) */
+        function actualizarListaParticipantesCard(cardId, participantes) {
+            const container = document.getElementById(`lista-participantes-${cardId}`);
+            if (!container) return;
+            const ordenados = participantes.slice().sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
+            container.innerHTML = ordenados.map(p => `
+                <div class="attendance-item-compact" data-participante-id="${p.id}">
+                    <input type="checkbox" class="attendance-checkbox-compact" ${p.asiste ? 'checked' : ''}
+                           data-participante-id="${p.id}"
+                           onchange="toggleAsistenciaGranular('${p.id}', '${cardId}')"
+                           onclick="event.stopPropagation();">
+                    <span class="attendance-name-compact ${p.asiste ? 'checked' : ''}"
+                          onclick="toggleAsistenciaGranular('${p.id}', '${cardId}'); event.stopPropagation();">${(p.nombre || '').replace(/</g, '&lt;')}</span>
+                </div>
+            `).join('');
         }
 
         /** Renderiza la lista de rutas en la pestaña Rutas (cards desplegables). */
@@ -4505,17 +4924,10 @@ function formatearFechaCorta(fechaString) {
                         return '';
                     }
                     
-                    // 🔥 CORRECCIÓN: Usar rutaId para contar participantes
                     const registrados = contarParticipantesReserva(reserva.lider, reserva.rutaId);
-                    
-                    // Calcular totales separados
-                    const totalBs = (reserva.pagos || [])
-                        .filter(p => !p.enDolares)
-                        .reduce((sum, p) => sum + p.monto, 0);
-                    const totalDolares = (reserva.pagos || [])
-                        .filter(p => p.enDolares)
-                        .reduce((sum, p) => sum + p.monto, 0);
-                    // Usar campo normalizado (siempre disponible después de loadData/saveData)
+                    const { totalBs, totalDolares, cuposPagados } = calcularTotalesPorMoneda(reserva);
+                    const eurosRecibidos = calcularEurosRecibidos(reserva, ruta);
+                    const eurosEsperados = (reserva.cantidad || 0) * (ruta ? (ruta.precioEuros || 0) : 0);
                     const precioEuros = ruta.precioEuros || 0;
                     const numPagos = (reserva.pagos && reserva.pagos.length > 0) ? reserva.pagos.length : 0;
                     const tienePagos = totalBs > 0 || totalDolares > 0;
@@ -4533,9 +4945,9 @@ function formatearFechaCorta(fechaString) {
                                         <div class="card-meta" style="margin-bottom: 8px;">📍 ${ruta ? ruta.nombre : 'N/A'}${ruta && ruta.fecha ? ' • ' + formatearFechaCorta(ruta.fecha) : ''}</div>
                                         <div style="display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary);">
                                             ${(function() {
-                                                const haySobreventa = registrados > reserva.cantidad;
-                                                const colorPersonas = haySobreventa ? 'var(--danger)' : 'var(--text-secondary)';
-                                                return '<span style="color: ' + colorPersonas + '; font-weight: ' + (haySobreventa ? '700' : '400') + ';">📊 ' + registrados + '/' + reserva.cantidad + (haySobreventa ? ' ⚠️' : '') + '</span>';
+                                                const c = getColorCompletitud(cuposPagados, reserva.cantidad);
+                                                const haySobreventa = cuposPagados > reserva.cantidad;
+                                                return '<span style="color: ' + c.color + '; font-weight: ' + (haySobreventa ? '700' : '400') + ';" title="Cupos pagados / reservados • € recibidos / esperados">📊 ' + cuposPagados + '/' + reserva.cantidad + ' (' + eurosRecibidos + '€/' + eurosEsperados + '€)</span>';
                                             })()}
                                             ${tienePagos ? `<span>💰 Bs ${totalBs.toLocaleString()}${totalDolares > 0 ? ` + $${totalDolares.toLocaleString()}` : ''}</span>` : '<span style="color: var(--text-tertiary);">Sin pagos</span>'}
                                         </div>
@@ -4564,9 +4976,10 @@ function formatearFechaCorta(fechaString) {
                                     </div>
                                 <div class="stat">
                                     ${(function() {
+                                        const c = getColorCompletitud(registrados, reserva.cantidad);
                                         const haySobreventa = registrados > reserva.cantidad;
-                                        const colorRegistrados = haySobreventa ? 'var(--danger)' : 'var(--accent)';
-                                        return '<span class="stat-value" style="color: ' + colorRegistrados + ';">' + registrados + '/' + reserva.cantidad + (haySobreventa ? ' ⚠️' : '') + '</span><span class="stat-label">' + (haySobreventa ? 'Sobrevendidos' : 'Personas/Cupos') + '</span>';
+                                        const labelStat = haySobreventa ? 'Sobrevendidos' : (registrados === reserva.cantidad ? 'Completo' : (registrados === 0 ? 'Personas/Cupos' : 'Faltan ' + (reserva.cantidad - registrados)));
+                                        return '<span class="stat-value" style="color: ' + c.color + ';" title="' + c.label + '">' + registrados + '/' + reserva.cantidad + (haySobreventa ? ' ⚠️' : '') + '</span><span class="stat-label">' + labelStat + '</span>';
                                     })()}
                                 </div>
                                 </div>
@@ -4736,27 +5149,23 @@ function formatearFechaCorta(fechaString) {
         function toggleAsistenciaCard(cardId) {
             const card = document.getElementById(cardId);
             if (!card) return;
-            
             const expanded = card.querySelector('.asistencia-expanded');
-            const compact = card.querySelector('.asistencia-compact');
             const icon = card.querySelector('.expand-icon');
-            
-            if (!expanded || !compact || !icon) return;
-            
+            if (!expanded || !icon) return;
             const isExpanded = expanded.style.display !== 'none';
-            
             if (isExpanded) {
-                // Colapsar
                 expanded.style.display = 'none';
                 icon.textContent = '▼';
                 icon.style.transform = 'rotate(0deg)';
-                cardsAsistenciaExpandidos.delete(cardId); // Remover del Set cuando se colapsa
+                cardsAsistenciaExpandidos.delete(cardId);
             } else {
-                // Expandir
                 expanded.style.display = 'block';
                 icon.textContent = '▲';
                 icon.style.transform = 'rotate(0deg)';
-                cardsAsistenciaExpandidos.add(cardId); // Agregar al Set cuando se expande
+                cardsAsistenciaExpandidos.add(cardId);
+                const lider = card.dataset.lider;
+                const rutaId = card.dataset.rutaId;
+                if (lider && rutaId) actualizarListaParticipantesCard(cardId, obtenerParticipantesReserva(lider, rutaId));
             }
         }
         
@@ -4811,50 +5220,71 @@ function formatearFechaCorta(fechaString) {
             }
         }
 
-        // VER HISTORIAL DE RUTAS DE UNA PERSONA
+        // VER HISTORIAL DE RUTAS DE UNA PERSONA (modal detallado)
         function verHistorialRutas(nombrePersona) {
             const historial = calcularRutasPorPersona(nombrePersona);
-            
-            if (historial.totalRutas === 0) {
+
+            if (historial.totalParticipaciones === 0) {
                 showToast('Esta persona no tiene historial de rutas', 'info', 'Información');
                 return;
             }
-            
-            // Obtener detalles de cada ruta
-            const rutasDetalle = historial.rutas.map(nombreRuta => {
-                const ruta = data.rutas.find(r => r.nombre === nombreRuta);
-                // Buscar reservas usando ruta normalizada (puede ser ruta_nombre o ruta)
-                const reservasDeRuta = data.reservas.filter(r => (r.ruta || r.ruta_nombre) === nombreRuta);
-                const participacionesEnRuta = data.participantes.filter(p => 
-                    p.nombre.toLowerCase().trim() === nombrePersona.toLowerCase().trim() &&
-                    reservasDeRuta.some(r => r.lider === p.lider)
-                );
-                
-                return {
-                    nombre: nombreRuta,
-                    fecha: ruta ? ruta.fecha : null,
-                    numero: ruta ? ruta.numero : null,
-                    archivada: ruta ? ruta.archivada : false,
-                    participaciones: participacionesEnRuta.length,
-                    lideres: [...new Set(participacionesEnRuta.map(p => p.lider))]
-                };
-            }).sort((a, b) => {
-                // Ordenar por fecha (más reciente primero)
-                if (!a.fecha && !b.fecha) return 0;
-                if (!a.fecha) return 1;
-                if (!b.fecha) return -1;
-                return new Date(b.fecha) - new Date(a.fecha);
+
+            let mensaje = `📊 HISTORIAL COMPLETO: ${(nombrePersona || '').toUpperCase()}\n\n`;
+            mensaje += `📈 RESUMEN ESTADÍSTICO:\n`;
+            mensaje += `• Rutas asistidas: ${historial.totalRutasAsistidas}\n`;
+            mensaje += `• Total de rutas participadas: ${historial.totalTodasLasRutas}\n`;
+            mensaje += `• Participaciones totales: ${historial.totalParticipaciones}\n`;
+            mensaje += `• ✅ Asistencias: ${historial.totalAsistidas}\n`;
+            mensaje += `• ❌ Ausencias: ${historial.totalNoAsistidas}\n`;
+            mensaje += `• Tasa de asistencia: ${historial.porcentajeAsistencia}%\n\n`;
+
+            if (historial.rutasAsistidas.length > 0) {
+                mensaje += `🏔️ RUTAS CON ASISTENCIA (${historial.rutasAsistidas.length}):\n\n`;
+                historial.rutasAsistidas.forEach((ruta, index) => {
+                    mensaje += `${index + 1}. ${ruta.nombre}\n`;
+                    if (ruta.fecha) {
+                        const fechaFormateada = new Date(ruta.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+                        mensaje += `   📅 ${fechaFormateada}\n`;
+                    }
+                    if (ruta.vecesAsistio > 1) mensaje += `   🔄 ${ruta.vecesAsistio} veces asistió\n`;
+                    if (ruta.lider) mensaje += `   👤 ${ruta.lider}\n`;
+                    mensaje += '\n';
+                });
+            }
+
+            mensaje += `📋 DETALLE DE TODAS LAS PARTICIPACIONES:\n\n`;
+            const participacionesPorRuta = {};
+            historial.participacionesDetalladas.forEach(p => {
+                const r = (p.ruta || '').trim();
+                if (!r) return;
+                if (!participacionesPorRuta[r]) participacionesPorRuta[r] = [];
+                participacionesPorRuta[r].push(p);
             });
-            
-            const rutasLista = rutasDetalle.map(r => {
-                const fechaStr = r.fecha ? new Date(r.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Sin fecha';
-                return `• ${r.nombre} - ${fechaStr}`;
-            }).join('\n');
-            
+
+            Object.entries(participacionesPorRuta).forEach(([nombreRuta, participaciones], rutaIndex) => {
+                const totalEnRuta = participaciones.length;
+                const asistidasEnRuta = participaciones.filter(pa => pa.asiste === true).length;
+                mensaje += `${rutaIndex + 1}. ${nombreRuta}\n`;
+                mensaje += `   ${asistidasEnRuta}/${totalEnRuta} veces asistió\n`;
+                participaciones.forEach((p, pIndex) => {
+                    const estado = p.asiste === true ? '✅' : '❌';
+                    const fecha = p.fecha ? new Date(p.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'Sin fecha';
+                    mensaje += `   ${pIndex + 1}) ${estado} ${fecha} - ${p.lider || 'Sin líder'}\n`;
+                });
+                mensaje += '\n';
+            });
+
             const tituloEl = document.getElementById('modalHistorialRecurrenteTitulo');
             const cuerpoEl = document.getElementById('modalHistorialRecurrenteCuerpo');
-            if (tituloEl) tituloEl.textContent = `⭐ Cliente recurrente: ${nombrePersona}`;
-            if (cuerpoEl) cuerpoEl.textContent = `📊 Total de rutas: ${historial.totalRutas}\n\n🗺️ RUTAS REALIZADAS:\n\n${rutasLista}`;
+            const nombreEsc = (nombrePersona || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+            if (tituloEl) {
+                const tituloColor = historial.porcentajeAsistencia >= 70 ? 'var(--success)' : historial.porcentajeAsistencia >= 30 ? '#f59e0b' : 'var(--danger)';
+                tituloEl.innerHTML = `<span style="color: ${tituloColor}">⭐ ${nombreEsc} <span style="font-size: 14px; color: var(--text-secondary);">(${historial.totalRutas} ${historial.totalRutas === 1 ? 'ruta asistida' : 'rutas asistidas'})</span></span>`;
+            }
+            if (cuerpoEl) {
+                cuerpoEl.innerHTML = `<div style="font-family: 'Poppins', sans-serif; font-size: 13px; line-height: 1.4; white-space: pre-wrap; max-height: 60vh; overflow-y: auto; padding-right: 8px;">${mensaje.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`;
+            }
             const modal = document.getElementById('modalHistorialRecurrente');
             if (modal) modal.classList.add('active');
         }
@@ -4927,16 +5357,19 @@ function formatearFechaCorta(fechaString) {
                         const rutaNombre = ruta ? ruta.nombre : (p.ruta_nombre || p.ruta || 'Sin ruta');
                         const rutaFecha = ruta ? formatearFechaCorta(ruta.fecha) : '';
                         
-                        // Calcular si es cliente recurrente
-                        const historialRutas = calcularRutasPorPersona(p.nombre);
-                        const esRecurrente = historialRutas.totalRutas > 1;
-                        
+                        const historial = calcularRutasPorPersona(p.nombre);
+                        const nombreEsc = (p.nombre || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        let badgeHtml = '';
+                        if (historial.rango) {
+                            const tooltip = `${historial.rango.emoji} ${historial.rango.nombre}\\n• Rutas asistidas: ${historial.totalRutas}\\n• Participaciones: ${historial.totalParticipaciones}\\n• Asistencias: ${historial.totalAsistidas} ✅\\n• Ausencias: ${historial.totalNoAsistidas} ❌\\n• Tasa: ${historial.porcentajeAsistencia}%`.replace(/"/g, '&quot;');
+                            badgeHtml = `<span style="background: ${historial.rango.color}20; color: ${historial.rango.color}; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; cursor: pointer; border: 1px solid ${historial.rango.color}40; display: inline-flex; align-items: center; gap: 4px;" onclick="verDetalleAventurero('${nombreEsc}')" title="${tooltip}">${historial.rango.emoji} ${historial.rango.nombre}</span>`;
+                        }
                         return `
                             <div class="person-item-compact">
                                 <div class="person-info-compact">
                                     <div style="display: flex; align-items: center; gap: 8px;">
-                                        <div class="person-name-compact">${p.nombre}</div>
-                                        ${esRecurrente ? `<span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; cursor: pointer;" onclick="verHistorialRutas('${p.nombre}')" title="Ver historial de rutas">⭐ ${historialRutas.totalRutas} rutas</span>` : ''}
+                                        <div class="person-name-compact">${(p.nombre || '').replace(/</g, '&lt;')}</div>
+                                        ${badgeHtml}
                                     </div>
                                     <div class="person-meta-compact">
                                         <span>👤 ${p.lider}</span>
@@ -4955,105 +5388,82 @@ function formatearFechaCorta(fechaString) {
             document.getElementById('listaParticipantes').innerHTML = html;
         }
 
-        // RENDER ASISTENCIA
-        function renderAsistencia() {
+        /** Devuelve reservas activas según filtros actuales de la pestaña Asistencia */
+        function getReservasActivasAsistencia() {
             const liderFiltro = document.getElementById('filtroLiderAsistencia')?.value || '';
+            const rutaFiltro = document.getElementById('filtroRutaAsistencia')?.value || '';
             const searchTerm = (document.getElementById('searchAsistencia')?.value || '').trim().toLowerCase();
-            
-            // Construir cards de asistencia a partir de las reservas activas (no archivadas)
-            const reservasActivas = (data.reservas || []).filter(reserva => {
-                // 🔥 CORRECCIÓN: Buscar ruta por ID
+            return (data.reservas || []).filter(reserva => {
                 const ruta = data.rutas.find(r => r.id === reserva.rutaId);
                 if (!ruta || ruta.archivada) return false;
-                // Filtrar por líder seleccionado en el filtro
                 if (liderFiltro && reserva.lider !== liderFiltro) return false;
-                // Filtrar por nombre del líder si hay término de búsqueda
+                if (rutaFiltro && reserva.rutaId !== rutaFiltro) return false;
                 if (searchTerm && !reserva.lider.toLowerCase().includes(searchTerm)) return false;
                 return true;
             });
-            
-            const html = reservasActivas.length === 0 ?
-                `<div class="empty-state">
-                    <div class="empty-state-icon">📋</div>
-                    <h3>No hay participantes</h3>
-                    <p>Selecciona una ruta o registra personas</p>
-                </div>` :
-                reservasActivas.map(reserva => {
-                    const lider = reserva.lider;
-                    // 🔥 CORRECCIÓN: Buscar ruta por ID
-                    const ruta = data.rutas.find(r => r.id === reserva.rutaId);
-                    if (!ruta) return '';
-                    
-                    const rutaNombre = ruta.nombre;
-                    const rutaFecha = formatearFechaCorta(ruta.fecha);
-                    
-                    // Participantes asociados a este líder y a esta ruta específica.
-                    // 🔥 CORRECCIÓN: Usar rutaId para filtrar correctamente (evita mezclar rutas con mismo nombre)
-                    let participantes = (data.participantes || []).filter(p => 
-                        p.lider === lider && 
-                        ((p.rutaId === reserva.rutaId || p.ruta_id === reserva.rutaId) || // Por ID (preferido)
-                         (p.ruta_nombre || p.ruta) === rutaNombre) // Compatibilidad: por nombre
-                    );
-                    // Orden estable por nombre para que no cambien de posición al marcar/desmarcar
-                    const participantesOrdenados = participantes
-                        .slice()
-                        .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
+        }
 
-                    const presentes = participantesOrdenados.filter(p => p.asiste).length;
-                    const totalEnCard = participantesOrdenados.length || 1; // evitar división por 0
-                    const porcentaje = (presentes / totalEnCard * 100).toFixed(0);
-                    
-                    // ID único por líder + rutaId para no mezclar tarjetas (evita colisiones con rutas del mismo nombre)
-                    const liderSlug = lider.replace(/\s+/g, '-').toLowerCase();
-                    const cardId = `asistencia-${liderSlug}-${reserva.rutaId}`;
-                    
-                    return `
-                        <div class="attendance-group-compact asistencia-card" id="${cardId}">
-                            <!-- VISTA COMPACTA (siempre visible) -->
-                            <div class="asistencia-compact">
-                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                    <div style="flex: 1;">
-                                        <div class="attendance-title-compact" style="margin-bottom: 4px;">📍 ${rutaNombre}${rutaFecha ? ` - ${rutaFecha}` : ''}</div>
-                                        <div class="attendance-meta-compact" style="margin-bottom: 8px;">
-                                            <span>👤 ${lider}</span>
-                                        </div>
-                                        <div style="display: flex; align-items: center; gap: 12px; font-size: 13px;">
-                                            <span style="color: var(--text-secondary);">📊 ${presentes}/${participantes.length} presentes</span>
-                                            <div style="flex: 1; max-width: 120px; height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 999px; overflow: hidden;">
-                                                <div class="attendance-progress-fill" style="width: ${porcentaje}%; height: 100%; background: ${porcentaje >= 80 ? 'var(--success)' : porcentaje >= 50 ? '#fbbf24' : 'var(--danger)'};"></div>
-                                            </div>
-                                            <span style="color: var(--text-secondary); font-weight: 600;">${porcentaje}%</span>
-                                        </div>
+        /** Crea el DOM inicial de la lista de asistencia (solo si container está vacío o hay que reconstruir) */
+        function crearEstructuraInicialAsistencia(container) {
+            const reservasActivas = getReservasActivasAsistencia();
+            if (reservasActivas.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <h3>No hay participantes</h3>
+                        <p>Selecciona una ruta o registra personas</p>
+                    </div>`;
+                actualizarContadorCheckin();
+                return;
+            }
+            const html = reservasActivas.map(reserva => {
+                const lider = reserva.lider;
+                const ruta = data.rutas.find(r => r.id === reserva.rutaId);
+                if (!ruta) return '';
+                const cardId = getAsistenciaCardId(lider, reserva.rutaId);
+                const rutaNombre = ruta.nombre;
+                const rutaFecha = formatearFechaCorta(ruta.fecha);
+                const participantes = obtenerParticipantesReserva(lider, reserva.rutaId);
+                const presentes = participantes.filter(p => p.asiste).length;
+                const total = participantes.length || 1;
+                const porcentaje = Math.round((presentes / total) * 100);
+                const liderEsc = (lider || '').replace(/"/g, '&quot;');
+                const rutaIdEsc = (reserva.rutaId || '').replace(/"/g, '&quot;');
+                return `
+                    <div class="attendance-group-compact asistencia-card" id="${cardId}" data-lider="${liderEsc}" data-ruta-id="${rutaIdEsc}">
+                        <div class="asistencia-compact">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div style="flex: 1;">
+                                    <div class="attendance-title-compact" style="margin-bottom: 4px;">📍 ${(rutaNombre || '').replace(/</g, '&lt;')}${rutaFecha ? ` - ${rutaFecha}` : ''}</div>
+                                    <div class="attendance-meta-compact" style="margin-bottom: 8px;">
+                                        <span>👤 ${(lider || '').replace(/</g, '&lt;')}</span>
+                                        <span class="contador-presentes" data-for-card="${cardId}">📊 ${presentes}/${total} presentes</span>
                                     </div>
-                                    <button class="btn-expand-reserva" onclick="toggleAsistenciaCard('${cardId}')" title="Ver lista completa">
-                                        <span class="expand-icon">▼</span>
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <!-- VISTA EXPANDIDA (oculta por defecto) -->
-                            <div class="asistencia-expanded" style="display: none;">
-                                <div class="attendance-list-compact">
-                                    ${participantesOrdenados.map(p => {
-                                        return `
-                                            <div class="attendance-item-compact">
-                                                <input type="checkbox" class="attendance-checkbox-compact" 
-                                                       ${p.asiste ? 'checked' : ''} 
-                                                       onchange="toggleAsistencia('${p.id}', '${cardId}')"
-                                                       onclick="event.stopPropagation();">
-                                                <span class="attendance-name-compact ${p.asiste ? 'checked' : ''}" onclick="toggleAsistencia('${p.id}', '${cardId}'); event.stopPropagation();">${p.nombre}</span>
+                                    <div style="display: flex; align-items: center; gap: 12px; font-size: 13px;">
+                                        <div class="attendance-progress-container" style="flex: 1; max-width: 120px;">
+                                            <div class="attendance-progress-bar" style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden;">
+                                                <div class="attendance-progress-fill" data-for-card="${cardId}" style="height: 100%; width: ${porcentaje}%; background: ${porcentaje >= 80 ? 'var(--success)' : porcentaje >= 50 ? '#fbbf24' : 'var(--danger)'};"></div>
                                             </div>
-                                        `;
-                                    }).join('')}
+                                        </div>
+                                        <span class="porcentaje-presentes" data-for-card="${cardId}" style="color: var(--text-secondary); font-weight: 600;">${porcentaje}%</span>
+                                    </div>
                                 </div>
+                                <button class="btn-expand-reserva" onclick="toggleAsistenciaCard('${cardId}')" title="Ver lista completa">
+                                    <span class="expand-icon">▼</span>
+                                </button>
                             </div>
                         </div>
-                    `;
-                }).join('');
-            
-            document.getElementById('listaAsistencia').innerHTML = html;
-
-            // Restaurar el estado expandido de todos los cards que estaban expandidos
+                        <div class="asistencia-expanded" style="display: none;">
+                            <div class="attendance-list-compact" id="lista-participantes-${cardId}"></div>
+                        </div>
+                    </div>
+                `;
+            }).filter(h => h !== '').join('');
+            container.innerHTML = html;
+            reservasActivas.forEach(reserva => {
+                const cardId = getAsistenciaCardId(reserva.lider, reserva.rutaId);
+                actualizarCardAsistencia(cardId);
+            });
             cardsAsistenciaExpandidos.forEach(cardId => {
                 const card = document.getElementById(cardId);
                 if (card) {
@@ -5063,11 +5473,50 @@ function formatearFechaCorta(fechaString) {
                         expanded.style.display = 'block';
                         icon.textContent = '▲';
                         icon.style.transform = 'rotate(0deg)';
+                        const lider = card.dataset.lider;
+                        const rutaId = card.dataset.rutaId;
+                        if (lider && rutaId) actualizarListaParticipantesCard(cardId, obtenerParticipantesReserva(lider, rutaId));
                     }
                 }
             });
-
             actualizarContadorCheckin();
+        }
+
+        /** Actualiza solo los datos de los cards existentes (sin reemplazar DOM) */
+        function actualizarDatosAsistencia() {
+            const container = document.getElementById('listaAsistencia');
+            if (!container) return;
+            const reservasActivas = getReservasActivasAsistencia();
+            const expectedIds = new Set(reservasActivas.map(r => getAsistenciaCardId(r.lider, r.rutaId)));
+            const existingIds = new Set(Array.from(container.children).map(el => el.id).filter(Boolean));
+            const sameSet = expectedIds.size === existingIds.size && [...expectedIds].every(id => existingIds.has(id));
+            if (!sameSet || container.querySelector('.empty-state')) {
+                crearEstructuraInicialAsistencia(container);
+                return;
+            }
+            expectedIds.forEach(cardId => actualizarCardAsistencia(cardId));
+            cardsAsistenciaExpandidos.forEach(cardId => {
+                const card = document.getElementById(cardId);
+                if (card) {
+                    const expanded = card.querySelector('.asistencia-expanded');
+                    if (expanded && expanded.style.display !== 'none') {
+                        const participantes = obtenerParticipantesReserva(card.dataset.lider, card.dataset.rutaId);
+                        actualizarListaParticipantesCard(cardId, participantes);
+                    }
+                }
+            });
+            actualizarContadorCheckin();
+        }
+
+        // RENDER ASISTENCIA (granular: solo crea estructura si vacía, sino actualiza datos)
+        function renderAsistencia() {
+            const container = document.getElementById('listaAsistencia');
+            if (!container) return;
+            if (container.children.length === 0 || container.querySelector('.empty-state')) {
+                crearEstructuraInicialAsistencia(container);
+                return;
+            }
+            actualizarDatosAsistencia();
         }
 
         // AGREGAR GASTO
@@ -5208,7 +5657,7 @@ function actualizarContadorCheckin() {
     }
 }
 
-// Marcar todos como presentes
+// Marcar todos como presentes (actualización granular, sin loadData)
 async function marcarTodosPresentes() {
     const liderFiltro = document.getElementById('filtroLiderAsistencia')?.value;
     if (!liderFiltro) {
@@ -5232,17 +5681,30 @@ async function marcarTodosPresentes() {
     if (!ok) return;
 
     try {
+        participantes.forEach(p => misAccionesRecientes.add(p.id));
+        setTimeout(() => participantes.forEach(p => misAccionesRecientes.delete(p.id)), 3000);
+
         for (const p of participantes) {
-            await db.from('participantes')
-                .update({ asiste: true })
-                .eq('id', p.id);
+            await db.from('participantes').update({ asiste: true }).eq('id', p.id);
+            p.asiste = true;
         }
 
-        await loadData();
-        renderAsistencia();
+        const cardsAActualizar = new Set();
+        participantes.forEach(p => {
+            const cardId = encontrarCardPorParticipante(p);
+            if (cardId) cardsAActualizar.add(cardId);
+        });
+        cardsAActualizar.forEach(cardId => actualizarCardAsistencia(cardId));
         actualizarContadorCheckin();
+        showToast(`${participantes.length} marcados como presentes`, 'success', 'Éxito');
     } catch (err) {
         console.error(err);
+        participantes.forEach(p => { p.asiste = false; });
+        document.querySelectorAll('#listaAsistencia .attendance-group-compact').forEach(card => {
+            const id = card.id;
+            if (id) actualizarCardAsistencia(id);
+        });
+        actualizarContadorCheckin();
         showToast('Error al marcar asistencia', 'error', 'Error');
     }
 }
@@ -5335,9 +5797,9 @@ async function marcarTodosPresentes() {
                     // Usar campo normalizado (siempre disponible después de loadData/saveData)
                     const precioEuros = ruta.precioEuros || 0;
                     
-                    // Calcular asistencia (presentes vs cupos reservados)
+                    // Calcular asistencia (presentes vs cupos reservados) — solo participantes de esta ruta
                     const participantesRuta = data.participantes.filter(p => 
-                        reservasRuta.some(r => r.lider === p.lider)
+                        (p.rutaId === ruta.id || p.ruta_id === ruta.id) || ((p.ruta_nombre || p.ruta) === ruta.nombre)
                     );
                     const presentes = participantesRuta.filter(p => p.asiste).length;
                     const cuposReservados = reservasRuta.reduce((sum, r) => sum + r.cantidad, 0);
@@ -5409,7 +5871,10 @@ async function marcarTodosPresentes() {
                                     <div style="margin-top: 20px;">
                                         <div style="font-weight: 700; margin-bottom: 16px; color: var(--accent); font-size: 16px;">👥 Reservas y Participantes</div>
                                         ${reservasRuta.map(reserva => {
-                                            const participantesReserva = data.participantes.filter(p => p.lider === reserva.lider);
+                                            const participantesReserva = data.participantes.filter(p => 
+                                                p.lider === reserva.lider && 
+                                                (p.rutaId === reserva.rutaId || p.ruta_id === reserva.rutaId || (p.ruta_nombre || p.ruta) === ruta.nombre)
+                                            );
                                             const presentes = participantesReserva.filter(p => p.asiste).length;
                                             const totalPagado = reserva.montoPagado || 0; // Usar campo normalizado
                                             
@@ -5466,6 +5931,107 @@ async function marcarTodosPresentes() {
             document.getElementById('listaHistorial').innerHTML = html;
         }
 
+        function renderEstadisticasGlobales(ranking) {
+            const container = document.getElementById('statsGlobalesContent');
+            if (!container) return;
+            const totalAventurados = ranking.length;
+            const totalRutas = ranking.reduce((sum, p) => sum + p.rutasAsistidas, 0);
+            const promedioRutas = totalAventurados > 0 ? (totalRutas / totalAventurados).toFixed(1) : 0;
+            const mejorAsistencia = [...ranking].sort((a, b) => b.porcentajeAsistencia - a.porcentajeAsistencia)[0];
+            const masRutas = [...ranking].sort((a, b) => b.rutasAsistidas - a.rutasAsistidas)[0];
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">
+                    <div class="stat"><span class="stat-value">${totalAventurados}</span><span class="stat-label">Aventurados</span></div>
+                    <div class="stat"><span class="stat-value">${promedioRutas}</span><span class="stat-label">Prom. rutas</span></div>
+                    <div class="stat"><span class="stat-value">${masRutas ? masRutas.rutasAsistidas : 0}</span><span class="stat-label">Máx. rutas</span>${masRutas ? `<div style="font-size: 10px; color: var(--text-secondary);">${(masRutas.nombre || '').replace(/</g, '&lt;')}</div>` : ''}</div>
+                    <div class="stat"><span class="stat-value">${mejorAsistencia ? mejorAsistencia.porcentajeAsistencia + '%' : '0%'}</span><span class="stat-label">Mejor %</span>${mejorAsistencia ? `<div style="font-size: 10px; color: var(--text-secondary);">${(mejorAsistencia.nombre || '').replace(/</g, '&lt;')}</div>` : ''}</div>
+                </div>`;
+        }
+
+        function renderTop10(top10) {
+            const container = document.getElementById('top10Content');
+            if (!container) return;
+            if (top10.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">No hay aventurados aún</div>';
+                return;
+            }
+            container.innerHTML = `<div class="person-list-compact">${top10.map((aventurero, index) => {
+                const medalla = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+                const nombreEsc = (aventurero.nombre || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '&lt;');
+                return `<div class="person-item-compact" style="border-left: 4px solid ${aventurero.rango.color}; background: ${index < 3 ? 'rgba(118, 200, 147, 0.05)' : 'transparent'};">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 32px; height: 32px; background: ${index < 3 ? 'rgba(118, 200, 147, 0.2)' : 'rgba(255,255,255,0.05)'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: ${index < 3 ? '16px' : '14px'}; color: ${index < 3 ? 'var(--accent)' : 'var(--text-secondary)'}; flex-shrink: 0; border: 2px solid ${index < 3 ? 'var(--accent)' : 'transparent'};">${medalla}</div>
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">${nombreEsc}</div>
+                                <span style="background: ${aventurero.rango.color}20; color: ${aventurero.rango.color}; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700;">${aventurero.rango.emoji} ${aventurero.rango.nombre}</span>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-secondary); display: flex; gap: 12px;"><span>🏔️ ${aventurero.rutasAsistidas} rutas</span><span>📊 ${aventurero.porcentajeAsistencia}% asistencia</span></div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('')}</div>`;
+        }
+
+        function renderListaRanking(ranking) {
+            const container = document.getElementById('listaRanking');
+            if (!container) return;
+            if (ranking.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);"><div style="font-size: 32px; margin-bottom: 8px;">🔍</div><p>No hay aventurados que coincidan</p></div>';
+                return;
+            }
+            container.innerHTML = `<div class="person-list-compact">${ranking.map(aventurero => {
+                const nombreEsc = (aventurero.nombre || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '&lt;');
+                const progPct = aventurero.totalParaSiguiente > 0 ? Math.min(100, (aventurero.progreso / aventurero.totalParaSiguiente) * 100) : 0;
+                return `<div class="person-item-compact" onclick="verDetalleAventurero('${nombreEsc}')" style="cursor: pointer; border-left: 4px solid ${aventurero.rango.color};">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">${nombreEsc}</div>
+                            <span style="background: ${aventurero.rango.color}20; color: ${aventurero.rango.color}; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${aventurero.rango.emoji} ${aventurero.rango.nombre}</span>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-secondary); display: flex; gap: 12px; margin-bottom: 8px;">
+                            <span>🏔️ ${aventurero.rutasAsistidas} rutas</span><span>✅ ${aventurero.totalAsistidas}/${aventurero.totalParticipaciones}</span><span>📊 ${aventurero.porcentajeAsistencia}%</span>
+                        </div>
+                        ${aventurero.siguienteRango ? `<div style="margin-top: 8px;"><div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-secondary); margin-bottom: 4px;"><span>Progreso a ${aventurero.siguienteRango.emoji} ${aventurero.siguienteRango.nombre}:</span><span>${aventurero.progreso}/${aventurero.totalParaSiguiente}</span></div><div style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;"><div style="height: 100%; width: ${progPct}%; background: ${aventurero.siguienteRango.color}; border-radius: 2px;"></div></div></div>` : ''}
+                    </div>
+                </div>`;
+            }).join('')}</div>`;
+        }
+
+        function renderRanking() {
+            const search = (document.getElementById('searchRanking')?.value || '').toLowerCase();
+            const filtroRango = document.getElementById('filtroRangoRanking')?.value || '';
+            const rankingCompleto = generarRankingAventurados();
+            let rankingFiltrado = rankingCompleto;
+            if (search) rankingFiltrado = rankingFiltrado.filter(p => (p.nombre || '').toLowerCase().includes(search));
+            if (filtroRango) rankingFiltrado = rankingFiltrado.filter(p => p.rango && p.rango.nombre === filtroRango);
+            renderEstadisticasGlobales(rankingCompleto);
+            renderTop10(rankingCompleto.slice(0, 10));
+            renderListaRanking(rankingFiltrado);
+        }
+
+        function verDetalleAventurero(nombre) {
+            const historial = calcularRutasPorPersona(nombre);
+            if (!historial.rango) return;
+            const nombreEsc = (nombre || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            const progPct = historial.siguienteRango && historial.totalParaSiguiente > 0
+                ? Math.min(100, ((historial.totalRutas - historial.rango.minRutas) / historial.totalParaSiguiente) * 100)
+                : 0;
+            const rutasHtml = historial.rutasAsistidas.length > 0
+                ? `<div><div style="font-size: 14px; font-weight: 700; margin-bottom: 12px;">🏔️ Rutas asistidas</div><div style="display: flex; flex-wrap: wrap; gap: 8px;">${historial.rutasAsistidas.slice(0, 8).map(r => `<span style="background: rgba(118, 200, 147, 0.1); padding: 6px 10px; border-radius: 8px; font-size: 12px; border: 1px solid var(--border);">${(r.nombre || '').replace(/</g, '&lt;')}</span>`).join('')}${historial.rutasAsistidas.length > 8 ? `<span style="background: rgba(118, 200, 147, 0.05); padding: 6px 10px; border-radius: 8px; font-size: 12px; color: var(--text-secondary); border: 1px dashed var(--border);">+${historial.rutasAsistidas.length - 8} más</span>` : ''}</div></div>`
+                : '';
+            const siguienteHtml = historial.siguienteRango ? `<div style="margin-bottom: 20px; padding: 16px; background: rgba(118, 200, 147, 0.1); border-radius: 12px;"><div style="font-size: 14px; font-weight: 700; margin-bottom: 8px; color: ${historial.siguienteRango.color}">${historial.siguienteRango.emoji} Próximo rango: ${historial.siguienteRango.nombre}</div><div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Necesitas ${historial.siguienteRango.minRutas - historial.totalRutas} ruta${historial.siguienteRango.minRutas - historial.totalRutas !== 1 ? 's' : ''} más</div><div class="progress-bar" style="height: 8px; background: rgba(255,255,255,0.1); margin-bottom: 4px;"><div style="height: 100%; width: ${progPct}%; background: ${historial.siguienteRango.color}; border-radius: 4px;"></div></div><div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary);"><span>${historial.progresoHaciaSiguiente}/${historial.totalParaSiguiente}</span><span>${progPct.toFixed(0)}%</span></div></div>` : '';
+            const html = `<div style="text-align: center; margin-bottom: 20px;"><div style="font-size: 48px; margin-bottom: 8px;">${historial.rango.emoji}</div><div style="font-size: 20px; font-weight: 800; color: ${historial.rango.color}; margin-bottom: 4px;">${historial.rango.nombre}</div><div style="font-size: 14px; color: var(--text-secondary);">${nombreEsc}</div></div><div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;"><div class="stat"><span class="stat-value" style="color: ${historial.rango.color};">${historial.totalRutas}</span><span class="stat-label">Rutas asistidas</span></div><div class="stat"><span class="stat-value">${historial.totalParticipaciones}</span><span class="stat-label">Participaciones</span></div><div class="stat"><span class="stat-value" style="color: var(--success);">${historial.totalAsistidas}</span><span class="stat-label">✅ Asistencias</span></div><div class="stat"><span class="stat-value" style="color: var(--danger);">${historial.totalNoAsistidas}</span><span class="stat-label">❌ Ausencias</span></div></div><div style="margin-bottom: 20px;"><div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">📊 Tasa de asistencia</div><div class="progress-bar" style="height: 12px; margin-bottom: 8px;"><div class="progress-fill" style="width: ${historial.porcentajeAsistencia}%;"></div></div><div style="display: flex; justify-content: space-between; font-size: 12px;"><span>${historial.porcentajeAsistencia}%</span><span>${historial.totalAsistidas}/${historial.totalParticipaciones}</span></div></div>${siguienteHtml}${rutasHtml}`;
+            const tituloEl = document.getElementById('modalHistorialRecurrenteTitulo');
+            const cuerpoEl = document.getElementById('modalHistorialRecurrenteCuerpo');
+            if (tituloEl && cuerpoEl) {
+                tituloEl.innerHTML = `${historial.rango.emoji} ${nombreEsc} - ${historial.rango.nombre}`;
+                cuerpoEl.innerHTML = html;
+                const modal = document.getElementById('modalHistorialRecurrente');
+                if (modal) modal.classList.add('active');
+            }
+        }
+
         // RENDER ALL
         function renderAll() {
             renderRutas();
@@ -5474,7 +6040,7 @@ async function marcarTodosPresentes() {
             renderAsistencia();
             renderGastos();
             renderHistorial();
-            // Ajustar estilos de selects de filtro después de renderizar
+            renderRanking();
             setTimeout(ajustarSelectsFiltro, 100);
         }
 
