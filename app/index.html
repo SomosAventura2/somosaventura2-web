@@ -1122,7 +1122,9 @@
         #modalDetalleReserva,
         #modalNuevaRuta,
         #modalEditarReserva,
-        #modalNuevoGasto {
+        #modalNuevoGasto,
+        #modalAnadirRutaPasada,
+        #modalAnadirAventuradoHistorial {
             z-index: 10002 !important;
         }
         
@@ -1131,7 +1133,9 @@
         #modalDetalleReserva.modal.active,
         #modalNuevaRuta.modal.active,
         #modalEditarReserva.modal.active,
-        #modalNuevoGasto.modal.active {
+        #modalNuevoGasto.modal.active,
+        #modalAnadirRutaPasada.modal.active,
+        #modalAnadirAventuradoHistorial.modal.active {
             z-index: 10002 !important;
         }
         
@@ -1146,7 +1150,7 @@
             z-index: 10100 !important;
         }
         
-        .modal.active:not(#modalConfirm):not(#modalHistorialRecurrente):not(#modalNuevaReserva):not(#modalNuevoParticipante):not(#modalDetalleReserva):not(#modalNuevaRuta):not(#modalEditarReserva):not(#modalNuevoGasto) {
+        .modal.active:not(#modalConfirm):not(#modalHistorialRecurrente):not(#modalNuevaReserva):not(#modalNuevoParticipante):not(#modalDetalleReserva):not(#modalNuevaRuta):not(#modalEditarReserva):not(#modalNuevoGasto):not(#modalAnadirRutaPasada):not(#modalAnadirAventuradoHistorial) {
             z-index: 1000;
         }
 
@@ -1719,8 +1723,50 @@
             <div id="btnCompartirHistorialWrap" style="display: none; margin-top: 16px; text-align: center;">
                 <button type="button" class="btn btn-primary" style="width: 100%; background: #25D366; border-color: #25D366; color: white;" onclick="compartirHistorialPorWhatsApp()">📱 Compartir por WhatsApp</button>
             </div>
+            <div id="btnAnadirRutaPasadaWrap" style="margin-top: 12px; text-align: center;">
+                <button type="button" class="btn btn-outline" style="width: 100%;" onclick="abrirModalAnadirRutaPasadaDesdeHistorial()">➕ Añadir ruta pasada</button>
+            </div>
             <div style="margin-top: 16px; text-align: center;">
                 <button type="button" class="btn btn-primary" style="width: 100%; max-width: 100%;" onclick="cerrarModalHistorialRecurrente()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: AÑADIR RUTA PASADA (a persona existente, sin reserva) -->
+    <div id="modalAnadirRutaPasada" class="modal" onclick="closeModalOnBackdrop(event, 'modalAnadirRutaPasada')">
+        <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 400px;">
+            <div class="modal-header">➕ Añadir ruta pasada</div>
+            <div class="form-group">
+                <p id="modalAnadirRutaPasadaPersona" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;"></p>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Ruta asistida (pasada o archivada)</label>
+                <select id="selectRutaPasada" class="form-input">
+                    <option value="">-- Elegir ruta --</option>
+                </select>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalAnadirRutaPasada')">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarRutaPasada()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: AÑADIR AVENTURADO AL HISTORIAL (participante sin reserva, varias rutas) -->
+    <div id="modalAnadirAventuradoHistorial" class="modal" onclick="closeModalOnBackdrop(event, 'modalAnadirAventuradoHistorial')">
+        <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 420px;">
+            <div class="modal-header">➕ Añadir aventurado al historial</div>
+            <div class="form-group">
+                <label class="form-label">Nombre completo</label>
+                <input type="text" id="nuevoAventuradoNombre" class="form-input" placeholder="Ej: María García">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Rutas asistidas (pasadas/archivadas) — marcar las que asistió</label>
+                <div id="listaRutasPasadasCheckboxes" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: rgba(0,0,0,0.2);"></div>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalAnadirAventuradoHistorial')">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarAventuradoHistorial()">Guardar</button>
             </div>
         </div>
     </div>
@@ -1896,7 +1942,10 @@
                 <div id="top10Content" style="padding: 16px 0;">Cargando...</div>
             </div>
             <div class="card">
-                <div class="card-title">📊 Ranking Completo</div>
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div class="card-title">📊 Ranking Completo</div>
+                    <button type="button" class="btn btn-success btn-small" onclick="abrirModalAnadirAventuradoHistorial()">➕ Añadir aventurado al historial</button>
+                </div>
                 <div id="listaRanking" style="padding: 16px 0;">Cargando...</div>
             </div>
         </div>
@@ -5677,6 +5726,7 @@ function formatearFechaCorta(fechaString) {
 
         // VER HISTORIAL DE RUTAS DE UNA PERSONA (modal detallado)
         function verHistorialRutas(nombrePersona) {
+            window._nombrePersonaHistorialActual = nombrePersona || '';
             const historial = calcularRutasPorPersona(nombrePersona);
 
             if (historial.totalParticipaciones === 0) {
@@ -5761,6 +5811,175 @@ function formatearFechaCorta(fechaString) {
             const url = 'https://wa.me/?text=' + encodeURIComponent(texto);
             window.open(url, '_blank');
             showToast('Abriendo WhatsApp...', 'info');
+        }
+
+        /** Rutas pasadas o archivadas (para añadir al historial manualmente) */
+        function getRutasPasadasParaHistorial() {
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            return (data.rutas || []).filter(r => {
+                const archivada = r.archivada === true;
+                const fechaPasada = r.fecha && new Date(r.fecha + 'T12:00:00') < hoy;
+                return archivada || fechaPasada;
+            }).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+        }
+
+        function abrirModalAnadirRutaPasadaDesdeHistorial() {
+            const nombre = window._nombrePersonaHistorialActual || '';
+            if (!nombre.trim()) {
+                showToast('No hay persona seleccionada', 'warning');
+                return;
+            }
+            const elPersona = document.getElementById('modalAnadirRutaPasadaPersona');
+            if (elPersona) elPersona.textContent = 'Añadir ruta asistida para: ' + nombre;
+            const select = document.getElementById('selectRutaPasada');
+            if (!select) return;
+            select.innerHTML = '<option value="">-- Elegir ruta --</option>';
+            const rutasPasadas = getRutasPasadasParaHistorial();
+            rutasPasadas.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.id;
+                opt.textContent = r.nombre + ' — ' + (r.fecha ? formatearFechaRuta(r.fecha) : 'Sin fecha');
+                select.appendChild(opt);
+            });
+            if (rutasPasadas.length === 0) {
+                showToast('No hay rutas pasadas o archivadas', 'info');
+                return;
+            }
+            closeModal('modalHistorialRecurrente');
+            openModal('modalAnadirRutaPasada');
+        }
+
+        async function guardarRutaPasada() {
+            const nombre = (window._nombrePersonaHistorialActual || '').trim();
+            const select = document.getElementById('selectRutaPasada');
+            const rutaId = select ? select.value : '';
+            if (!nombre) {
+                showToast('No hay persona seleccionada', 'warning');
+                return;
+            }
+            if (!rutaId) {
+                showToast('Elige una ruta', 'warning');
+                return;
+            }
+            const ruta = data.rutas.find(r => r.id === rutaId);
+            if (!ruta) {
+                showToast('Ruta no encontrada', 'error');
+                return;
+            }
+            const yaExiste = (data.participantes || []).some(p =>
+                (p.nombre || '').trim().toLowerCase() === nombre.toLowerCase() &&
+                (p.rutaId === rutaId || p.ruta_id === rutaId)
+            );
+            if (yaExiste) {
+                showToast('Esta persona ya tiene esa ruta en su historial', 'warning');
+                return;
+            }
+            try {
+                showLoader('Guardando...');
+                const { error } = await db.from('participantes').insert([{
+                    nombre: nombre,
+                    lider: nombre,
+                    ruta_id: rutaId,
+                    ruta_nombre: ruta.nombre,
+                    asiste: true
+                }]);
+                if (error) throw error;
+                await saveData(true);
+                closeModal('modalAnadirRutaPasada');
+                showToast('Ruta añadida al historial', 'success');
+                renderRanking();
+                renderParticipantes();
+                verHistorialRutas(nombre);
+                openModal('modalHistorialRecurrente');
+            } catch (e) {
+                console.error(e);
+                showToast('Error: ' + (e.message || e), 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        function abrirModalAnadirAventuradoHistorial() {
+            const input = document.getElementById('nuevoAventuradoNombre');
+            if (input) input.value = '';
+            const container = document.getElementById('listaRutasPasadasCheckboxes');
+            if (!container) return;
+            container.innerHTML = '';
+            const rutasPasadas = getRutasPasadasParaHistorial();
+            if (rutasPasadas.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary); font-size: 13px;">No hay rutas pasadas o archivadas.</p>';
+            } else {
+                rutasPasadas.forEach(r => {
+                    const label = document.createElement('label');
+                    label.style.display = 'flex';
+                    label.style.alignItems = 'center';
+                    label.style.gap = '8px';
+                    label.style.marginBottom = '8px';
+                    label.style.cursor = 'pointer';
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.value = r.id;
+                    cb.dataset.nombre = r.nombre || '';
+                    label.appendChild(cb);
+                    label.appendChild(document.createTextNode(r.nombre + (r.fecha ? ' — ' + formatearFechaRuta(r.fecha) : '')));
+                    container.appendChild(label);
+                });
+            }
+            openModal('modalAnadirAventuradoHistorial');
+        }
+
+        async function guardarAventuradoHistorial() {
+            const nombreInput = document.getElementById('nuevoAventuradoNombre');
+            const nombre = (nombreInput && nombreInput.value || '').trim();
+            if (!nombre) {
+                showToast('Ingresa el nombre completo', 'warning');
+                return;
+            }
+            const container = document.getElementById('listaRutasPasadasCheckboxes');
+            const checkboxes = container ? container.querySelectorAll('input[type="checkbox"]:checked') : [];
+            const rutaIds = Array.from(checkboxes).map(cb => cb.value).filter(Boolean);
+            if (rutaIds.length === 0) {
+                showToast('Marca al menos una ruta asistida', 'warning');
+                return;
+            }
+            try {
+                showLoader('Guardando...');
+                const inserts = [];
+                for (const rutaId of rutaIds) {
+                    const ruta = data.rutas.find(r => r.id === rutaId);
+                    if (!ruta) continue;
+                    const yaExiste = (data.participantes || []).some(p =>
+                        (p.nombre || '').trim().toLowerCase() === nombre.toLowerCase() &&
+                        (p.rutaId === rutaId || p.ruta_id === rutaId)
+                    );
+                    if (yaExiste) continue;
+                    inserts.push({
+                        nombre: nombre,
+                        lider: nombre,
+                        ruta_id: rutaId,
+                        ruta_nombre: ruta.nombre,
+                        asiste: true
+                    });
+                }
+                if (inserts.length === 0) {
+                    showToast('Todas esas rutas ya están en el historial de esta persona', 'info');
+                    hideLoader();
+                    return;
+                }
+                const { error } = await db.from('participantes').insert(inserts);
+                if (error) throw error;
+                await saveData(true);
+                closeModal('modalAnadirAventuradoHistorial');
+                showToast(inserts.length === 1 ? 'Aventurado añadido al historial' : inserts.length + ' rutas añadidas al historial', 'success');
+                renderRanking();
+                renderParticipantes();
+            } catch (e) {
+                console.error(e);
+                showToast('Error: ' + (e.message || e), 'error');
+            } finally {
+                hideLoader();
+            }
         }
 
         // RENDER PARTICIPANTES
@@ -6567,6 +6786,7 @@ async function marcarTodosPresentes() {
         }
 
         function verDetalleAventurero(nombre) {
+            window._nombrePersonaHistorialActual = nombre || '';
             const historial = calcularRutasPorPersona(nombre);
             if (!historial.rango) return;
             const nombreEsc = (nombre || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
