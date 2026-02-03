@@ -16,6 +16,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
+            --app-header-content-height: 60px;
+            --app-header-total-height: calc(var(--app-header-content-height) + 10px + env(safe-area-inset-top));
             --whatsapp: #25D366;
             --green-primary: #4CAF50;
             --green-mountain: #2d5a3d;
@@ -517,6 +519,7 @@
             background: rgba(255, 255, 255, 0.1);
             color: var(--text-primary);
             /* Prevenir zoom en iOS */
+            appearance: none;
             -webkit-appearance: none;
             touch-action: manipulation;
         }
@@ -572,6 +575,7 @@
             font-size: 16px;
             background: transparent;
             color: var(--text-primary);
+            appearance: none;
             -webkit-appearance: none;
             touch-action: manipulation;
             transition: all 0.3s;
@@ -728,6 +732,7 @@
             transition: all 0.3s;
             color: var(--text-primary);
             /* Prevenir zoom en iOS */
+            appearance: none;
             -webkit-appearance: none;
             touch-action: manipulation;
         }
@@ -997,6 +1002,7 @@
             cursor: pointer;
             transition: all 0.2s;
             /* Prevenir zoom en iOS */
+            appearance: none;
             -webkit-appearance: none;
             touch-action: manipulation;
         }
@@ -1422,6 +1428,7 @@
             min-height: 44px; /* Touch target mínimo para iPhone */
             font-size: 16px; /* Mínimo 16px para evitar zoom en iOS */
             /* Prevenir zoom en iOS */
+            appearance: none;
             -webkit-appearance: none;
             touch-action: manipulation;
         }
@@ -1470,6 +1477,104 @@
 
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        /* SKELETON SCREEN (carga inicial) */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.06) 100%);
+            background-size: 200% 100%;
+            animation: skeleton-shimmer 1.2s ease-in-out infinite;
+            border-radius: 12px;
+        }
+        @keyframes skeleton-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .loader-skeleton {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 80px 16px 24px;
+            width: 100%;
+        }
+        .loader-skeleton-header {
+            height: 44px;
+            margin-bottom: 24px;
+            border-radius: 16px;
+        }
+        .loader-skeleton-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .loader-skeleton-tab {
+            width: 48px;
+            height: 40px;
+            border-radius: 12px;
+        }
+        .loader-skeleton-card {
+            height: 120px;
+            margin-bottom: 16px;
+            border-radius: 20px;
+        }
+        .loader-skeleton-card.small {
+            height: 80px;
+        }
+        .loader-spinner-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 24px;
+            gap: 12px;
+        }
+        .loader-spinner-wrap .loader-text {
+            margin-top: 0;
+        }
+
+        /* PULL-TO-REFRESH */
+        .pull-refresh-indicator {
+            position: fixed;
+            top: var(--app-header-total-height);
+            left: 50%;
+            transform: translate(-50%, -100%);
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 20px;
+            background: rgba(26, 61, 71, 0.98);
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-top: none;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            transition: transform 0.2s ease-out;
+            pointer-events: none;
+        }
+        .pull-refresh-indicator.visible {
+            transform: translate(-50%, 0);
+        }
+        .pull-refresh-indicator.refreshing .pull-refresh-spinner {
+            display: block;
+        }
+        .pull-refresh-indicator .pull-refresh-spinner {
+            display: none;
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(118, 200, 147, 0.3);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .pull-refresh-indicator .pull-refresh-icon {
+            font-size: 18px;
+        }
+        .pull-refresh-indicator.refreshing .pull-refresh-icon {
+            display: none;
         }
 
         /* TOAST NOTIFICATIONS - MOBILE OPTIMIZED (BOTTOM & DARK GLASS) */
@@ -1574,8 +1679,9 @@
             color: #cfd8d3; /* Gris perla suave para lectura cómoda */
             line-height: 1.3;
         }
-            
-            /* Nav tabs más compactos en iPhone - solo iconos, tamaño más grande */
+
+        /* Nav tabs más compactos en iPhone - solo iconos, tamaño más grande */
+        @media (max-width: 768px) {
             .nav-tabs {
                 grid-template-columns: repeat(8, 1fr);
                 gap: 0;
@@ -1603,7 +1709,7 @@
                 border-radius: 24px 24px 0 0;
             }
         }
-        
+
         /* Optimizaciones específicas para iOS */
         @supports (-webkit-touch-callout: none) {
             /* Solo se aplica en iOS */
@@ -1654,7 +1760,6 @@
                 -webkit-user-select: auto !important;
                 user-select: auto !important;
                 -webkit-touch-callout: default !important;
-                touch-callout: default !important;
                 pointer-events: auto !important;
                 -webkit-tap-highlight-color: rgba(118, 200, 147, 0.2) !important;
                 /* Forzar que iOS reconozca estos como campos editables */
@@ -1675,6 +1780,7 @@
             }
         }
 
+        @media (max-width: 768px) {
             .reserva-compact {
                 flex-direction: column;
                 gap: 8px;
@@ -1693,10 +1799,24 @@
     </style>
 </head>
 <body>
-    <!-- Loader visible mientras se verifica sesión (fuera de #app para mostrarse desde el primer frame) -->
-    <div id="loader" class="loader" style="display: flex;">
-        <div class="loader-spinner"></div>
-        <div class="loader-text">Cargando datos...</div>
+    <!-- Loader: skeleton screen + spinner mientras se verifica sesión y cargan datos -->
+    <div id="loader" class="loader" style="display: flex; align-items: flex-start; padding-top: 0;">
+        <div class="loader-skeleton">
+            <div class="skeleton loader-skeleton-header"></div>
+            <div class="loader-skeleton-tabs">
+                <div class="skeleton loader-skeleton-tab"></div>
+                <div class="skeleton loader-skeleton-tab"></div>
+                <div class="skeleton loader-skeleton-tab"></div>
+                <div class="skeleton loader-skeleton-tab"></div>
+            </div>
+            <div class="skeleton loader-skeleton-card"></div>
+            <div class="skeleton loader-skeleton-card small"></div>
+            <div class="skeleton loader-skeleton-card"></div>
+            <div class="loader-spinner-wrap">
+                <div class="loader-spinner" style="width: 40px; height: 40px; border-width: 3px;"></div>
+                <div class="loader-text">Cargando datos...</div>
+            </div>
+        </div>
     </div>
 
     <!-- MODAL DE CONFIRMACIÓN GENÉRICO -->
@@ -1771,6 +1891,13 @@
         </div>
     </div>
 
+    <!-- Indicador pull-to-refresh (fixed, se muestra al tirar hacia abajo) -->
+    <div id="pullRefreshIndicator" class="pull-refresh-indicator" aria-hidden="true">
+        <span class="pull-refresh-icon">↻</span>
+        <span class="pull-refresh-label">Suelta para actualizar</span>
+        <div class="pull-refresh-spinner"></div>
+    </div>
+
     <!-- APP -->
     <div id="app" class="app">
         <!-- TOAST NOTIFICATIONS -->
@@ -1801,14 +1928,14 @@
     <button class="nav-tab" onclick="showTab('gastos')">
         💸 <span class="text">Gastos</span>
     </button>
-    <button class="nav-tab" onclick="showTab('historial')">
-        📚 <span class="text">Historial</span>
-    </button>
     <button class="nav-tab" onclick="showTab('ranking')">
         🏆 <span class="text">Ranking</span>
     </button>
     <button class="nav-tab" onclick="showTab('abonados')">
         💰 <span class="text">Abonados</span>
+    </button>
+    <button class="nav-tab" onclick="showTab('historial')">
+        📚 <span class="text">Historial</span>
     </button>
         </div>
 
@@ -1836,7 +1963,7 @@
         <!-- RUTAS -->
         <div id="rutas" class="section active">
             <div class="search-filter-container">
-                <input type="text" class="search-box" id="searchRutas" placeholder="Buscar rutas..." oninput="renderRutas()">
+                <input type="text" class="search-box" id="searchRutas" placeholder="Buscar rutas..." oninput="debouncedRenderRutas()">
             </div>
             <div id="listaRutas"></div>
         </div>
@@ -1844,7 +1971,7 @@
         <!-- RESERVAS -->
         <div id="reservas" class="section">
             <div class="search-filter-container">
-                <input type="text" class="search-box" id="searchReservas" placeholder="Buscar reservas..." oninput="renderReservas()">
+                <input type="text" class="search-box" id="searchReservas" placeholder="Buscar reservas..." oninput="debouncedRenderReservas()">
                 <div class="search-filter-separator"></div>
                 <div class="search-filter-wrapper">
                     <select id="filtroRutaReservas" class="search-filter-select" onchange="renderReservas(); ajustarSelectFiltro(this);">
@@ -1858,7 +1985,7 @@
         <!-- PARTICIPANTES -->
         <div id="participantes" class="section">
             <div class="search-filter-container">
-                <input type="text" class="search-box" id="searchParticipantes" placeholder="Buscar personas..." oninput="renderParticipantes()">
+                <input type="text" class="search-box" id="searchParticipantes" placeholder="Buscar personas..." oninput="debouncedRenderParticipantes()">
                 <div class="search-filter-separator"></div>
                 <div class="search-filter-wrapper">
                     <select id="filtroRutaParticipantes" class="search-filter-select" onchange="renderParticipantes(); ajustarSelectFiltro(this);">
@@ -1872,7 +1999,7 @@
         <!-- ASISTENCIA -->
         <div id="asistencia" class="section">
             <div class="search-filter-container">
-                <input type="text" class="search-box" id="searchAsistencia" placeholder="Buscar por líder..." oninput="renderAsistencia()">
+                <input type="text" class="search-box" id="searchAsistencia" placeholder="Buscar por líder..." oninput="debouncedRenderAsistencia()">
                 <div class="search-filter-separator"></div>
                 <div class="search-filter-wrapper">
                     <select id="filtroLiderAsistencia" class="search-filter-select" onchange="renderAsistencia(); ajustarSelectFiltro(this);">
@@ -1892,7 +2019,7 @@
         <!-- GASTOS -->
         <div id="gastos" class="section">
             <div class="search-filter-container">
-                <input type="text" class="search-box" id="searchGastos" placeholder="Buscar gastos..." oninput="renderGastos()">
+                <input type="text" class="search-box" id="searchGastos" placeholder="Buscar gastos..." oninput="debouncedRenderGastos()">
                 <div class="search-filter-separator"></div>
                 <div class="search-filter-wrapper">
                     <select id="filtroRutaGastos" class="search-filter-select" onchange="renderGastos(); ajustarSelectFiltro(this);">
@@ -1911,7 +2038,7 @@
         <!-- HISTORIAL -->
         <div id="historial" class="section">
             <div class="search-filter-container">
-                <input type="text" class="search-box" id="searchHistorial" placeholder="Buscar en historial..." oninput="renderHistorial()">
+                <input type="text" class="search-box" id="searchHistorial" placeholder="Buscar en historial..." oninput="debouncedRenderHistorial()">
             </div>
             <div id="listaHistorial"></div>
         </div>
@@ -1919,7 +2046,7 @@
         <!-- RANKING -->
         <div id="ranking" class="section">
             <div class="search-filter-container">
-                <input type="text" class="search-box" id="searchRanking" placeholder="Buscar aventurado..." oninput="renderRanking()">
+                <input type="text" class="search-box" id="searchRanking" placeholder="Buscar aventurado..." oninput="debouncedRenderRanking()">
                 <div class="search-filter-separator"></div>
                 <div class="search-filter-wrapper">
                     <select id="filtroRangoRanking" class="search-filter-select" onchange="renderRanking(); ajustarSelectFiltro(this);">
@@ -1953,7 +2080,7 @@
         <!-- ABONADOS -->
         <div id="abonados" class="section">
             <div class="search-filter-container">
-                <input type="text" class="search-box" id="searchAbonados" placeholder="Buscar líder..." oninput="renderAbonados()">
+                <input type="text" class="search-box" id="searchAbonados" placeholder="Buscar líder..." oninput="debouncedRenderAbonados()">
             </div>
             <div class="card" style="margin-bottom: 16px;">
                 <div class="card-title">💰 Resumen de Abonados</div>
@@ -2131,6 +2258,10 @@
                     <input type="number" id="participanteMonto" class="form-input" placeholder="0.00" step="0.01" min="0" inputmode="decimal" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
                 </div>
                 <div class="form-group" style="margin-bottom: 12px;">
+                    <label class="form-label" style="font-size: 12px;">Cupos pagados con este monto</label>
+                    <input type="number" id="participanteCuposPagados" class="form-input" placeholder="1" min="0" step="1" value="1" title="Cantidad de cupos que cubre este pago (se refleja en el resumen de la reserva)">
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px;">
                         <input type="checkbox" id="participanteEnDolares" style="width: 18px; height: 18px; cursor: pointer;">
                         <span>💵 Pagar en dólares efectivo</span>
@@ -2286,19 +2417,56 @@ async function loadUsuarios() {
         // 4.5. UTILIDADES - TOAST Y LOADER
         // =============================================
         
-        // Mostrar/Ocultar Loader
+        // Mostrar/Ocultar Loader (skeleton solo en carga inicial; después solo spinner)
         function showLoader(text = 'Cargando datos...') {
             const loader = document.getElementById('loader');
-            if (loader) {
+            if (!loader) return;
+            if (loader.querySelector('.loader-skeleton')) {
+                loader.innerHTML = '<div class="loader-spinner"></div><div class="loader-text">' + (text || 'Cargando...') + '</div>';
+                loader.style.alignItems = 'center';
+                loader.style.paddingTop = '';
+            } else {
                 const loaderText = loader.querySelector('.loader-text');
                 if (loaderText) loaderText.textContent = text;
-                loader.style.display = 'flex';
             }
+            loader.style.display = 'flex';
         }
 
         function hideLoader() {
             const loader = document.getElementById('loader');
             if (loader) loader.style.display = 'none';
+        }
+
+        /** Debounce: ejecuta fn tras ms ms sin nuevas llamadas (para búsquedas). */
+        function debounce(fn, ms) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => fn.apply(this, args), ms);
+            };
+        }
+
+        /** Escape para contenido HTML (evita XSS). */
+        function escapeHtml(str) {
+            if (str == null) return '';
+            const s = String(str);
+            return s
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        /** Escape para valores en atributos HTML (onclick, title, etc.). Incluye comillas para no romper el atributo. */
+        function escapeAttr(str) {
+            if (str == null) return '';
+            const s = String(str);
+            return s
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
         // Toast Notifications
@@ -2690,15 +2858,15 @@ async function loadUsuarios() {
                 .channel('db-changes')
                 .on('postgres_changes', 
                     { event: '*', schema: 'public', table: 'rutas' },
-                    () => { loadData().then(() => renderAll()); }
+                    () => { loadData().then(() => { renderRutas(); renderReservas(); }); }
                 )
                 .on('postgres_changes',
                     { event: '*', schema: 'public', table: 'reservas' },
-                    () => { loadData().then(() => renderAll()); }
+                    () => { loadData().then(() => { renderReservas(); renderRutas(); }); }
                 )
                 .on('postgres_changes',
                     { event: '*', schema: 'public', table: 'gastos' },
-                    () => { loadData().then(() => renderAll()); }
+                    () => { loadData().then(() => { renderGastos(); renderRutas(); }); }
                 )
                 .on('postgres_changes',
                     { event: '*', schema: 'public', table: 'participantes' },
@@ -2706,6 +2874,82 @@ async function loadUsuarios() {
                 )
                 .subscribe();
         }
+
+        /** Desuscribe el canal Realtime para evitar memory leaks al cerrar/recargar la página. */
+        function destroyRealtimeSync() {
+            if (realtimeChannel && typeof realtimeChannel.unsubscribe === 'function') {
+                realtimeChannel.unsubscribe();
+                realtimeChannel = null;
+            }
+        }
+
+        // Limpiar Realtime al cerrar/ocultar la pestaña
+        if (typeof window !== 'undefined') {
+            window.addEventListener('pagehide', destroyRealtimeSync);
+            window.addEventListener('beforeunload', destroyRealtimeSync);
+        }
+
+        // ========== PULL-TO-REFRESH ==========
+        (function initPullToRefresh() {
+            const PULL_THRESHOLD = 70;
+            const indicator = document.getElementById('pullRefreshIndicator');
+            const labelEl = indicator ? indicator.querySelector('.pull-refresh-label') : null;
+            let startY = 0;
+            let pullDistance = 0;
+
+            function getScrollTop() {
+                return document.documentElement.scrollTop || document.body.scrollTop || 0;
+            }
+
+            function showIndicator(distance) {
+                if (!indicator) return;
+                indicator.classList.add('visible');
+                indicator.classList.remove('refreshing');
+                if (labelEl) labelEl.textContent = distance >= PULL_THRESHOLD ? 'Suelta para actualizar' : 'Desliza para actualizar';
+            }
+
+            function hideIndicator() {
+                if (!indicator) return;
+                indicator.classList.remove('visible', 'refreshing');
+                if (labelEl) labelEl.textContent = 'Suelta para actualizar';
+            }
+
+            async function doRefresh() {
+                if (!indicator || !labelEl) return;
+                indicator.classList.add('refreshing');
+                labelEl.textContent = 'Actualizando...';
+                try {
+                    await loadData();
+                    updateSelects();
+                    renderAll();
+                    showToast('Datos actualizados', 'success');
+                } catch (e) {
+                    console.error('Error en pull-to-refresh:', e);
+                    showToast('Error al actualizar', 'error');
+                }
+                setTimeout(hideIndicator, 300);
+            }
+
+            document.addEventListener('touchstart', function (e) {
+                if (getScrollTop() === 0) startY = e.touches[0].pageY;
+            }, { passive: true });
+
+            document.addEventListener('touchmove', function (e) {
+                if (getScrollTop() > 0) return;
+                const currentY = e.touches[0].pageY;
+                pullDistance = Math.max(0, currentY - startY);
+                if (pullDistance > 20) showIndicator(pullDistance);
+            }, { passive: true });
+
+            document.addEventListener('touchend', function () {
+                if (pullDistance >= PULL_THRESHOLD) {
+                    doRefresh();
+                } else {
+                    hideIndicator();
+                }
+                pullDistance = 0;
+            }, { passive: true });
+        })();
 
         function esMiAccion(payload) {
             const id = payload.new?.id || payload.old?.id;
@@ -2869,6 +3113,8 @@ async function loadUsuarios() {
                 // Limpiar campos del formulario de nueva persona en reserva
                 document.getElementById('participanteNombreCompleto').value = '';
                 document.getElementById('participanteMonto').value = '';
+                const participanteCuposInput = document.getElementById('participanteCuposPagados');
+                if (participanteCuposInput) participanteCuposInput.value = '1';
                 document.getElementById('participanteReferencia').value = '';
                 const participanteEnDolaresInput = document.getElementById('participanteEnDolares');
                 if (participanteEnDolaresInput) participanteEnDolaresInput.checked = false;
@@ -2895,120 +3141,79 @@ async function loadUsuarios() {
             }
         };
 
-        // MODIFICAR updateSelects() - Actualizar TODOS los selects:
-
-function updateSelects() {
-    // Separar rutas activas y archivadas
-    const rutasActivas = data.rutas.filter(r => !r.archivada);
-    const rutasArchivadas = data.rutas.filter(r => r.archivada);
-    
-    // 🔄 SELECT PARA NUEVA RESERVA - SOLO ACTIVAS
-    const selectRuta = document.getElementById('reservaRuta');
-    if (selectRuta) {
-        selectRuta.innerHTML = '<option value="">Selecciona una ruta</option>';
-        rutasActivas.forEach(ruta => {
-            const ocupados = calcularCuposOcupados(ruta.id);
-            const disponibles = calcularCuposDisponibles(ruta.id);
-            const haySobreventa = ocupados > ruta.cupos;
+        /** Genera el HTML de una opción &lt;option&gt; para una ruta (valor = id, texto escapado). */
+        function buildOptionRuta(ruta, opts) {
+            const conDisponibles = opts && opts.conDisponibles === true;
             const numeroRuta = ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
-            const textoDisponibles = haySobreventa 
-                ? `⚠️ Sobrevendida (${ocupados}/${ruta.cupos})` 
-                : `(${disponibles} disponibles)`;
-            selectRuta.innerHTML += `<option value="${ruta.id}">${ruta.nombre} ${numeroRuta} - ${formatearFechaRuta(ruta.fecha)} ${textoDisponibles}</option>`;
-        });
-    }
-
-    // 🔄 SELECT PARA NUEVO GASTO - SOLO ACTIVAS
-    const gastoRuta = document.getElementById('gastoRuta');
-    if (gastoRuta) {
-        gastoRuta.innerHTML = '<option value="">Selecciona una ruta</option>';
-        rutasActivas.forEach(ruta => {
-            const numeroRuta = ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
-            gastoRuta.innerHTML += `<option value="${ruta.id}">${ruta.nombre} ${numeroRuta} - ${formatearFechaRuta(ruta.fecha)}</option>`;
-        });
-    }
-
-    // 🔄 FILTRO RESERVAS - SOLO ACTIVAS
-    const filtroRutaReservas = document.getElementById('filtroRutaReservas');
-    if (filtroRutaReservas) {
-        filtroRutaReservas.innerHTML = '<option value="">Todas las rutas</option>';
-        rutasActivas.forEach(ruta => {
-            const numeroRuta = ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
-            filtroRutaReservas.innerHTML += `<option value="${ruta.id}">${ruta.nombre} ${numeroRuta} - ${formatearFechaRuta(ruta.fecha)}</option>`;
-        });
-    }
-
-    // 🔄 FILTRO PARTICIPANTES - SOLO ACTIVAS
-    const filtroRutaParticipantes = document.getElementById('filtroRutaParticipantes');
-    if (filtroRutaParticipantes) {
-        filtroRutaParticipantes.innerHTML = '<option value="">Todas las rutas</option>';
-        rutasActivas.forEach(ruta => {
-            const numeroRuta = ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
-            filtroRutaParticipantes.innerHTML += `<option value="${ruta.id}">${ruta.nombre} ${numeroRuta} - ${formatearFechaRuta(ruta.fecha)}</option>`;
-        });
-    }
-
-    // 🔄 FILTRO ASISTENCIA - LÍDERES DE RESERVAS ACTIVAS
-    const filtroLiderAsistencia = document.getElementById('filtroLiderAsistencia');
-    if (filtroLiderAsistencia) {
-        // Obtener líderes únicos de reservas activas (no archivadas)
-        const lideresUnicos = new Set();
-        data.reservas.forEach(reserva => {
-            const ruta = data.rutas.find(r => r.id === reserva.rutaId);
-            if (ruta && !ruta.archivada) {
-                lideresUnicos.add(reserva.lider);
+            const nombreEsc = escapeHtml(ruta.nombre);
+            const fecha = formatearFechaRuta(ruta.fecha);
+            let texto = `${nombreEsc} ${numeroRuta} - ${fecha}`;
+            if (conDisponibles) {
+                const ocupados = calcularCuposOcupados(ruta.id);
+                const disponibles = calcularCuposDisponibles(ruta.id);
+                const haySobreventa = ocupados > ruta.cupos;
+                const textoDisponibles = haySobreventa
+                    ? `⚠️ Sobrevendida (${ocupados}/${ruta.cupos})`
+                    : `(${disponibles} disponibles)`;
+                texto += ' ' + textoDisponibles;
             }
-        });
-        
-        // Ordenar líderes alfabéticamente
-        const lideresOrdenados = Array.from(lideresUnicos).sort((a, b) => 
-            a.localeCompare(b, 'es', { sensitivity: 'base' })
-        );
-        
-        filtroLiderAsistencia.innerHTML = '<option value="">Todos los líderes</option>';
-        lideresOrdenados.forEach(lider => {
-            filtroLiderAsistencia.innerHTML += `<option value="${lider}">${lider}</option>`;
-        });
-    }
+            return `<option value="${ruta.id}">${texto}</option>`;
+        }
 
-    // 🔄 FILTRO ASISTENCIA - RUTAS ACTIVAS
-    const filtroRutaAsistencia = document.getElementById('filtroRutaAsistencia');
-    if (filtroRutaAsistencia) {
-        filtroRutaAsistencia.innerHTML = '<option value="">Todas las rutas</option>';
-        rutasActivas.forEach(ruta => {
-            const numeroRuta = ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
-            filtroRutaAsistencia.innerHTML += `<option value="${ruta.id}">${ruta.nombre} ${numeroRuta} - ${formatearFechaRuta(ruta.fecha)}</option>`;
-        });
-    }
+        function updateSelects() {
+            const rutasActivas = data.rutas.filter(r => !r.archivada);
 
-    // 🔄 FILTRO GASTOS - SOLO RUTAS ACTIVAS
-    const filtroRutaGastos = document.getElementById('filtroRutaGastos');
-    if (filtroRutaGastos) {
-        filtroRutaGastos.innerHTML = '<option value="">Todas las rutas</option>';
-        rutasActivas.forEach(ruta => {
-            const numeroRuta = ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
-            filtroRutaGastos.innerHTML += `<option value="${ruta.id}">${ruta.nombre} ${numeroRuta} - ${formatearFechaRuta(ruta.fecha)}</option>`;
-        });
-    }
+            const selectRuta = document.getElementById('reservaRuta');
+            if (selectRuta) {
+                selectRuta.innerHTML = '<option value="">Selecciona una ruta</option>' +
+                    rutasActivas.map(r => buildOptionRuta(r, { conDisponibles: true })).join('');
+            }
 
-    // 🔄 SELECT PARA PARTICIPANTES (líderes)
-    const selectReserva = document.getElementById('participanteReserva');
-    if (selectReserva) {
-        selectReserva.innerHTML = '<option value="">Selecciona un líder</option>';
-        // Solo mostrar líderes de reservas de rutas activas (no archivadas)
-        data.reservas.forEach(reserva => {
-            const ruta = data.rutas.find(r => r.id === reserva.rutaId);
-            // Excluir reservas de rutas archivadas
-            if (!ruta || ruta.archivada) return;
-            
-            const numeroRuta = ruta && ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
-            selectReserva.innerHTML += `<option value="${reserva.lider}">${reserva.lider} - ${ruta.nombre} ${numeroRuta}</option>`;
-        });
-    }
-    
-    // Ajustar estilos de selects de filtro después de actualizar
-    setTimeout(ajustarSelectsFiltro, 50);
-}
+            const opcionesRutaSimple = rutasActivas.map(r => buildOptionRuta(r)).join('');
+            const gastoRuta = document.getElementById('gastoRuta');
+            if (gastoRuta) gastoRuta.innerHTML = '<option value="">Selecciona una ruta</option>' + opcionesRutaSimple;
+
+            const filtroRutaReservas = document.getElementById('filtroRutaReservas');
+            if (filtroRutaReservas) filtroRutaReservas.innerHTML = '<option value="">Todas las rutas</option>' + opcionesRutaSimple;
+
+            const filtroRutaParticipantes = document.getElementById('filtroRutaParticipantes');
+            if (filtroRutaParticipantes) filtroRutaParticipantes.innerHTML = '<option value="">Todas las rutas</option>' + opcionesRutaSimple;
+
+            const filtroLiderAsistencia = document.getElementById('filtroLiderAsistencia');
+            if (filtroLiderAsistencia) {
+                const lideresUnicos = new Set();
+                data.reservas.forEach(reserva => {
+                    const ruta = data.rutas.find(r => r.id === reserva.rutaId);
+                    if (ruta && !ruta.archivada) lideresUnicos.add(reserva.lider);
+                });
+                const lideresOrdenados = Array.from(lideresUnicos).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+                filtroLiderAsistencia.innerHTML = '<option value="">Todos los líderes</option>' +
+                    lideresOrdenados.map(lider => `<option value="${escapeAttr(lider)}">${escapeHtml(lider)}</option>`).join('');
+            }
+
+            const filtroRutaAsistencia = document.getElementById('filtroRutaAsistencia');
+            if (filtroRutaAsistencia) filtroRutaAsistencia.innerHTML = '<option value="">Todas las rutas</option>' + opcionesRutaSimple;
+
+            const filtroRutaGastos = document.getElementById('filtroRutaGastos');
+            if (filtroRutaGastos) filtroRutaGastos.innerHTML = '<option value="">Todas las rutas</option>' + opcionesRutaSimple;
+
+            const selectReserva = document.getElementById('participanteReserva');
+            if (selectReserva) {
+                const optsReserva = data.reservas
+                    .filter(reserva => {
+                        const ruta = data.rutas.find(r => r.id === reserva.rutaId);
+                        return ruta && !ruta.archivada;
+                    })
+                    .map(reserva => {
+                        const ruta = data.rutas.find(r => r.id === reserva.rutaId);
+                        const numeroRuta = ruta && ruta.numero ? `#${String(ruta.numero).padStart(4, '0')}` : '';
+                        return `<option value="${escapeAttr(reserva.lider)}">${escapeHtml(reserva.lider)} - ${escapeHtml(ruta ? ruta.nombre : '')} ${numeroRuta}</option>`;
+                    });
+                selectReserva.innerHTML = '<option value="">Selecciona un líder</option>' + optsReserva.join('');
+            }
+
+            setTimeout(ajustarSelectsFiltro, 50);
+        }
         // CÁLCULOS
         /**
          * Devuelve color y estado de completitud para X/Y (registrados vs cupos).
@@ -3143,13 +3348,13 @@ function updateSelects() {
             return 'Sin ruta';
         }
 
-        /** Rango del aventurado según rutas asistidas. Novato (0-1), luego Bronce (2+). */
-        function calcularRangoAventurado(rutasAsistidas) {
-            if (rutasAsistidas < 2) return { nombre: 'Novato', emoji: '🌱', color: '#22c55e', minRutas: 0 };
-            if (rutasAsistidas <= 4) return { nombre: 'Bronce', emoji: '🥉', color: '#CD7F32', minRutas: 2 };
-            if (rutasAsistidas <= 9) return { nombre: 'Plata', emoji: '🥈', color: '#C0C0C0', minRutas: 5 };
-            if (rutasAsistidas <= 14) return { nombre: 'Oro', emoji: '🥇', color: '#FFD700', minRutas: 10 };
-            if (rutasAsistidas <= 19) return { nombre: 'Platino', emoji: '💎', color: '#E5E4E2', minRutas: 15 };
+        /** Rango del aventurado según asistencias totales (no rutas diferentes). Novato (0-1), luego Bronce (2+). */
+        function calcularRangoAventurado(asistenciasTotales) {
+            if (asistenciasTotales < 2) return { nombre: 'Novato', emoji: '🌱', color: '#22c55e', minRutas: 0 };
+            if (asistenciasTotales <= 4) return { nombre: 'Bronce', emoji: '🥉', color: '#CD7F32', minRutas: 2 };
+            if (asistenciasTotales <= 9) return { nombre: 'Plata', emoji: '🥈', color: '#C0C0C0', minRutas: 5 };
+            if (asistenciasTotales <= 14) return { nombre: 'Oro', emoji: '🥇', color: '#FFD700', minRutas: 10 };
+            if (asistenciasTotales <= 19) return { nombre: 'Platino', emoji: '💎', color: '#E5E4E2', minRutas: 15 };
             return { nombre: 'Diamante', emoji: '✨', color: '#b9f2ff', minRutas: 20 };
         }
 
@@ -3227,7 +3432,8 @@ function updateSelects() {
             });
 
             const rutasAsistidasCount = rutasAsistidasUnicas.size;
-            const rango = calcularRangoAventurado(rutasAsistidasCount);
+            /* Rango por asistencias totales (no por rutas diferentes) */
+            const rango = calcularRangoAventurado(totalAsistidas);
             const siguienteRango = rango ? getSiguienteRango(rango) : null;
 
             return {
@@ -3249,7 +3455,7 @@ function updateSelects() {
                 })),
                 rango: rango,
                 siguienteRango: siguienteRango,
-                progresoHaciaSiguiente: rango ? rutasAsistidasCount - rango.minRutas : 0,
+                progresoHaciaSiguiente: rango ? totalAsistidas - rango.minRutas : 0,
                 totalParaSiguiente: rango && siguienteRango ? siguienteRango.minRutas - rango.minRutas : 0
             };
         }
@@ -3276,7 +3482,8 @@ function updateSelects() {
                 const totalParticipaciones = persona.participaciones.length;
                 const totalAsistidas = persona.participaciones.filter(pa => pa.asiste === true).length;
                 const porcentajeAsistencia = totalParticipaciones > 0 ? Math.round((totalAsistidas / totalParticipaciones) * 100) : 0;
-                const rango = calcularRangoAventurado(rutasAsistidas);
+                /* Rango por asistencias totales (no por rutas diferentes) */
+                const rango = calcularRangoAventurado(totalAsistidas);
                 const siguienteRango = rango ? getSiguienteRango(rango) : null;
                 return {
                     nombre: persona.nombre,
@@ -3286,16 +3493,16 @@ function updateSelects() {
                     porcentajeAsistencia: porcentajeAsistencia,
                     rango: rango,
                     siguienteRango: siguienteRango,
-                    progreso: rango ? rutasAsistidas - rango.minRutas : 0,
+                    progreso: rango ? totalAsistidas - rango.minRutas : 0,
                     totalParaSiguiente: rango && siguienteRango ? siguienteRango.minRutas - rango.minRutas : 0
                 };
-            }).filter(p => p.rango !== null && p.rutasAsistidas >= 2);
+            }).filter(p => p.rango !== null && p.totalAsistidas >= 2);
 
             ranking.sort((a, b) => {
                 const pesoA = ordenRangos[a.rango.nombre] || 0;
                 const pesoB = ordenRangos[b.rango.nombre] || 0;
                 if (pesoB !== pesoA) return pesoB - pesoA;
-                if (b.rutasAsistidas !== a.rutasAsistidas) return b.rutasAsistidas - a.rutasAsistidas;
+                if (b.totalAsistidas !== a.totalAsistidas) return b.totalAsistidas - a.totalAsistidas;
                 if (b.porcentajeAsistencia !== a.porcentajeAsistencia) return b.porcentajeAsistencia - a.porcentajeAsistencia;
                 return (a.nombre || '').localeCompare(b.nombre || '', 'es');
             });
@@ -4065,15 +4272,18 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
             }]);
         if (errorParticipante) throw errorParticipante;
 
-        // Registrar pago opcional
+        // Registrar pago opcional (con cuposPagados para que se refleje en la card de cupos pagados)
         if (monto > 0) {
             const enDolares = document.getElementById('participanteEnDolares')?.checked || false;
+            const cuposPagados = parseInt(document.getElementById('participanteCuposPagados')?.value, 10);
+            const cupos = (Number.isFinite(cuposPagados) && cuposPagados >= 0) ? cuposPagados : (enDolares ? 0 : 1);
             const pagosActuales = reserva.pagos || [];
             pagosActuales.push({
                 monto: monto,
                 referencia: referencia || 'Pago al agregar persona',
                 fecha: new Date().toISOString(),
-                enDolares: enDolares
+                enDolares: enDolares,
+                cuposPagados: cupos
             });
             
             const montoPagadoBs = pagosActuales
@@ -4089,6 +4299,8 @@ async function actualizarCuposReserva(lider, incremento = 1, sinConfirmacion = f
         // Limpiar y cerrar
         document.getElementById('participanteNombreCompleto').value = '';
         document.getElementById('participanteMonto').value = '';
+        const elCupos = document.getElementById('participanteCuposPagados');
+        if (elCupos) elCupos.value = '1';
         document.getElementById('participanteReferencia').value = '';
         if (document.getElementById('participanteEnDolares')) document.getElementById('participanteEnDolares').checked = false;
         
@@ -5162,7 +5374,7 @@ function abrirAgregarPersonaAReserva(lider, nombreRuta) {
                            onchange="toggleAsistenciaGranular('${p.id}', '${cardId}')"
                            onclick="event.stopPropagation();">
                     <span class="attendance-name-compact ${p.asiste ? 'checked' : ''}"
-                          onclick="toggleAsistenciaGranular('${p.id}', '${cardId}'); event.stopPropagation();">${(p.nombre || '').replace(/</g, '&lt;')}</span>
+                          onclick="toggleAsistenciaGranular('${p.id}', '${cardId}'); event.stopPropagation();">${escapeHtml(p.nombre)}</span>
                 </div>
             `).join('');
         }
@@ -5781,18 +5993,17 @@ function formatearFechaCorta(fechaString) {
 
             const tituloEl = document.getElementById('modalHistorialRecurrenteTitulo');
             const cuerpoEl = document.getElementById('modalHistorialRecurrenteCuerpo');
-            const nombreEsc = (nombrePersona || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            const nombreEsc = escapeHtml(nombrePersona || '');
 
             if (tituloEl) {
                 const tituloColor = historial.porcentajeAsistencia >= 70 ? 'var(--success)' : historial.porcentajeAsistencia >= 30 ? '#f59e0b' : 'var(--danger)';
                 tituloEl.innerHTML = `<span style="color: ${tituloColor}">⭐ ${nombreEsc} <span style="font-size: 14px; color: var(--text-secondary);">(${historial.totalRutas} ${historial.totalRutas === 1 ? 'ruta asistida' : 'rutas asistidas'})</span></span>`;
             }
             if (cuerpoEl) {
-                cuerpoEl.innerHTML = `<div style="font-family: 'Poppins', sans-serif; font-size: 13px; line-height: 1.4; white-space: pre-wrap; max-height: 60vh; overflow-y: auto; padding-right: 8px;">${mensaje.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`;
+                cuerpoEl.innerHTML = `<div style="font-family: 'Poppins', sans-serif; font-size: 13px; line-height: 1.4; white-space: pre-wrap; max-height: 60vh; overflow-y: auto; padding-right: 8px;">${escapeHtml(mensaje)}</div>`;
             }
-            window._shareHistorialTexto = mensaje;
             const btnWrap = document.getElementById('btnCompartirHistorialWrap');
-            if (btnWrap) btnWrap.style.display = 'block';
+            if (btnWrap) btnWrap.style.display = 'none';
             const modal = document.getElementById('modalHistorialRecurrente');
             if (modal) modal.classList.add('active');
         }
@@ -5802,6 +6013,7 @@ function formatearFechaCorta(fechaString) {
             if (modal) modal.classList.remove('active');
         }
 
+        /** Comparte por WhatsApp el texto en window._shareHistorialTexto (usado por el perfil de aventurero desde Ranking). */
         function compartirHistorialPorWhatsApp() {
             const texto = window._shareHistorialTexto;
             if (!texto || typeof texto !== 'string') {
@@ -6046,22 +6258,22 @@ function formatearFechaCorta(fechaString) {
                         const rutaFecha = ruta ? formatearFechaCorta(ruta.fecha) : '';
                         
                         const historial = calcularRutasPorPersona(p.nombre);
-                        const nombreEsc = (p.nombre || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        const nombreEscAttr = escapeAttr(p.nombre || '');
                         let badgeHtml = '';
                         if (historial.rango) {
-                            const tooltip = `${historial.rango.emoji} ${historial.rango.nombre}\\n• Rutas asistidas: ${historial.totalRutas}\\n• Participaciones: ${historial.totalParticipaciones}\\n• Asistencias: ${historial.totalAsistidas} ✅\\n• Ausencias: ${historial.totalNoAsistidas} ❌\\n• Tasa: ${historial.porcentajeAsistencia}%`.replace(/"/g, '&quot;');
-                            badgeHtml = `<span style="background: ${historial.rango.color}20; color: ${historial.rango.color}; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; cursor: pointer; border: 1px solid ${historial.rango.color}40; display: inline-flex; align-items: center; gap: 4px;" onclick="verDetalleAventurero('${nombreEsc}')" title="${tooltip}">${historial.rango.emoji} ${historial.rango.nombre}</span>`;
+                            const tooltip = `${historial.rango.emoji} ${historial.rango.nombre}\n• Rutas asistidas: ${historial.totalRutas}\n• Participaciones: ${historial.totalParticipaciones}\n• Asistencias: ${historial.totalAsistidas} ✅\n• Ausencias: ${historial.totalNoAsistidas} ❌\n• Tasa: ${historial.porcentajeAsistencia}%`;
+                            badgeHtml = `<span style="background: ${historial.rango.color}20; color: ${historial.rango.color}; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; cursor: pointer; border: 1px solid ${historial.rango.color}40; display: inline-flex; align-items: center; gap: 4px;" onclick="verDetalleAventurero('${nombreEscAttr}')" title="${escapeAttr(tooltip)}">${historial.rango.emoji} ${historial.rango.nombre}</span>`;
                         }
                         return `
                             <div class="person-item-compact">
                                 <div class="person-info-compact">
                                     <div style="display: flex; align-items: center; gap: 8px;">
-                                        <div class="person-name-compact">${(p.nombre || '').replace(/</g, '&lt;')}</div>
+                                        <div class="person-name-compact">${escapeHtml(p.nombre)}</div>
                                         ${badgeHtml}
                                     </div>
                                     <div class="person-meta-compact">
-                                        <span>👤 ${p.lider}</span>
-                                        <span>📍 ${rutaNombre}</span>
+                                        <span>👤 ${escapeHtml(p.lider)}</span>
+                                        <span>📍 ${escapeHtml(rutaNombre)}</span>
                                         ${rutaFecha ? `<span>📅 ${rutaFecha}</span>` : ''}
                                     </div>
                                 </div>
@@ -6115,16 +6327,16 @@ function formatearFechaCorta(fechaString) {
                 const presentes = participantes.filter(p => p.asiste).length;
                 const total = participantes.length || 1;
                 const porcentaje = Math.round((presentes / total) * 100);
-                const liderEsc = (lider || '').replace(/"/g, '&quot;');
-                const rutaIdEsc = (reserva.rutaId || '').replace(/"/g, '&quot;');
+                const liderEsc = escapeAttr(lider || '');
+                const rutaIdEsc = escapeAttr(reserva.rutaId || '');
                 return `
                     <div class="attendance-group-compact asistencia-card" id="${cardId}" data-lider="${liderEsc}" data-ruta-id="${rutaIdEsc}">
                         <div class="asistencia-compact">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                 <div style="flex: 1;">
-                                    <div class="attendance-title-compact" style="margin-bottom: 4px;">📍 ${(rutaNombre || '').replace(/</g, '&lt;')}${rutaFecha ? ` - ${rutaFecha}` : ''}</div>
+                                    <div class="attendance-title-compact" style="margin-bottom: 4px;">📍 ${escapeHtml(rutaNombre || '')}${rutaFecha ? ` - ${rutaFecha}` : ''}</div>
                                     <div class="attendance-meta-compact" style="margin-bottom: 8px;">
-                                        <span>👤 ${(lider || '').replace(/</g, '&lt;')}</span>
+                                        <span>👤 ${escapeHtml(lider || '')}</span>
                                         <span class="contador-presentes" data-for-card="${cardId}">📊 ${presentes}/${total} presentes</span>
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 12px; font-size: 13px;">
@@ -6631,8 +6843,8 @@ async function marcarTodosPresentes() {
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">
                     <div class="stat"><span class="stat-value">${totalAventurados}</span><span class="stat-label">Aventurados</span></div>
                     <div class="stat"><span class="stat-value">${promedioRutas}</span><span class="stat-label">Prom. rutas</span></div>
-                    <div class="stat"><span class="stat-value">${masRutas ? masRutas.rutasAsistidas : 0}</span><span class="stat-label">Máx. rutas</span>${masRutas ? `<div style="font-size: 10px; color: var(--text-secondary);">${(masRutas.nombre || '').replace(/</g, '&lt;')}</div>` : ''}</div>
-                    <div class="stat"><span class="stat-value">${mejorAsistencia ? mejorAsistencia.porcentajeAsistencia + '%' : '0%'}</span><span class="stat-label">Mejor %</span>${mejorAsistencia ? `<div style="font-size: 10px; color: var(--text-secondary);">${(mejorAsistencia.nombre || '').replace(/</g, '&lt;')}</div>` : ''}</div>
+                    <div class="stat"><span class="stat-value">${masRutas ? masRutas.rutasAsistidas : 0}</span><span class="stat-label">Máx. rutas</span>${masRutas ? `<div style="font-size: 10px; color: var(--text-secondary);">${escapeHtml(masRutas.nombre)}</div>` : ''}</div>
+                    <div class="stat"><span class="stat-value">${mejorAsistencia ? mejorAsistencia.porcentajeAsistencia + '%' : '0%'}</span><span class="stat-label">Mejor %</span>${mejorAsistencia ? `<div style="font-size: 10px; color: var(--text-secondary);">${escapeHtml(mejorAsistencia.nombre)}</div>` : ''}</div>
                 </div>`;
         }
 
@@ -6645,13 +6857,14 @@ async function marcarTodosPresentes() {
             }
             container.innerHTML = `<div class="person-list-compact">${top10.map((aventurero, index) => {
                 const medalla = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
-                const nombreEsc = (aventurero.nombre || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '&lt;');
-                return `<div class="person-item-compact" style="border-left: 4px solid ${aventurero.rango.color}; background: ${index < 3 ? 'rgba(118, 200, 147, 0.05)' : 'transparent'};">
+                const nombreEscAttr = escapeAttr(aventurero.nombre || '');
+                const nombreEscHtml = escapeHtml(aventurero.nombre);
+                return `<div class="person-item-compact" onclick="verDetalleAventurero('${nombreEscAttr}')" style="cursor: pointer; border-left: 4px solid ${aventurero.rango.color}; background: ${index < 3 ? 'rgba(118, 200, 147, 0.05)' : 'transparent'};">
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <div style="width: 32px; height: 32px; background: ${index < 3 ? 'rgba(118, 200, 147, 0.2)' : 'rgba(255,255,255,0.05)'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: ${index < 3 ? '16px' : '14px'}; color: ${index < 3 ? 'var(--accent)' : 'var(--text-secondary)'}; flex-shrink: 0; border: 2px solid ${index < 3 ? 'var(--accent)' : 'transparent'};">${medalla}</div>
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                                <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">${nombreEsc}</div>
+                                <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">${nombreEscHtml}</div>
                                 <span style="background: ${aventurero.rango.color}20; color: ${aventurero.rango.color}; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700;">${aventurero.rango.emoji} ${aventurero.rango.nombre}</span>
                             </div>
                             <div style="font-size: 12px; color: var(--text-secondary); display: flex; gap: 12px;"><span>🏔️ ${aventurero.rutasAsistidas} rutas</span><span>📊 ${aventurero.porcentajeAsistencia}% asistencia</span></div>
@@ -6669,12 +6882,13 @@ async function marcarTodosPresentes() {
                 return;
             }
             container.innerHTML = `<div class="person-list-compact">${ranking.map(aventurero => {
-                const nombreEsc = (aventurero.nombre || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '&lt;');
+                const nombreEscAttr = escapeAttr(aventurero.nombre || '');
+                const nombreEscHtml = escapeHtml(aventurero.nombre);
                 const progPct = aventurero.totalParaSiguiente > 0 ? Math.min(100, (aventurero.progreso / aventurero.totalParaSiguiente) * 100) : 0;
-                return `<div class="person-item-compact" onclick="verDetalleAventurero('${nombreEsc}')" style="cursor: pointer; border-left: 4px solid ${aventurero.rango.color};">
+                return `<div class="person-item-compact" onclick="verDetalleAventurero('${nombreEscAttr}')" style="cursor: pointer; border-left: 4px solid ${aventurero.rango.color};">
                     <div style="flex: 1;">
                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">${nombreEsc}</div>
+                            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">${nombreEscHtml}</div>
                             <span style="background: ${aventurero.rango.color}20; color: ${aventurero.rango.color}; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${aventurero.rango.emoji} ${aventurero.rango.nombre}</span>
                         </div>
                         <div style="font-size: 12px; color: var(--text-secondary); display: flex; gap: 12px; margin-bottom: 8px;">
@@ -6710,13 +6924,15 @@ async function marcarTodosPresentes() {
                     container.innerHTML = `<div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);"><div style="font-size: 32px; margin-bottom: 8px;">💰</div><p>${search ? 'No hay abonados que coincidan' : 'No hay abonados con saldo'}</p>${!search ? `<button type="button" class="btn btn-primary" onclick="abrirModalNuevoAbono()" style="margin-top: 16px;">+ Agregar primer abonado</button>` : ''}</div>`;
                     return;
                 }
-                const liderEsc = (l) => (l || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '&lt;');
                 container.innerHTML = `<div class="person-list-compact">${abonadosFiltrados.map(abonado => {
                     const saldo = parseFloat(abonado.saldo_euros || 0);
                     const colorSaldo = saldo > 100 ? 'var(--success)' : saldo > 20 ? '#f59e0b' : 'var(--text-primary)';
                     const ultima = abonado.ultima_actualizacion ? new Date(abonado.ultima_actualizacion).toLocaleDateString('es-ES') : 'Sin movimientos';
                     const notas = abonado.notas ? (abonado.notas.substring(0, 30) + (abonado.notas.length > 30 ? '...' : '')) : '';
-                    return `<div class="person-item-compact"><div class="person-info-compact"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;"><div class="person-name-compact">${liderEsc(abonado.lider)}</div><span style="font-size: 18px; font-weight: 800; color: ${colorSaldo};">€${saldo.toFixed(2)}</span></div><div class="person-meta-compact"><span>📅 ${ultima}</span>${notas ? `<span>📝 ${liderEsc(notas)}</span>` : ''}</div></div><div style="display: flex; gap: 8px;"><button type="button" class="btn btn-success btn-small" onclick="verMovimientosAbonado('${abonado.id}', '${liderEsc(abonado.lider)}')">📋</button><button type="button" class="btn btn-primary btn-small" onclick="abrirModalCargarSaldo('${liderEsc(abonado.lider)}')">+€</button></div></div>`;
+                    const liderAttr = escapeAttr(abonado.lider || '');
+                    const liderHtml = escapeHtml(abonado.lider);
+                    const notasHtml = notas ? escapeHtml(notas) : '';
+                    return `<div class="person-item-compact"><div class="person-info-compact"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;"><div class="person-name-compact">${liderHtml}</div><span style="font-size: 18px; font-weight: 800; color: ${colorSaldo};">€${saldo.toFixed(2)}</span></div><div class="person-meta-compact"><span>📅 ${ultima}</span>${notas ? `<span>📝 ${notasHtml}</span>` : ''}</div></div><div style="display: flex; gap: 8px;"><button type="button" class="btn btn-success btn-small" onclick="verMovimientosAbonado('${abonado.id}', '${liderAttr}')">📋</button><button type="button" class="btn btn-primary btn-small" onclick="abrirModalCargarSaldo('${liderAttr}')">+€</button></div></div>`;
                 }).join('')}</div>`;
             } catch (err) {
                 console.error('Error cargando abonados:', err);
@@ -6735,8 +6951,7 @@ async function marcarTodosPresentes() {
                 if (errMov) throw errMov;
 
                 const saldoActual = parseFloat(abonado.saldo_euros || 0).toFixed(2);
-                const esc = (s) => (s || '').toString().replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-                let html = `<div style="margin-bottom: 20px;"><div style="font-size: 24px; font-weight: 800; color: var(--accent); margin-bottom: 4px;">${esc(lider)}</div><div style="font-size: 18px; font-weight: 700; color: var(--success);">Saldo actual: €${saldoActual}</div>${abonado.notas ? `<div style="margin-top: 8px; font-size: 14px; color: var(--text-secondary);">📝 ${esc(abonado.notas)}</div>` : ''}</div>`;
+                let html = `<div style="margin-bottom: 20px;"><div style="font-size: 24px; font-weight: 800; color: var(--accent); margin-bottom: 4px;">${escapeHtml(lider)}</div><div style="font-size: 18px; font-weight: 700; color: var(--success);">Saldo actual: €${saldoActual}</div>${abonado.notas ? `<div style="margin-top: 8px; font-size: 14px; color: var(--text-secondary);">📝 ${escapeHtml(abonado.notas)}</div>` : ''}</div>`;
 
                 if (movimientos && movimientos.length > 0) {
                     html += `<div style="margin-bottom: 16px;"><div style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">📋 Historial de Movimientos</div><div style="max-height: 400px; overflow-y: auto; padding-right: 8px;">`;
@@ -6749,7 +6964,7 @@ async function marcarTodosPresentes() {
                         const rutaIdTexto = rutaObj ? (rutaObj.numero != null && rutaObj.numero !== '' ? ('#' + String(rutaObj.numero).padStart(4, '0')) : (rutaObj.nombre || '')) : '';
                         const saldoAntes = parseFloat(mov.saldo_antes || 0).toFixed(2);
                         const saldoDespues = parseFloat(mov.saldo_despues || 0).toFixed(2);
-                        html += `<div style="padding: 12px; background: rgba(118, 200, 147, 0.05); border-radius: 8px; margin-bottom: 8px; border-left: 4px solid ${color};"><div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;"><div style="font-weight: 700; font-size: 14px; color: ${color};">${signo}€${parseFloat(mov.monto_euros || 0).toFixed(2)} (${mov.tipo})</div><div style="font-size: 12px; color: var(--text-secondary);">${fecha}</div></div>${mov.descripcion ? `<div style="font-size: 13px; margin-bottom: 4px;">${esc(mov.descripcion)}</div>` : ''}${rutaIdTexto ? `<div style="font-size: 11px; color: var(--text-secondary);">Ruta: ${esc(rutaIdTexto)}</div>` : ''}<div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Saldo: €${saldoAntes} → €${saldoDespues}</div></div>`;
+                        html += `<div style="padding: 12px; background: rgba(118, 200, 147, 0.05); border-radius: 8px; margin-bottom: 8px; border-left: 4px solid ${color};"><div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;"><div style="font-weight: 700; font-size: 14px; color: ${color};">${signo}€${parseFloat(mov.monto_euros || 0).toFixed(2)} (${mov.tipo})</div><div style="font-size: 12px; color: var(--text-secondary);">${fecha}</div></div>${mov.descripcion ? `<div style="font-size: 13px; margin-bottom: 4px;">${escapeHtml(mov.descripcion)}</div>` : ''}${rutaIdTexto ? `<div style="font-size: 11px; color: var(--text-secondary);">Ruta: ${escapeHtml(rutaIdTexto)}</div>` : ''}<div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Saldo: €${saldoAntes} → €${saldoDespues}</div></div>`;
                     });
                     html += '</div></div>';
                 } else {
@@ -6759,7 +6974,7 @@ async function marcarTodosPresentes() {
                 const tituloEl = document.getElementById('modalHistorialRecurrenteTitulo');
                 const cuerpoEl = document.getElementById('modalHistorialRecurrenteCuerpo');
                 if (tituloEl && cuerpoEl) {
-                    tituloEl.innerHTML = `💰 ${esc(lider)} - Movimientos`;
+                    tituloEl.innerHTML = `💰 ${escapeHtml(lider)} - Movimientos`;
                     cuerpoEl.innerHTML = html;
                     window._shareHistorialTexto = null;
                     const btnWrap = document.getElementById('btnCompartirHistorialWrap');
@@ -6789,14 +7004,20 @@ async function marcarTodosPresentes() {
             window._nombrePersonaHistorialActual = nombre || '';
             const historial = calcularRutasPorPersona(nombre);
             if (!historial.rango) return;
-            const nombreEsc = (nombre || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            const nombreEsc = escapeHtml(nombre || '');
             const progPct = historial.siguienteRango && historial.totalParaSiguiente > 0
-                ? Math.min(100, ((historial.totalRutas - historial.rango.minRutas) / historial.totalParaSiguiente) * 100)
+                ? Math.min(100, (historial.progresoHaciaSiguiente / historial.totalParaSiguiente) * 100)
                 : 0;
+            const faltanAsistencias = historial.siguienteRango ? historial.siguienteRango.minRutas - historial.totalAsistidas : 0;
             const rutasHtml = historial.rutasAsistidas.length > 0
-                ? `<div><div style="font-size: 14px; font-weight: 700; margin-bottom: 12px;">🏔️ Rutas asistidas</div><div style="display: flex; flex-wrap: wrap; gap: 8px;">${historial.rutasAsistidas.slice(0, 8).map(r => `<span style="background: rgba(118, 200, 147, 0.1); padding: 6px 10px; border-radius: 8px; font-size: 12px; border: 1px solid var(--border);">${(r.nombre || '').replace(/</g, '&lt;')}</span>`).join('')}${historial.rutasAsistidas.length > 8 ? `<span style="background: rgba(118, 200, 147, 0.05); padding: 6px 10px; border-radius: 8px; font-size: 12px; color: var(--text-secondary); border: 1px dashed var(--border);">+${historial.rutasAsistidas.length - 8} más</span>` : ''}</div></div>`
+                ? `<div><div style="font-size: 14px; font-weight: 700; margin-bottom: 12px;">🏔️ Rutas asistidas</div><div style="display: flex; flex-wrap: wrap; gap: 8px;">${historial.rutasAsistidas.slice(0, 8).map(r => {
+                    const nombre = escapeHtml(r.nombre || '');
+                    const veces = r.vecesAsistio || 1;
+                    const badgeRepetida = veces > 1 ? ` <span style="background: var(--accent); color: var(--bg-dark); padding: 2px 6px; border-radius: 6px; font-size: 11px; font-weight: 700;">x${veces}</span>` : '';
+                    return `<span style="background: rgba(118, 200, 147, 0.1); padding: 6px 10px; border-radius: 8px; font-size: 12px; border: 1px solid var(--border);">${nombre}${badgeRepetida}</span>`;
+                }).join('')}${historial.rutasAsistidas.length > 8 ? `<span style="background: rgba(118, 200, 147, 0.05); padding: 6px 10px; border-radius: 8px; font-size: 12px; color: var(--text-secondary); border: 1px dashed var(--border);">+${historial.rutasAsistidas.length - 8} más</span>` : ''}</div></div>`
                 : '';
-            const siguienteHtml = historial.siguienteRango ? `<div style="margin-bottom: 20px; padding: 16px; background: rgba(118, 200, 147, 0.1); border-radius: 12px;"><div style="font-size: 14px; font-weight: 700; margin-bottom: 8px; color: ${historial.siguienteRango.color}">${historial.siguienteRango.emoji} Próximo rango: ${historial.siguienteRango.nombre}</div><div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Necesitas ${historial.siguienteRango.minRutas - historial.totalRutas} ruta${historial.siguienteRango.minRutas - historial.totalRutas !== 1 ? 's' : ''} más</div><div class="progress-bar" style="height: 8px; background: rgba(255,255,255,0.1); margin-bottom: 4px;"><div style="height: 100%; width: ${progPct}%; background: ${historial.siguienteRango.color}; border-radius: 4px;"></div></div><div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary);"><span>${historial.progresoHaciaSiguiente}/${historial.totalParaSiguiente}</span><span>${progPct.toFixed(0)}%</span></div></div>` : '';
+            const siguienteHtml = historial.siguienteRango ? `<div style="margin-bottom: 20px; padding: 16px; background: rgba(118, 200, 147, 0.1); border-radius: 12px;"><div style="font-size: 14px; font-weight: 700; margin-bottom: 8px; color: ${historial.siguienteRango.color}">${historial.siguienteRango.emoji} Próximo rango: ${historial.siguienteRango.nombre}</div><div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Necesitas ${faltanAsistencias} asistencia${faltanAsistencias !== 1 ? 's' : ''} más</div><div class="progress-bar" style="height: 8px; background: rgba(255,255,255,0.1); margin-bottom: 4px;"><div style="height: 100%; width: ${progPct}%; background: ${historial.siguienteRango.color}; border-radius: 4px;"></div></div><div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary);"><span>${historial.progresoHaciaSiguiente}/${historial.totalParaSiguiente}</span><span>${progPct.toFixed(0)}%</span></div></div>` : '';
             const html = `<div style="text-align: center; margin-bottom: 20px;"><div style="font-size: 48px; margin-bottom: 8px;">${historial.rango.emoji}</div><div style="font-size: 20px; font-weight: 800; color: ${historial.rango.color}; margin-bottom: 4px;">${historial.rango.nombre}</div><div style="font-size: 14px; color: var(--text-secondary);">${nombreEsc}</div></div><div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;"><div class="stat"><span class="stat-value" style="color: ${historial.rango.color};">${historial.totalRutas}</span><span class="stat-label">Rutas asistidas</span></div><div class="stat"><span class="stat-value">${historial.totalParticipaciones}</span><span class="stat-label">Participaciones</span></div><div class="stat"><span class="stat-value" style="color: var(--success);">${historial.totalAsistidas}</span><span class="stat-label">✅ Asistencias</span></div><div class="stat"><span class="stat-value" style="color: var(--danger);">${historial.totalNoAsistidas}</span><span class="stat-label">❌ Ausencias</span></div></div><div style="margin-bottom: 20px;"><div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">📊 Tasa de asistencia</div><div class="progress-bar" style="height: 12px; margin-bottom: 8px;"><div class="progress-fill" style="width: ${historial.porcentajeAsistencia}%;"></div></div><div style="display: flex; justify-content: space-between; font-size: 12px;"><span>${historial.porcentajeAsistencia}%</span><span>${historial.totalAsistidas}/${historial.totalParticipaciones}</span></div></div>${siguienteHtml}${rutasHtml}`;
             const tituloEl = document.getElementById('modalHistorialRecurrenteTitulo');
             const cuerpoEl = document.getElementById('modalHistorialRecurrenteCuerpo');
@@ -6804,20 +7025,22 @@ async function marcarTodosPresentes() {
                 tituloEl.innerHTML = `${historial.rango.emoji} ${nombreEsc} - ${historial.rango.nombre}`;
                 cuerpoEl.innerHTML = html;
                 let textoShare = `*${historial.rango.emoji} ${historial.rango.nombre}*\n\n`;
-                textoShare += `👤 ${nombreEsc}\n\n`;
-                textoShare += `📊 *Estadísticas*\n`;
-                textoShare += `• Rutas asistidas: ${historial.totalRutas}\n`;
-                textoShare += `• Participaciones: ${historial.totalParticipaciones}\n`;
-                textoShare += `• ✅ Asistencias: ${historial.totalAsistidas}\n`;
-                textoShare += `• ❌ Ausencias: ${historial.totalNoAsistidas}\n`;
-                textoShare += `• Tasa de asistencia: ${historial.porcentajeAsistencia}%\n\n`;
+                textoShare += `👤 ${(nombre || '').replace(/\*/g, '')}\n\n`;
+                textoShare += `📊 *Estadísticas* (rango por asistencias)\n`;
+                textoShare += `• Rutas diferentes: ${historial.totalRutas}\n`;
+                textoShare += `• Participaciones: ${historial.totalParticipaciones}\n\n`;
                 if (historial.rutasAsistidas.length > 0) {
                     textoShare += `🏔️ *Rutas asistidas:*\n`;
-                    historial.rutasAsistidas.slice(0, 15).forEach(r => { textoShare += `• ${(r.nombre || '').replace(/\*/g, '')}\n`; });
+                    historial.rutasAsistidas.slice(0, 15).forEach(r => {
+                        const veces = r.vecesAsistio || 1;
+                        const sufijo = veces > 1 ? ` x${veces}` : '';
+                        textoShare += `• ${(r.nombre || '').replace(/\*/g, '')}${sufijo}\n`;
+                    });
                     if (historial.rutasAsistidas.length > 15) textoShare += `• +${historial.rutasAsistidas.length - 15} más\n`;
                 }
                 if (historial.siguienteRango) {
-                    textoShare += `\n🎯 Próximo rango: ${historial.siguienteRango.emoji} ${historial.siguienteRango.nombre} (faltan ${historial.siguienteRango.minRutas - historial.totalRutas} rutas)`;
+                    const faltan = historial.siguienteRango.minRutas - historial.totalAsistidas;
+                    textoShare += `\n🎯 Próximo rango: ${historial.siguienteRango.emoji} ${historial.siguienteRango.nombre} (faltan ${faltan} asistencias)`;
                 }
                 window._shareHistorialTexto = textoShare;
                 const btnWrap = document.getElementById('btnCompartirHistorialWrap');
@@ -6839,6 +7062,17 @@ async function marcarTodosPresentes() {
             if (typeof renderAbonados === 'function') renderAbonados();
             setTimeout(ajustarSelectsFiltro, 100);
         }
+
+        // Versiones con debounce para inputs de búsqueda (300 ms)
+        const DEBOUNCE_MS = 300;
+        const debouncedRenderRutas = debounce(renderRutas, DEBOUNCE_MS);
+        const debouncedRenderReservas = debounce(renderReservas, DEBOUNCE_MS);
+        const debouncedRenderParticipantes = debounce(renderParticipantes, DEBOUNCE_MS);
+        const debouncedRenderAsistencia = debounce(renderAsistencia, DEBOUNCE_MS);
+        const debouncedRenderGastos = debounce(renderGastos, DEBOUNCE_MS);
+        const debouncedRenderHistorial = debounce(renderHistorial, DEBOUNCE_MS);
+        const debouncedRenderRanking = debounce(renderRanking, DEBOUNCE_MS);
+        const debouncedRenderAbonados = typeof renderAbonados === 'function' ? debounce(renderAbonados, DEBOUNCE_MS) : function () {};
 
         // --- FUNCIÓN PARA AJUSTAR ESTILO DE SELECTS DE FILTRO ---
         function ajustarSelectFiltro(selectElement) {
