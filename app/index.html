@@ -150,7 +150,7 @@
             z-index: 9990;
             background: var(--bg-card);
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(8, 1fr);
             border-bottom: 2px solid var(--border);
             margin-top: 0;
             box-shadow: 0 2px 8px var(--shadow);
@@ -1573,7 +1573,7 @@
             
             /* Nav tabs más compactos en iPhone - solo iconos, tamaño más grande */
             .nav-tabs {
-                grid-template-columns: repeat(7, 1fr);
+                grid-template-columns: repeat(8, 1fr);
                 gap: 0;
             }
             
@@ -1716,8 +1716,11 @@
             <div class="form-group" style="margin-bottom: 16px;">
                 <p id="modalHistorialRecurrenteCuerpo" style="font-size: 14px; color: var(--text-primary); white-space: pre-line; line-height: 1.6;"></p>
             </div>
-            <div class="btn-group" style="margin-top: 16px;">
-                <button class="btn btn-primary" style="width: 100%;" onclick="cerrarModalHistorialRecurrente()">Cerrar</button>
+            <div id="btnCompartirHistorialWrap" style="display: none; margin-top: 16px; text-align: center;">
+                <button type="button" class="btn btn-primary" style="width: 100%; background: #25D366; border-color: #25D366; color: white;" onclick="compartirHistorialPorWhatsApp()">📱 Compartir por WhatsApp</button>
+            </div>
+            <div style="margin-top: 16px; text-align: center;">
+                <button type="button" class="btn btn-primary" style="width: 100%; max-width: 100%;" onclick="cerrarModalHistorialRecurrente()">Cerrar</button>
             </div>
         </div>
     </div>
@@ -1750,13 +1753,16 @@
         📋 <span class="text">Asistencia</span>
     </button>
     <button class="nav-tab" onclick="showTab('gastos')">
-        💰 <span class="text">Gastos</span>
+        💸 <span class="text">Gastos</span>
     </button>
     <button class="nav-tab" onclick="showTab('historial')">
         📚 <span class="text">Historial</span>
     </button>
     <button class="nav-tab" onclick="showTab('ranking')">
         🏆 <span class="text">Ranking</span>
+    </button>
+    <button class="nav-tab" onclick="showTab('abonados')">
+        💰 <span class="text">Abonados</span>
     </button>
         </div>
 
@@ -1877,6 +1883,7 @@
                         <option value="Oro">🥇 Oro</option>
                         <option value="Plata">🥈 Plata</option>
                         <option value="Bronce">🥉 Bronce</option>
+                        <option value="Novato">🌱 Novato</option>
                     </select>
                 </div>
             </div>
@@ -1891,6 +1898,30 @@
             <div class="card">
                 <div class="card-title">📊 Ranking Completo</div>
                 <div id="listaRanking" style="padding: 16px 0;">Cargando...</div>
+            </div>
+        </div>
+
+        <!-- ABONADOS -->
+        <div id="abonados" class="section">
+            <div class="search-filter-container">
+                <input type="text" class="search-box" id="searchAbonados" placeholder="Buscar líder..." oninput="renderAbonados()">
+            </div>
+            <div class="card" style="margin-bottom: 16px;">
+                <div class="card-title">💰 Resumen de Abonados</div>
+                <div id="resumenAbonados" style="padding: 16px 0;">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                        <div class="stat"><span class="stat-value" id="totalAbonados">0</span><span class="stat-label">Total abonados</span></div>
+                        <div class="stat"><span class="stat-value" id="totalSaldoEuros">€0</span><span class="stat-label">Saldo total</span></div>
+                        <div class="stat"><span class="stat-value" id="promedioSaldo">€0</span><span class="stat-label">Promedio</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div class="card-title">👥 Abonados Activos</div>
+                    <button type="button" class="btn btn-success btn-small" onclick="abrirModalNuevoAbono()">+ Nuevo Abono</button>
+                </div>
+                <div id="listaAbonados" style="padding: 16px 0;">Cargando abonados...</div>
             </div>
         </div>
     </div>
@@ -1956,15 +1987,29 @@
                     <input type="number" id="reservaMontoPagado" class="form-input" placeholder="17500" step="0.01" min="0" inputmode="decimal" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
                 </div>
             </div>
+            <div class="form-group" id="reservaCuposMontoInicialGroup">
+                <label class="form-label">Cupos pagados con este monto</label>
+                <input type="number" id="reservaCuposMontoInicial" class="form-input" placeholder="Ej: 2" min="0" step="1" value="1">
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Solo aplica cuando el pago es en Bs</div>
+            </div>
             <div class="form-group">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                    <input type="checkbox" id="reservaEnDolares" style="width: 18px; height: 18px; cursor: pointer;">
+                    <input type="checkbox" id="reservaEnDolares" style="width: 18px; height: 18px; cursor: pointer;" onchange="toggleReferenciaNuevaReserva()">
                     <span>💵 Pagar en dólares efectivo</span>
                 </label>
             </div>
-            <div class="form-group">
+            <div id="grupoReferenciaPagoNuevaReserva" class="form-group">
                 <label class="form-label">📎 Referencia del Pago Inicial (Opcional)</label>
                 <input type="text" id="reservaReferenciaPago" class="form-input" placeholder="Ej: 001, 12345" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+            </div>
+            <div id="infoSaldoLiderNuevaReserva" style="display: none; background: rgba(6, 182, 212, 0.1); padding: 14px; border-radius: 14px; margin-bottom: 16px; border: 1px solid rgba(6, 182, 212, 0.3);">
+                <div style="font-size: 13px; font-weight: 700; color: #06b6d4; margin-bottom: 8px;">💰 Líder con saldo</div>
+                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 6px;">Saldo disponible: <strong id="saldoLiderNuevaReserva">€0.00</strong></div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="font-size: 12px;">Cupos a pagar con saldo</label>
+                    <input type="number" id="reservaCuposConSaldo" class="form-input" placeholder="0" min="0" step="1" value="0" style="max-width: 120px;">
+                    <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Máx: <span id="reservaCuposConSaldoMax">0</span> cupos</div>
+                </div>
             </div>
             
             <!-- SECCIÓN DE PERSONAS -->
@@ -2059,6 +2104,27 @@
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">💰 Gestión de Pagos</div>
             <div id="detalleReservaContent"></div>
+        </div>
+    </div>
+
+    <!-- MODAL: CARGAR SALDO ABONADO -->
+    <div id="modalCargaAbonados" class="modal" onclick="closeModalOnBackdrop(event, 'modalCargaAbonados')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">💰 Cargar Saldo a Líder</div>
+            <div class="form-group">
+                <label class="form-label">Nombre del líder</label>
+                <input type="text" id="inputLiderAbono" class="form-input" placeholder="Nombre del líder">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Saldo en €</label>
+                <input type="number" id="inputSaldoEuros" class="form-input" placeholder="0.00" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notas (opcional)</label>
+                <textarea id="inputNotasAbono" class="form-input" placeholder="Notas" rows="2"></textarea>
+            </div>
+            <button type="button" class="btn btn-success" onclick="cargarAbonadoManualDesdeModal()">Cargar Saldo</button>
+            <button type="button" class="btn btn-outline" style="margin-top: 12px;" onclick="closeModal('modalCargaAbonados')">Cerrar</button>
         </div>
     </div>
 
@@ -2440,9 +2506,7 @@ async function loadUsuarios() {
 
         function calcularCuposPagados(reserva) {
             if (!reserva.pagos || !Array.isArray(reserva.pagos)) return 0;
-            return reserva.pagos
-                .filter(p => !p.enDolares)
-                .reduce((sum, p) => sum + (p.cuposPagados || 0), 0);
+            return reserva.pagos.reduce((sum, p) => sum + (p.cuposPagados || 0), 0);
         }
 
         function calcularEurosRecibidos(reserva, ruta) {
@@ -2456,14 +2520,22 @@ async function loadUsuarios() {
                 return { totalBs: 0, totalDolares: 0, cuposPagados: 0 };
             }
             return reserva.pagos.reduce((totales, pago) => {
+                totales.cuposPagados += pago.cuposPagados || 0;
                 if (pago.enDolares) {
                     totales.totalDolares += pago.monto || 0;
                 } else {
                     totales.totalBs += pago.monto || 0;
-                    totales.cuposPagados += pago.cuposPagados || 0;
                 }
                 return totales;
             }, { totalBs: 0, totalDolares: 0, cuposPagados: 0 });
+        }
+
+        /** Cupos pagados con saldo (para mostrar en resumen). */
+        function calcularCuposPagadosConSaldo(reserva) {
+            if (!reserva.pagos || !Array.isArray(reserva.pagos)) return 0;
+            return reserva.pagos
+                .filter(p => p.saldo_usado != null && p.saldo_usado > 0)
+                .reduce((sum, p) => sum + (p.cuposPagados || 0), 0);
         }
 
         // =============================================
@@ -3022,9 +3094,9 @@ function updateSelects() {
             return 'Sin ruta';
         }
 
-        /** Rango del aventurado según rutas asistidas (2+). null si &lt; 2 */
+        /** Rango del aventurado según rutas asistidas. Novato (0-1), luego Bronce (2+). */
         function calcularRangoAventurado(rutasAsistidas) {
-            if (rutasAsistidas < 2) return null;
+            if (rutasAsistidas < 2) return { nombre: 'Novato', emoji: '🌱', color: '#22c55e', minRutas: 0 };
             if (rutasAsistidas <= 4) return { nombre: 'Bronce', emoji: '🥉', color: '#CD7F32', minRutas: 2 };
             if (rutasAsistidas <= 9) return { nombre: 'Plata', emoji: '🥈', color: '#C0C0C0', minRutas: 5 };
             if (rutasAsistidas <= 14) return { nombre: 'Oro', emoji: '🥇', color: '#FFD700', minRutas: 10 };
@@ -3035,6 +3107,7 @@ function updateSelects() {
         /** Siguiente rango en la escala (para barra de progreso) */
         function getSiguienteRango(rango) {
             if (!rango) return null;
+            if (rango.nombre === 'Novato') return calcularRangoAventurado(2);
             if (rango.nombre === 'Bronce') return calcularRangoAventurado(5);
             if (rango.nombre === 'Plata') return calcularRangoAventurado(10);
             if (rango.nombre === 'Oro') return calcularRangoAventurado(15);
@@ -3148,7 +3221,7 @@ function updateSelects() {
                 }
             });
 
-            const ordenRangos = { 'Diamante': 5, 'Platino': 4, 'Oro': 3, 'Plata': 2, 'Bronce': 1 };
+            const ordenRangos = { 'Diamante': 6, 'Platino': 5, 'Oro': 4, 'Plata': 3, 'Bronce': 2, 'Novato': 1 };
             let ranking = Array.from(personasMap.values()).map(persona => {
                 const rutasAsistidas = persona.rutasAsistidasSet.size;
                 const totalParticipaciones = persona.participaciones.length;
@@ -3235,11 +3308,10 @@ function updateSelects() {
 
         // MOSTRAR PRECIO REFERENCIAL EN MODAL RESERVA
         function mostrarPrecioRuta() {
-            const rutaNombre = document.getElementById('reservaRuta').value;
-            if (rutaNombre) {
-                const ruta = data.rutas.find(r => r.nombre === rutaNombre);
+            const rutaId = document.getElementById('reservaRuta').value;
+            if (rutaId) {
+                const ruta = data.rutas.find(r => r.id === rutaId);
                 if (ruta) {
-                    // Usar campo normalizado (siempre disponible después de loadData/saveData)
                     const precioEuros = ruta.precioEuros || 0;
                     document.getElementById('infoPrecioRuta').style.display = 'block';
                     document.getElementById('precioReferencialRuta').textContent = `${precioEuros}€ por cupo`;
@@ -3249,6 +3321,38 @@ function updateSelects() {
             } else {
                 document.getElementById('infoPrecioRuta').style.display = 'none';
             }
+        }
+
+        async function actualizarSaldoLiderNuevaReserva() {
+            const lider = (document.getElementById('reservaLider')?.value || '').trim();
+            const rutaId = document.getElementById('reservaRuta')?.value;
+            const cantidad = parseInt(document.getElementById('reservaCantidad')?.value, 10) || 0;
+            const block = document.getElementById('infoSaldoLiderNuevaReserva');
+            const inputCupos = document.getElementById('reservaCuposConSaldo');
+            const elMax = document.getElementById('reservaCuposConSaldoMax');
+            const elSaldo = document.getElementById('saldoLiderNuevaReserva');
+            if (!block || !inputCupos || !elMax || !elSaldo) return;
+            if (!lider || !rutaId) {
+                block.style.display = 'none';
+                inputCupos.value = '0';
+                return;
+            }
+            const ruta = data.rutas.find(r => r.id === rutaId);
+            const precioCupo = ruta ? (ruta.precioEuros || 0) : 0;
+            const saldo = await obtenerSaldoLider(lider);
+            if (saldo <= 0 || precioCupo <= 0) {
+                block.style.display = 'none';
+                inputCupos.value = '0';
+                return;
+            }
+            const maxCupos = Math.floor(saldo / precioCupo);
+            block.style.display = 'block';
+            elSaldo.textContent = '€' + saldo.toFixed(2);
+            elMax.textContent = String(maxCupos);
+            inputCupos.max = maxCupos;
+            const actual = parseInt(inputCupos.value, 10) || 0;
+            if (actual > maxCupos) inputCupos.value = maxCupos;
+            if (actual === 0 && maxCupos > 0 && cantidad > 0) inputCupos.value = Math.min(cantidad, maxCupos);
         }
 
         // GESTIÓN DE PERSONAS TEMPORALES EN RESERVA
@@ -3356,6 +3460,7 @@ function updateSelects() {
         function actualizarPersonasEnReserva() {
             mostrarPrecioRuta();
             renderPersonasTemporales();
+            actualizarSaldoLiderNuevaReserva();
         }
 
         /**
@@ -3560,45 +3665,74 @@ function updateSelects() {
                 if (!continuar) return;
             }
 
+            const cuposConSaldo = parseInt(document.getElementById('reservaCuposConSaldo')?.value, 10) || 0;
+            const precioCupo = ruta.precioEuros || 0;
+            let saldoUsar = 0;
+            if (cuposConSaldo > 0 && precioCupo > 0) {
+                saldoUsar = cuposConSaldo * precioCupo;
+                const saldoDisponible = await obtenerSaldoLider(lider);
+                if (saldoUsar > saldoDisponible) {
+                    showToast(`Saldo insuficiente. Necesitas €${saldoUsar.toFixed(2)}, disponible: €${saldoDisponible.toFixed(2)}`, 'error');
+                    return;
+                }
+                if (cuposConSaldo > cantidad) {
+                    showToast('Cupos a pagar con saldo no pueden superar los cupos reservados', 'warning');
+                    return;
+                }
+            }
+
             try {
                 showLoader('Creando reserva...');
                 
-                // Crear la reserva
                 const referenciaPago = document.getElementById('reservaReferenciaPago').value.trim();
                 const enDolares = document.getElementById('reservaEnDolares')?.checked || false;
+                const cuposMontoInicial = parseInt(document.getElementById('reservaCuposMontoInicial')?.value, 10);
                 const pagosIniciales = [];
                 if (montoPagado > 0) {
                     pagosIniciales.push({
                         monto: montoPagado,
                         referencia: referenciaPago || 'Pago inicial',
                         fecha: new Date().toISOString(),
-                        enDolares: enDolares
+                        enDolares: enDolares,
+                        cuposPagados: enDolares ? 0 : (isNaN(cuposMontoInicial) || cuposMontoInicial < 1 ? 1 : cuposMontoInicial)
+                    });
+                }
+                if (cuposConSaldo > 0 && saldoUsar > 0) {
+                    pagosIniciales.push({
+                        monto: 0,
+                        cuposPagados: cuposConSaldo,
+                        enDolares: false,
+                        saldo_usado: saldoUsar,
+                        referencia: referenciaPago || 'Pago con saldo',
+                        fecha: new Date().toISOString()
                     });
                 }
                 
-                // Solo contar Bs para monto_pagado (los gastos son en Bs)
                 const montoPagadoBs = enDolares ? 0 : montoPagado;
 
                 const { data: nuevaReserva, error: errorReserva } = await db
                     .from('reservas')
                     .insert([{ 
                         lider, 
-                        ruta_id: rutaId, // 🔥 CAMBIO: Usar ruta_id con el UUID
+                        ruta_id: rutaId,
                         cantidad, 
                         monto_pagado: montoPagadoBs, 
-                        pagos: pagosIniciales 
+                        pagos: pagosIniciales,
+                        abonado_euros: saldoUsar || null,
+                        pagado_con_abono: saldoUsar > 0
                     }])
                     .select()
                     .single();
 
                 if (errorReserva) throw errorReserva;
 
-                // AUTO-REGISTRO DEL LÍDER (asociado a esta ruta)
-                // 🔥 CORRECCIÓN: Usar nombre de ruta del objeto ruta
+                // AUTO-REGISTRO DEL LÍDER Y PERSONAS TEMPORALES — justo después de crear la reserva,
+                // para que SIEMPRE se ejecute (con o sin saldo). Si falla el bloque de saldo después,
+                // el líder ya estará en Asistencia.
                 const liderExiste = data.participantes.find(p => 
                     p.nombre.toLowerCase() === lider.toLowerCase() && 
                     p.lider === lider &&
-                    (p.ruta_nombre || p.ruta) === ruta.nombre
+                    (p.rutaId === rutaId || p.ruta_id === rutaId)
                 );
                 
                 if (!liderExiste) {
@@ -3607,27 +3741,26 @@ function updateSelects() {
                         .insert([{
                             nombre: lider,
                             lider: lider,
-                            ruta_id: rutaId, // 🔥 CORRECCIÓN: Usar ruta_id (UUID) para integridad
-                            ruta_nombre: ruta.nombre, // Mantener por compatibilidad
+                            ruta_id: rutaId,
+                            ruta_nombre: ruta.nombre,
                             asiste: false
                         }]);
                 }
                 
-                // Agregar las personas temporales (todas asociadas a este líder y ruta)
                 const participantesInsert = [];
                 personasTemporales.forEach(nombre => {
                     const existe = data.participantes.find(p => 
                         p.nombre.toLowerCase() === nombre.toLowerCase() && 
                         p.lider === lider &&
-                        (p.ruta_nombre || p.ruta) === ruta.nombre
+                        (p.rutaId === rutaId || p.ruta_id === rutaId)
                     );
                     
                     if (!existe) {
                         participantesInsert.push({
                             nombre: nombre,
                             lider: lider,
-                            ruta_id: rutaId, // 🔥 CORRECCIÓN: Usar ruta_id (UUID) para integridad
-                            ruta_nombre: ruta.nombre, // Mantener por compatibilidad
+                            ruta_id: rutaId,
+                            ruta_nombre: ruta.nombre,
                             asiste: false
                         });
                     }
@@ -3636,17 +3769,38 @@ function updateSelects() {
                 if (participantesInsert.length > 0) {
                     await db.from('participantes').insert(participantesInsert);
                 }
+
+                if (saldoUsar > 0) {
+                    const { abonado, saldoDespues } = await registrarMovimientoAbono({
+                        lider: lider,
+                        tipo: 'uso',
+                        monto_euros: -saldoUsar,
+                        descripcion: 'Pago al crear reserva',
+                        referencia: referenciaPago || ('Ruta ' + rutaId),
+                        ruta_id: rutaId
+                    });
+                    if (saldoDespues <= 0 && abonado && abonado.id) {
+                        await db.from('abonados').delete().eq('id', abonado.id);
+                    }
+                    if (typeof renderAbonados === 'function') renderAbonados();
+                }
                 
                 // Limpiar formulario
                 document.getElementById('reservaLider').value = '';
                 document.getElementById('reservaRuta').value = '';
                 document.getElementById('reservaCantidad').value = '';
                 document.getElementById('reservaMontoPagado').value = '';
+                const reservaCuposMontoInicialEl = document.getElementById('reservaCuposMontoInicial');
+                if (reservaCuposMontoInicialEl) reservaCuposMontoInicialEl.value = '1';
                 document.getElementById('reservaReferenciaPago').value = '';
                 const reservaEnDolaresInput2 = document.getElementById('reservaEnDolares');
                 if (reservaEnDolaresInput2) reservaEnDolaresInput2.checked = false;
                 document.getElementById('personaNombreInput').value = '';
                 document.getElementById('infoPrecioRuta').style.display = 'none';
+                const infoSaldo = document.getElementById('infoSaldoLiderNuevaReserva');
+                if (infoSaldo) infoSaldo.style.display = 'none';
+                const reservaCuposConSaldoEl = document.getElementById('reservaCuposConSaldo');
+                if (reservaCuposConSaldoEl) reservaCuposConSaldoEl.value = '0';
                 personasTemporales = [];
                 renderPersonasTemporales();
                 
@@ -3916,17 +4070,26 @@ async function agregarPersonaRapida(lider, ruta) {
 }
 
 
-        /** Toggle Bs / $ efectivo en formulario de pago: muestra/oculta campos de cupos */
+        function toggleReferenciaNuevaReserva() {
+            const enDolares = document.getElementById('reservaEnDolares')?.checked || false;
+            const grupo = document.getElementById('grupoReferenciaPagoNuevaReserva');
+            if (grupo) grupo.style.display = enDolares ? 'none' : 'block';
+        }
+
+        /** Toggle Bs / $ efectivo en formulario de pago: muestra/oculta campos y referencia */
         function toggleTipoPago(tipo) {
             const camposBs = document.getElementById('camposBsPago');
             const camposDolares = document.getElementById('camposDolaresPago');
+            const grupoRef = document.getElementById('grupoReferenciaPagoDetalle');
             if (!camposBs || !camposDolares) return;
             if (tipo === 'bs') {
                 camposBs.style.display = 'block';
                 camposDolares.style.display = 'none';
+                if (grupoRef) grupoRef.style.display = 'block';
             } else {
                 camposBs.style.display = 'none';
                 camposDolares.style.display = 'block';
+                if (grupoRef) grupoRef.style.display = 'none';
             }
         }
 
@@ -3944,11 +4107,12 @@ async function agregarPersonaRapida(lider, ruta) {
                 actualizarPagos(lider, rutaId, 'bs', monto, cupos, referencia);
             } else {
                 const monto = parseFloat((document.getElementById('nuevoPagoMontoDolares') || {}).value);
+                const cupos = parseInt((document.getElementById('nuevoPagoCuposDolares') || {}).value, 10) || 0;
                 if (!monto || monto < 0) {
                     showToast('Ingresa un monto en $ válido', 'warning', 'Monto Inválido');
                     return;
                 }
-                actualizarPagos(lider, rutaId, 'dolares', monto, 0, referencia);
+                actualizarPagos(lider, rutaId, 'dolares', monto, cupos, referencia);
             }
         }
 
@@ -3966,7 +4130,7 @@ async function agregarPersonaRapida(lider, ruta) {
                 referencia: referencia || '',
                 fecha: new Date().toISOString(),
                 enDolares: enDolares,
-                cuposPagados: enDolares ? 0 : (parseInt(cupos, 10) || 0)
+                cuposPagados: parseInt(cupos, 10) || 0
             };
             try {
                 const pagosActuales = reserva.pagos || [];
@@ -3984,10 +4148,12 @@ async function agregarPersonaRapida(lider, ruta) {
                 const elBs = document.getElementById('nuevoPagoMontoBs');
                 const elCupos = document.getElementById('nuevoPagoCupos');
                 const elDol = document.getElementById('nuevoPagoMontoDolares');
+                const elCuposDol = document.getElementById('nuevoPagoCuposDolares');
                 const elRef = document.getElementById('nuevoPagoReferencia');
                 if (elBs) elBs.value = '';
                 if (elCupos) elCupos.value = '';
                 if (elDol) elDol.value = '';
+                if (elCuposDol) elCuposDol.value = '1';
                 if (elRef) elRef.value = '';
                 await saveData(true);
                 renderReservas();
@@ -3998,6 +4164,265 @@ async function agregarPersonaRapida(lider, ruta) {
             } catch (error) {
                 console.error('Error:', error);
                 showToast('Error al registrar el pago: ' + error.message, 'error', 'Error');
+            }
+        }
+
+        // ========== ABONADOS (saldo en € por líder) ==========
+        async function obtenerSaldoLider(lider) {
+            try {
+                const { data, error } = await db.from('abonados').select('saldo_euros').eq('lider', lider).single();
+                if (error && error.code !== 'PGRST116') throw error;
+                return data ? parseFloat(data.saldo_euros || 0) : 0;
+            } catch (e) {
+                console.error('Error obteniendo saldo:', e);
+                return 0;
+            }
+        }
+
+        async function registrarMovimientoAbono({ lider, tipo, monto_euros, descripcion, referencia, ruta_id, reserva_id }) {
+            let { data: abonado, error: errorAbonado } = await db.from('abonados').select('*').eq('lider', lider).single();
+            if (errorAbonado && errorAbonado.code === 'PGRST116') {
+                const { data: nuevo, error: errorCrear } = await db.from('abonados').insert({ lider: lider, saldo_euros: 0, ultima_actualizacion: new Date().toISOString() }).select().single();
+                if (errorCrear) throw errorCrear;
+                abonado = nuevo;
+            } else if (errorAbonado) throw errorAbonado;
+
+            const saldoAntes = parseFloat(abonado.saldo_euros || 0);
+            const monto = parseFloat(monto_euros);
+            const saldoDespues = saldoAntes + monto;
+
+            const { error: errorUpdate } = await db.from('abonados').update({ saldo_euros: saldoDespues, ultima_actualizacion: new Date().toISOString() }).eq('id', abonado.id);
+            if (errorUpdate) throw errorUpdate;
+
+            const { error: errorMov } = await db.from('movimientos_abonos').insert({
+                abonado_id: abonado.id,
+                tipo: tipo,
+                monto_euros: Math.abs(monto),
+                saldo_antes: saldoAntes,
+                saldo_despues: saldoDespues,
+                descripcion: descripcion || null,
+                referencia: referencia || null,
+                ruta_id: ruta_id || null,
+                reserva_id: reserva_id || null,
+                fecha: new Date().toISOString(),
+                usuario: 'admin'
+            });
+            if (errorMov) throw errorMov;
+            return { abonado, saldoDespues };
+        }
+
+        async function cargarAbonadoManual(lider, saldoEuros, notas) {
+            try {
+                const saldo = parseFloat(saldoEuros);
+                if (!lider || isNaN(saldo) || saldo <= 0) {
+                    showToast('Líder y saldo positivo requeridos', 'warning');
+                    return;
+                }
+                const liderTrim = lider.trim();
+                const { data: existente } = await db.from('abonados').select('*').eq('lider', liderTrim).single();
+                let abonado;
+                let saldoAntes, saldoDespues, descripcion, referencia;
+                if (existente) {
+                    saldoAntes = parseFloat(existente.saldo_euros || 0);
+                    saldoDespues = saldoAntes + saldo;
+                    const { data: updated, error } = await db.from('abonados').update({
+                        saldo_euros: saldoDespues,
+                        notas: (notas || '').trim() || existente.notas,
+                        ultima_actualizacion: new Date().toISOString()
+                    }).eq('id', existente.id).select().single();
+                    if (error) throw error;
+                    abonado = updated;
+                    descripcion = 'Carga de saldo';
+                    referencia = 'CARGA';
+                } else {
+                    saldoAntes = 0;
+                    saldoDespues = saldo;
+                    const { data: nuevo, error } = await db.from('abonados').insert({
+                        lider: liderTrim,
+                        saldo_euros: saldo,
+                        notas: (notas || '').trim() || null,
+                        ultima_actualizacion: new Date().toISOString()
+                    }).select().single();
+                    if (error) throw error;
+                    abonado = nuevo;
+                    descripcion = 'Carga inicial desde notas';
+                    referencia = 'INICIAL';
+                }
+                await db.from('movimientos_abonos').insert({
+                    abonado_id: abonado.id,
+                    tipo: 'carga',
+                    monto_euros: saldo,
+                    saldo_antes: saldoAntes,
+                    saldo_despues: saldoDespues,
+                    descripcion: descripcion,
+                    referencia: referencia,
+                    usuario: 'admin',
+                    fecha: new Date().toISOString()
+                });
+                showToast(`✅ ${liderTrim}: €${saldo.toFixed(2)} cargados`, 'success');
+                if (typeof renderAbonados === 'function') renderAbonados();
+                closeModal('modalCargaAbonados');
+                return data;
+            } catch (err) {
+                console.error('Error cargando abonado:', err);
+                showToast('❌ Error: ' + (err.message || 'al cargar abonado'), 'error');
+            }
+        }
+
+        function cargarAbonadoManualDesdeModal() {
+            const lider = (document.getElementById('inputLiderAbono')?.value || '').trim();
+            const saldo = document.getElementById('inputSaldoEuros')?.value;
+            const notas = (document.getElementById('inputNotasAbono')?.value || '').trim();
+            cargarAbonadoManual(lider, saldo, notas);
+        }
+
+        function abrirModalNuevoAbono() {
+            const elLider = document.getElementById('inputLiderAbono');
+            const elSaldo = document.getElementById('inputSaldoEuros');
+            const elNotas = document.getElementById('inputNotasAbono');
+            if (elLider) elLider.value = '';
+            if (elSaldo) elSaldo.value = '';
+            if (elNotas) elNotas.value = '';
+            openModal('modalCargaAbonados');
+        }
+
+        function abrirModalCargarSaldo(lider) {
+            const elLider = document.getElementById('inputLiderAbono');
+            if (elLider) elLider.value = lider || '';
+            document.getElementById('inputSaldoEuros').value = '';
+            document.getElementById('inputNotasAbono').value = '';
+            openModal('modalCargaAbonados');
+        }
+
+        /** Actualiza la etiqueta "Cupos a pagar con saldo" según el valor en usarSaldoEuros y precio por cupo. */
+        function actualizarCuposConSaldoLabel(precioCupo) {
+            const saldoUsar = parseFloat(document.getElementById('usarSaldoEuros')?.value) || 0;
+            const cupos = precioCupo > 0 ? Math.floor(saldoUsar / precioCupo) : 0;
+            const el = document.getElementById('cuposConSaldoLabel');
+            if (el) el.textContent = cupos;
+        }
+
+        async function registrarPagoConSaldoDesdeModal(lider, rutaId) {
+            const saldoEuros = parseFloat(document.getElementById('usarSaldoEuros')?.value) || 0;
+            const referencia = (document.getElementById('nuevoPagoReferencia')?.value || '').trim();
+
+            const saldoDisponible = await obtenerSaldoLider(lider);
+            if (saldoEuros > saldoDisponible) {
+                showToast(`Saldo insuficiente. Disponible: €${saldoDisponible.toFixed(2)}`, 'error');
+                return;
+            }
+            if (saldoEuros <= 0) {
+                showToast('Indica el saldo en € a usar', 'warning');
+                return;
+            }
+
+            const reserva = data.reservas.find(r => r.lider === lider && r.rutaId === rutaId);
+            const ruta = data.rutas.find(r => r.id === rutaId);
+            const precioCupo = ruta ? (ruta.precioEuros || 0) : 0;
+            const cuposConSaldo = precioCupo > 0 ? Math.floor(saldoEuros / precioCupo) : 0;
+            if (cuposConSaldo < 1) {
+                showToast('El saldo no alcanza para un cupo (precio/cupo: €' + (precioCupo || 0) + ')', 'warning');
+                return;
+            }
+
+            try {
+                const { abonado, saldoDespues } = await registrarMovimientoAbono({
+                    lider: lider,
+                    tipo: 'uso',
+                    monto_euros: -saldoEuros,
+                    descripcion: 'Pago para ruta',
+                    referencia: referencia || ('Ruta ' + rutaId),
+                    ruta_id: rutaId
+                });
+
+                if (saldoDespues <= 0 && abonado && abonado.id) {
+                    await db.from('abonados').delete().eq('id', abonado.id);
+                }
+
+                const pagoConSaldo = {
+                    monto: 0,
+                    cuposPagados: cuposConSaldo,
+                    enDolares: false,
+                    saldo_usado: saldoEuros,
+                    referencia: referencia || 'Pago con saldo',
+                    fecha: new Date().toISOString()
+                };
+                const pagosActuales = (reserva.pagos || []).slice();
+                pagosActuales.push(pagoConSaldo);
+                const montoPagadoBs = pagosActuales
+                    .filter(p => !p.enDolares && !(p.saldo_usado > 0))
+                    .reduce((sum, p) => sum + (p.monto || 0), 0);
+
+                await db.from('reservas')
+                    .update({
+                        pagos: pagosActuales,
+                        monto_pagado: montoPagadoBs,
+                        abonado_euros: (reserva.abonado_euros || 0) + saldoEuros,
+                        pagado_con_abono: true
+                    })
+                    .eq('lider', lider)
+                    .eq('ruta_id', rutaId);
+
+                if (document.getElementById('usarSaldoEuros')) document.getElementById('usarSaldoEuros').value = '';
+                actualizarCuposConSaldoLabel(precioCupo);
+                await saveData(true);
+                renderReservas();
+                renderRutas();
+                if (typeof renderAbonados === 'function') renderAbonados();
+                verDetalleReserva(lider, rutaId);
+                showToast(`✅ Pago con saldo: ${cuposConSaldo} cupo${cuposConSaldo !== 1 ? 's' : ''} (€${saldoEuros.toFixed(2)})`, 'success');
+            } catch (err) {
+                console.error('Error en pago con saldo:', err);
+                showToast('❌ Error al procesar pago', 'error');
+            }
+        }
+
+        async function abonarReservaCancelada(reservaId, porcentaje) {
+            const reserva = data.reservas.find(r => r.id === reservaId);
+            if (!reserva) { showToast('Reserva no encontrada', 'error'); return; }
+            const ruta = data.rutas.find(r => r.id === reserva.rutaId);
+            const precioCupo = ruta ? (ruta.precioEuros || 0) : 0;
+            const totalEuros = (reserva.cantidad || 0) * precioCupo;
+            const eurosAAbonar = totalEuros * ((porcentaje || 100) / 100);
+
+            const ok = await confirmarAccion(
+                `¿Abonar €${eurosAAbonar.toFixed(2)} a ${reserva.lider}?\n\nRuta: ${ruta ? ruta.nombre : 'N/A'}\nCupos: ${reserva.cantidad}\nPrecio/cupo: €${precioCupo}\nTotal: €${totalEuros}\nPorcentaje: ${porcentaje || 100}%`,
+                'pregunta'
+            );
+            if (!ok) return;
+
+            try {
+                await registrarMovimientoAbono({
+                    lider: reserva.lider,
+                    tipo: 'carga',
+                    monto_euros: eurosAAbonar,
+                    descripcion: `Abono por cancelación: ${ruta ? ruta.nombre : ''}`,
+                    referencia: 'RES-' + reservaId,
+                    ruta_id: reserva.rutaId,
+                    reserva_id: reservaId
+                });
+                const { error: errPart } = await db
+                    .from('participantes')
+                    .delete()
+                    .eq('lider', reserva.lider)
+                    .eq('ruta_id', reserva.rutaId);
+                if (errPart) throw errPart;
+                const { error: errRes } = await db
+                    .from('reservas')
+                    .delete()
+                    .eq('id', reservaId);
+                if (errRes) throw errRes;
+                closeModal('modalDetalleReserva');
+                await saveData(true);
+                updateSelects();
+                renderReservas();
+                renderRutas();
+                if (typeof renderParticipantes === 'function') renderParticipantes();
+                if (typeof renderAbonados === 'function') renderAbonados();
+                showToast(`✅ €${eurosAAbonar.toFixed(2)} abonados a ${reserva.lider}. Reserva y participantes eliminados.`, 'success');
+            } catch (err) {
+                console.error('Error abonando:', err);
+                showToast('❌ Error al abonar', 'error');
             }
         }
 
@@ -4205,17 +4630,20 @@ async function agregarPersonaRapida(lider, ruta) {
             const precioCupo = ruta ? (ruta.precioEuros || 0) : 0;
 
             const historialPagos = (reserva.pagos || []).map((pago, index) => {
-                const esDolares = pago.enDolares || false;
-                const simbolo = esDolares ? '$' : 'Bs';
-                const color = esDolares ? '#f59e0b' : 'var(--success)';
-                const cuposTexto = esDolares ? '' : (` (${pago.cuposPagados || 0} cupo${(pago.cuposPagados || 0) !== 1 ? 's' : ''} = ${(pago.cuposPagados || 0) * precioCupo}€)`);
-                const migrado = pago._cuposCalculado ? ' <span style="font-size: 10px; color: var(--text-secondary);">(calculado automáticamente)</span>' : '';
+                const esSaldo = pago.saldo_usado != null && pago.saldo_usado > 0;
+                const esDolares = !esSaldo && (pago.enDolares || false);
+                const simbolo = esSaldo ? '€ saldo' : (esDolares ? '$' : 'Bs');
+                const color = esSaldo ? '#06b6d4' : (esDolares ? '#f59e0b' : 'var(--success)');
+                const cuposNum = pago.cuposPagados || 0;
+                const cuposTexto = esSaldo ? ` (${cuposNum} cupo${cuposNum !== 1 ? 's' : ''})` : (esDolares ? (cuposNum > 0 ? ` (${cuposNum} cupo${cuposNum !== 1 ? 's' : ''} = ${cuposNum * precioCupo}€)` : '') : (` (${cuposNum} cupo${cuposNum !== 1 ? 's' : ''} = ${cuposNum * precioCupo}€)`));
+                const montoTexto = esSaldo ? `€${(pago.saldo_usado || 0).toFixed(2)}` : (esDolares ? '$' + (pago.monto || 0).toLocaleString() : 'Bs ' + (pago.monto || 0).toLocaleString());
+                const migrado = !esSaldo && pago._cuposCalculado ? ' <span style="font-size: 10px; color: var(--text-secondary);">(calculado automáticamente)</span>' : '';
                 return `
                 <div style="padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border);">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
                         <div style="flex: 1;">
                             <div style="font-weight: 700; color: ${color}; margin-bottom: 4px;">
-                                ${simbolo} ${(pago.monto || 0).toLocaleString()} ${esDolares ? '(USD efectivo)' : cuposTexto}${migrado}
+                                ${montoTexto} ${simbolo}${cuposTexto}${migrado}
                             </div>
                             ${pago.referencia ? `<div style="font-size: 12px; color: var(--accent); margin-bottom: 4px;">📎 Ref: ${pago.referencia}</div>` : ''}
                             <div style="font-size: 12px; color: var(--text-secondary);">${new Date(pago.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
@@ -4255,6 +4683,15 @@ async function agregarPersonaRapida(lider, ruta) {
                 <div class="divider"></div>
                 <div style="margin-top: 20px; padding: 16px; background: rgba(118, 200, 147, 0.1); border-radius: 12px;">
                     <div style="font-weight: 700; margin-bottom: 12px;">💵 Registrar Nuevo Pago</div>
+                    <div style="margin-bottom: 16px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                        <div style="font-size: 13px; font-weight: 700; color: #3b82f6; margin-bottom: 8px;">💰 Saldo disponible: <span id="saldoDisponibleLider">€0.00</span></div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-size: 12px;">Usar saldo (€)</label>
+                            <input type="number" id="usarSaldoEuros" class="form-input" placeholder="0.00" step="0.01" min="0" oninput="actualizarCuposConSaldoLabel(${precioCupo})">
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">Cupos a pagar con saldo: <strong id="cuposConSaldoLabel">0</strong> (precio/cupo: ${precioCupo}€)</div>
+                        <button type="button" class="btn btn-primary" style="margin-top: 12px;" onclick="registrarPagoConSaldoDesdeModal('${lider}', '${reserva.rutaId}')">✅ Registrar con saldo</button>
+                    </div>
                     <div style="display: flex; gap: 16px; margin-bottom: 16px;">
                         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
                             <input type="radio" name="tipoPago" value="bs" checked onchange="toggleTipoPago('bs')">
@@ -4262,7 +4699,7 @@ async function agregarPersonaRapida(lider, ruta) {
                         </label>
                         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
                             <input type="radio" name="tipoPago" value="dolares" onchange="toggleTipoPago('dolares')">
-                            <span>$ Efectivo (solo monto)</span>
+                            <span>$ Efectivo</span>
                         </label>
                     </div>
                     <div id="camposBsPago">
@@ -4280,17 +4717,26 @@ async function agregarPersonaRapida(lider, ruta) {
                             <label class="form-label">Monto en $ efectivo</label>
                             <input type="number" id="nuevoPagoMontoDolares" class="form-input" placeholder="Ej: 100" step="0.01" min="0" inputmode="decimal">
                         </div>
+                        <div class="form-group">
+                            <label class="form-label">Cupos pagados con este monto</label>
+                            <input type="number" id="nuevoPagoCuposDolares" class="form-input" placeholder="Ej: 2" min="0" step="1" value="1">
+                        </div>
                     </div>
-                    <div class="form-group">
+                    <div id="grupoReferenciaPagoDetalle" class="form-group">
                         <label class="form-label">📎 Referencia (Opcional)</label>
                         <input type="text" id="nuevoPagoReferencia" class="form-input" placeholder="Número de referencia" inputmode="numeric">
                     </div>
                     <button class="btn btn-success" onclick="registrarPagoConTipo('${lider}', '${reserva.rutaId}')">✅ Registrar Pago</button>
                 </div>
+                <button type="button" class="btn btn-outline" style="margin-top: 8px; width: 100%; font-size: 12px;" onclick="abonarReservaCancelada('${reserva.id}', 100)">💰 Abonar reserva cancelada (no asistió)</button>
                 <button class="btn btn-outline" style="margin-top: 12px; width: 100%;" onclick="closeModal('modalDetalleReserva')">Cerrar</button>
             `;
             document.getElementById('detalleReservaContent').innerHTML = html;
             openModal('modalDetalleReserva');
+            obtenerSaldoLider(lider).then(saldo => {
+                const el = document.getElementById('saldoDisponibleLider');
+                if (el) el.textContent = '€' + saldo.toFixed(2);
+            });
         }
 
         // COMPARTIR RESERVA POR WHATSAPP (robusto por ID; no lee del DOM)
@@ -4930,7 +5376,8 @@ function formatearFechaCorta(fechaString) {
                     const eurosEsperados = (reserva.cantidad || 0) * (ruta ? (ruta.precioEuros || 0) : 0);
                     const precioEuros = ruta.precioEuros || 0;
                     const numPagos = (reserva.pagos && reserva.pagos.length > 0) ? reserva.pagos.length : 0;
-                    const tienePagos = totalBs > 0 || totalDolares > 0;
+                    const saldoUsado = (reserva.abonado_euros || 0) || (reserva.pagos || []).reduce((s, p) => s + (p.saldo_usado || 0), 0);
+                    const tienePagos = totalBs > 0 || totalDolares > 0 || saldoUsado > 0;
                     // ID único por líder + ruta, para soportar mismo líder en varias rutas
                     // 🔥 CORRECCIÓN: Usar rutaId para cardId único (evita colisiones con rutas del mismo nombre)
                     const cardId = `reserva-${reserva.lider.replace(/\s+/g, '-').toLowerCase()}-${reserva.rutaId}`;
@@ -4949,7 +5396,7 @@ function formatearFechaCorta(fechaString) {
                                                 const haySobreventa = cuposPagados > reserva.cantidad;
                                                 return '<span style="color: ' + c.color + '; font-weight: ' + (haySobreventa ? '700' : '400') + ';" title="Cupos pagados / reservados • € recibidos / esperados">📊 ' + cuposPagados + '/' + reserva.cantidad + ' (' + eurosRecibidos + '€/' + eurosEsperados + '€)</span>';
                                             })()}
-                                            ${tienePagos ? `<span>💰 Bs ${totalBs.toLocaleString()}${totalDolares > 0 ? ` + $${totalDolares.toLocaleString()}` : ''}</span>` : '<span style="color: var(--text-tertiary);">Sin pagos</span>'}
+                                            ${tienePagos ? `<span>💰 ${totalBs > 0 || totalDolares > 0 ? `Bs ${totalBs.toLocaleString()}${totalDolares > 0 ? ` + $${totalDolares.toLocaleString()}` : ''}${saldoUsado > 0 ? ' + ' : ''}` : ''}${saldoUsado > 0 ? `€${(saldoUsado % 1 === 0 ? saldoUsado : saldoUsado.toFixed(2))} pagado con saldo` : (totalBs > 0 || totalDolares > 0 ? '' : '')}</span>` : '<span style="color: var(--text-tertiary);">Sin pagos</span>'}
                                         </div>
                                     </div>
                                     <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -4985,7 +5432,8 @@ function formatearFechaCorta(fechaString) {
                                 </div>
                                 ${tienePagos ? `
                                     <div style="margin-top: 16px; padding: 12px; background: rgba(118, 200, 147, 0.1); border-radius: 12px; border: 1px solid var(--border);">
-                                        <div style="display: grid; grid-template-columns: 1fr ${totalDolares > 0 ? '1fr' : ''}; gap: 12px; margin-bottom: 4px;">
+                                        <div style="display: grid; grid-template-columns: 1fr ${totalDolares > 0 ? '1fr' : ''}${saldoUsado > 0 ? ' 1fr' : ''}; gap: 12px; margin-bottom: 4px;">
+                                            ${(totalBs > 0 || totalDolares > 0) ? `
                                             <div>
                                                 <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">💰 Bs</div>
                                                 <div style="font-size: 16px; font-weight: 800; color: var(--success);">Bs ${totalBs.toLocaleString()}</div>
@@ -4994,6 +5442,13 @@ function formatearFechaCorta(fechaString) {
                                             <div>
                                                 <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">💵 USD Efectivo</div>
                                                 <div style="font-size: 16px; font-weight: 800; color: #f59e0b;">$${totalDolares.toLocaleString()}</div>
+                                            </div>
+                                            ` : ''}
+                                            ` : ''}
+                                            ${saldoUsado > 0 ? `
+                                            <div>
+                                                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">💳 Pagado con saldo</div>
+                                                <div style="font-size: 16px; font-weight: 800; color: #06b6d4;">€${saldoUsado % 1 === 0 ? saldoUsado : saldoUsado.toFixed(2)}</div>
                                             </div>
                                             ` : ''}
                                         </div>
@@ -5285,6 +5740,9 @@ function formatearFechaCorta(fechaString) {
             if (cuerpoEl) {
                 cuerpoEl.innerHTML = `<div style="font-family: 'Poppins', sans-serif; font-size: 13px; line-height: 1.4; white-space: pre-wrap; max-height: 60vh; overflow-y: auto; padding-right: 8px;">${mensaje.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`;
             }
+            window._shareHistorialTexto = mensaje;
+            const btnWrap = document.getElementById('btnCompartirHistorialWrap');
+            if (btnWrap) btnWrap.style.display = 'block';
             const modal = document.getElementById('modalHistorialRecurrente');
             if (modal) modal.classList.add('active');
         }
@@ -5292,6 +5750,17 @@ function formatearFechaCorta(fechaString) {
         function cerrarModalHistorialRecurrente() {
             const modal = document.getElementById('modalHistorialRecurrente');
             if (modal) modal.classList.remove('active');
+        }
+
+        function compartirHistorialPorWhatsApp() {
+            const texto = window._shareHistorialTexto;
+            if (!texto || typeof texto !== 'string') {
+                showToast('No hay contenido para compartir', 'info');
+                return;
+            }
+            const url = 'https://wa.me/?text=' + encodeURIComponent(texto);
+            window.open(url, '_blank');
+            showToast('Abriendo WhatsApp...', 'info');
         }
 
         // RENDER PARTICIPANTES
@@ -5736,7 +6205,7 @@ async function marcarTodosPresentes() {
 
             const html = filtered.length === 0 ?
                 `<div class="empty-state">
-                    <div class="empty-state-icon">💰</div>
+                    <div class="empty-state-icon">💸</div>
                     <h3>No hay gastos registrados</h3>
                     <p>Registra los gastos de las rutas</p>
                 </div>` :
@@ -5998,6 +6467,93 @@ async function marcarTodosPresentes() {
             }).join('')}</div>`;
         }
 
+        async function renderAbonados() {
+            try {
+                const { data: abonadosRaw, error } = await db.from('abonados').select('*').order('saldo_euros', { ascending: false });
+                if (error) throw error;
+                const abonados = (abonadosRaw || []).filter(a => parseFloat(a.saldo_euros || 0) > 0);
+                const totalAbonados = abonados.length;
+                const totalSaldo = abonados.reduce((sum, a) => sum + parseFloat(a.saldo_euros || 0), 0);
+                const promedio = totalAbonados > 0 ? totalSaldo / totalAbonados : 0;
+                const elTotal = document.getElementById('totalAbonados');
+                const elSaldo = document.getElementById('totalSaldoEuros');
+                const elProm = document.getElementById('promedioSaldo');
+                if (elTotal) elTotal.textContent = totalAbonados;
+                if (elSaldo) elSaldo.textContent = '€' + totalSaldo.toFixed(2);
+                if (elProm) elProm.textContent = '€' + promedio.toFixed(2);
+
+                const search = (document.getElementById('searchAbonados')?.value || '').toLowerCase();
+                const abonadosFiltrados = abonados.filter(a => (a.lider || '').toLowerCase().includes(search));
+
+                const container = document.getElementById('listaAbonados');
+                if (!container) return;
+                if (abonadosFiltrados.length === 0) {
+                    container.innerHTML = `<div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);"><div style="font-size: 32px; margin-bottom: 8px;">💰</div><p>${search ? 'No hay abonados que coincidan' : 'No hay abonados con saldo'}</p>${!search ? `<button type="button" class="btn btn-primary" onclick="abrirModalNuevoAbono()" style="margin-top: 16px;">+ Agregar primer abonado</button>` : ''}</div>`;
+                    return;
+                }
+                const liderEsc = (l) => (l || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '&lt;');
+                container.innerHTML = `<div class="person-list-compact">${abonadosFiltrados.map(abonado => {
+                    const saldo = parseFloat(abonado.saldo_euros || 0);
+                    const colorSaldo = saldo > 100 ? 'var(--success)' : saldo > 20 ? '#f59e0b' : 'var(--text-primary)';
+                    const ultima = abonado.ultima_actualizacion ? new Date(abonado.ultima_actualizacion).toLocaleDateString('es-ES') : 'Sin movimientos';
+                    const notas = abonado.notas ? (abonado.notas.substring(0, 30) + (abonado.notas.length > 30 ? '...' : '')) : '';
+                    return `<div class="person-item-compact"><div class="person-info-compact"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;"><div class="person-name-compact">${liderEsc(abonado.lider)}</div><span style="font-size: 18px; font-weight: 800; color: ${colorSaldo};">€${saldo.toFixed(2)}</span></div><div class="person-meta-compact"><span>📅 ${ultima}</span>${notas ? `<span>📝 ${liderEsc(notas)}</span>` : ''}</div></div><div style="display: flex; gap: 8px;"><button type="button" class="btn btn-success btn-small" onclick="verMovimientosAbonado('${abonado.id}', '${liderEsc(abonado.lider)}')">📋</button><button type="button" class="btn btn-primary btn-small" onclick="abrirModalCargarSaldo('${liderEsc(abonado.lider)}')">+€</button></div></div>`;
+                }).join('')}</div>`;
+            } catch (err) {
+                console.error('Error cargando abonados:', err);
+                const c = document.getElementById('listaAbonados');
+                if (c) c.innerHTML = '<div style="text-align: center; padding: 40px 20px; color: var(--danger);">❌ Error al cargar abonados</div>';
+            }
+        }
+
+        async function verMovimientosAbonado(abonadoId, lider) {
+            try {
+                const [{ data: abonado, error: errAbonado }, { data: movimientos, error: errMov }] = await Promise.all([
+                    db.from('abonados').select('*').eq('id', abonadoId).single(),
+                    db.from('movimientos_abonos').select('*').eq('abonado_id', abonadoId).order('fecha', { ascending: true })
+                ]);
+                if (errAbonado || !abonado) { showToast('Abonado no encontrado', 'error'); return; }
+                if (errMov) throw errMov;
+
+                const saldoActual = parseFloat(abonado.saldo_euros || 0).toFixed(2);
+                const esc = (s) => (s || '').toString().replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                let html = `<div style="margin-bottom: 20px;"><div style="font-size: 24px; font-weight: 800; color: var(--accent); margin-bottom: 4px;">${esc(lider)}</div><div style="font-size: 18px; font-weight: 700; color: var(--success);">Saldo actual: €${saldoActual}</div>${abonado.notas ? `<div style="margin-top: 8px; font-size: 14px; color: var(--text-secondary);">📝 ${esc(abonado.notas)}</div>` : ''}</div>`;
+
+                if (movimientos && movimientos.length > 0) {
+                    html += `<div style="margin-bottom: 16px;"><div style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">📋 Historial de Movimientos</div><div style="max-height: 400px; overflow-y: auto; padding-right: 8px;">`;
+                    movimientos.forEach(mov => {
+                        const esCarga = mov.tipo === 'carga';
+                        const color = esCarga ? 'var(--success)' : 'var(--danger)';
+                        const signo = esCarga ? '+' : '-';
+                        const fecha = new Date(mov.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                        const rutaObj = data.rutas && mov.ruta_id ? data.rutas.find(r => r.id === mov.ruta_id) : null;
+                        const rutaIdTexto = rutaObj ? (rutaObj.numero != null && rutaObj.numero !== '' ? ('#' + String(rutaObj.numero).padStart(4, '0')) : (rutaObj.nombre || '')) : '';
+                        const saldoAntes = parseFloat(mov.saldo_antes || 0).toFixed(2);
+                        const saldoDespues = parseFloat(mov.saldo_despues || 0).toFixed(2);
+                        html += `<div style="padding: 12px; background: rgba(118, 200, 147, 0.05); border-radius: 8px; margin-bottom: 8px; border-left: 4px solid ${color};"><div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;"><div style="font-weight: 700; font-size: 14px; color: ${color};">${signo}€${parseFloat(mov.monto_euros || 0).toFixed(2)} (${mov.tipo})</div><div style="font-size: 12px; color: var(--text-secondary);">${fecha}</div></div>${mov.descripcion ? `<div style="font-size: 13px; margin-bottom: 4px;">${esc(mov.descripcion)}</div>` : ''}${rutaIdTexto ? `<div style="font-size: 11px; color: var(--text-secondary);">Ruta: ${esc(rutaIdTexto)}</div>` : ''}<div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Saldo: €${saldoAntes} → €${saldoDespues}</div></div>`;
+                    });
+                    html += '</div></div>';
+                } else {
+                    html += '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">No hay movimientos registrados</div>';
+                }
+
+                const tituloEl = document.getElementById('modalHistorialRecurrenteTitulo');
+                const cuerpoEl = document.getElementById('modalHistorialRecurrenteCuerpo');
+                if (tituloEl && cuerpoEl) {
+                    tituloEl.innerHTML = `💰 ${esc(lider)} - Movimientos`;
+                    cuerpoEl.innerHTML = html;
+                    window._shareHistorialTexto = null;
+                    const btnWrap = document.getElementById('btnCompartirHistorialWrap');
+                    if (btnWrap) btnWrap.style.display = 'none';
+                    const modal = document.getElementById('modalHistorialRecurrente');
+                    if (modal) modal.classList.add('active');
+                }
+            } catch (err) {
+                console.error('Error cargando movimientos:', err);
+                showToast('Error al cargar movimientos', 'error');
+            }
+        }
+
         function renderRanking() {
             const search = (document.getElementById('searchRanking')?.value || '').toLowerCase();
             const filtroRango = document.getElementById('filtroRangoRanking')?.value || '';
@@ -6027,6 +6583,25 @@ async function marcarTodosPresentes() {
             if (tituloEl && cuerpoEl) {
                 tituloEl.innerHTML = `${historial.rango.emoji} ${nombreEsc} - ${historial.rango.nombre}`;
                 cuerpoEl.innerHTML = html;
+                let textoShare = `*${historial.rango.emoji} ${historial.rango.nombre}*\n\n`;
+                textoShare += `👤 ${nombreEsc}\n\n`;
+                textoShare += `📊 *Estadísticas*\n`;
+                textoShare += `• Rutas asistidas: ${historial.totalRutas}\n`;
+                textoShare += `• Participaciones: ${historial.totalParticipaciones}\n`;
+                textoShare += `• ✅ Asistencias: ${historial.totalAsistidas}\n`;
+                textoShare += `• ❌ Ausencias: ${historial.totalNoAsistidas}\n`;
+                textoShare += `• Tasa de asistencia: ${historial.porcentajeAsistencia}%\n\n`;
+                if (historial.rutasAsistidas.length > 0) {
+                    textoShare += `🏔️ *Rutas asistidas:*\n`;
+                    historial.rutasAsistidas.slice(0, 15).forEach(r => { textoShare += `• ${(r.nombre || '').replace(/\*/g, '')}\n`; });
+                    if (historial.rutasAsistidas.length > 15) textoShare += `• +${historial.rutasAsistidas.length - 15} más\n`;
+                }
+                if (historial.siguienteRango) {
+                    textoShare += `\n🎯 Próximo rango: ${historial.siguienteRango.emoji} ${historial.siguienteRango.nombre} (faltan ${historial.siguienteRango.minRutas - historial.totalRutas} rutas)`;
+                }
+                window._shareHistorialTexto = textoShare;
+                const btnWrap = document.getElementById('btnCompartirHistorialWrap');
+                if (btnWrap) btnWrap.style.display = 'block';
                 const modal = document.getElementById('modalHistorialRecurrente');
                 if (modal) modal.classList.add('active');
             }
@@ -6041,6 +6616,7 @@ async function marcarTodosPresentes() {
             renderGastos();
             renderHistorial();
             renderRanking();
+            if (typeof renderAbonados === 'function') renderAbonados();
             setTimeout(ajustarSelectsFiltro, 100);
         }
 
