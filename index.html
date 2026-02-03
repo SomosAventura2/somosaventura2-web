@@ -468,6 +468,211 @@
       z-index: 5;
     }
 
+    /* ===== RANKING TOP 10 AVENTURADOS ===== */
+    .ranking-section {
+      padding: 40px 24px;
+    }
+
+    .ranking-intro {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin: -8px 0 24px;
+    }
+
+    .ranking-test-badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: var(--accent-orange);
+      color: var(--bg-dark);
+      border-radius: 6px;
+    }
+
+    .ranking-container {
+      min-height: 120px;
+    }
+
+    .ranking-loading {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--text-secondary);
+    }
+
+    .ranking-loading::after {
+      content: '⛰️';
+      display: block;
+      font-size: 40px;
+      margin-top: 12px;
+      animation: ranking-pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes ranking-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    .ranking-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ranking-podio {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      align-items: end;
+      margin-bottom: 20px;
+      max-width: 320px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .ranking-podio.ranking-podio--1 {
+      grid-template-columns: 1fr;
+      justify-items: center;
+    }
+
+    .ranking-podio.ranking-podio--2 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .ranking-podio .ranking-card {
+      margin-bottom: 0;
+    }
+
+    .ranking-podio .ranking-card:nth-child(1) { order: 2; }
+    .ranking-podio .ranking-card:nth-child(2) { order: 1; }
+    .ranking-podio .ranking-card:nth-child(3) { order: 3; }
+
+    .ranking-podio .ranking-card.rank-1 {
+      background: linear-gradient(145deg, rgba(255, 215, 0, 0.2), var(--bg-card));
+      border-color: rgba(255, 215, 0, 0.5);
+      box-shadow: 0 6px 20px rgba(255, 215, 0, 0.2);
+    }
+
+    .ranking-podio .ranking-card.rank-2 {
+      background: linear-gradient(145deg, rgba(192, 192, 192, 0.15), var(--bg-card));
+      border-color: rgba(192, 192, 192, 0.45);
+      box-shadow: 0 4px 16px rgba(192, 192, 192, 0.15);
+    }
+
+    .ranking-podio .ranking-card.rank-3 {
+      background: linear-gradient(145deg, rgba(205, 127, 50, 0.2), var(--bg-card));
+      border-color: rgba(205, 127, 50, 0.5);
+      box-shadow: 0 4px 16px rgba(205, 127, 50, 0.2);
+    }
+
+    .ranking-card {
+      background: var(--bg-card);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid rgba(118, 200, 147, 0.15);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .ranking-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(118, 200, 147, 0.2);
+    }
+
+    .ranking-card .rank-num {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(118, 200, 147, 0.2);
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ranking-podio .ranking-card.rank-1 .rank-num { background: linear-gradient(135deg, #FFD700, #FFA500); color: #1a2e22; }
+    .ranking-podio .ranking-card.rank-2 .rank-num { background: linear-gradient(135deg, #C0C0C0, #A0A0A0); color: #1a2e22; }
+    .ranking-podio .ranking-card.rank-3 .rank-num { background: linear-gradient(135deg, #CD7F32, #8B4513); color: #fff; }
+
+    .ranking-card .rank-emoji {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .ranking-card .rank-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ranking-card .rank-name {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .ranking-card .rank-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .ranking-card .rank-badge {
+      flex-shrink: 0;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .ranking-rest {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ranking-rest .ranking-card .rank-num {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .ranking-list .ranking-card {
+      animation: ranking-appear 0.4s ease-out backwards;
+    }
+
+    .ranking-podio .ranking-card:nth-child(1) { animation-delay: 0.1s; }
+    .ranking-podio .ranking-card:nth-child(2) { animation-delay: 0.2s; }
+    .ranking-podio .ranking-card:nth-child(3) { animation-delay: 0.15s; }
+
+    .ranking-rest .ranking-card:nth-child(1) { animation-delay: 0.25s; }
+    .ranking-rest .ranking-card:nth-child(2) { animation-delay: 0.3s; }
+    .ranking-rest .ranking-card:nth-child(3) { animation-delay: 0.35s; }
+    .ranking-rest .ranking-card:nth-child(4) { animation-delay: 0.4s; }
+    .ranking-rest .ranking-card:nth-child(5) { animation-delay: 0.45s; }
+    .ranking-rest .ranking-card:nth-child(6) { animation-delay: 0.5s; }
+    .ranking-rest .ranking-card:nth-child(7) { animation-delay: 0.55s; }
+
+    @keyframes ranking-appear {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .about-content {
       display: flex;
       flex-direction: column;
@@ -1440,6 +1645,16 @@
       </div>
     </section>
 
+    <!-- Top 10 Aventurados (ranking desde Supabase) -->
+    <section id="rankingSection" class="ranking-section">
+      <h2 class="section-title">🏆 Top 10 Aventurados</h2>
+      <p class="ranking-intro">Los que más rutas han conquistado con nosotros</p>
+      <div id="rankingContainer" class="ranking-container">
+        <div class="ranking-loading" id="rankingLoading">Cargando ranking...</div>
+        <div id="rankingList" class="ranking-list" aria-live="polite" style="display: none;"></div>
+      </div>
+    </section>
+
     <!-- Team Section -->
     <section>
       <h2 class="section-title">Nuestra Historia</h2>
@@ -2027,6 +2242,158 @@
       // Cargar rutas y activar Realtime
       cargarRutasProximas();
       initRealtimeRutas();
+
+      // =============================================
+      // RANKING TOP 10 AVENTURADOS (desde participantes)
+      // =============================================
+      function calcularRangoAventurado(rutasAsistidas) {
+        if (rutasAsistidas < 2) return { nombre: 'Novato', emoji: '🌱', color: '#22c55e' };
+        if (rutasAsistidas <= 4) return { nombre: 'Bronce', emoji: '🥉', color: '#CD7F32' };
+        if (rutasAsistidas <= 9) return { nombre: 'Plata', emoji: '🥈', color: '#C0C0C0' };
+        if (rutasAsistidas <= 14) return { nombre: 'Oro', emoji: '🥇', color: '#FFD700' };
+        if (rutasAsistidas <= 19) return { nombre: 'Platino', emoji: '💎', color: '#E5E4E2' };
+        return { nombre: 'Diamante', emoji: '✨', color: '#b9f2ff' };
+      }
+
+      function getRankingTestData() {
+        return [
+          { nombre: 'María García', rutasAsistidas: 22 },
+          { nombre: 'Carlos Rodríguez', rutasAsistidas: 18 },
+          { nombre: 'Ana Martínez', rutasAsistidas: 15 },
+          { nombre: 'Luis Fernández', rutasAsistidas: 12 },
+          { nombre: 'Laura Sánchez', rutasAsistidas: 9 },
+          { nombre: 'Pedro López', rutasAsistidas: 7 },
+          { nombre: 'Sofia Hernández', rutasAsistidas: 5 },
+          { nombre: 'Diego Ramírez', rutasAsistidas: 4 },
+          { nombre: 'Elena Torres', rutasAsistidas: 3 },
+          { nombre: 'Javier Flores', rutasAsistidas: 2 }
+        ].map(p => ({
+          nombre: p.nombre,
+          rutasAsistidas: p.rutasAsistidas,
+          rango: calcularRangoAventurado(p.rutasAsistidas)
+        }));
+      }
+
+      async function cargarRankingTop10() {
+        const container = document.getElementById('rankingContainer');
+        const loading = document.getElementById('rankingLoading');
+        const list = document.getElementById('rankingList');
+        if (!container || !loading || !list) return;
+
+        const useTestRanking = new URLSearchParams(window.location.search).get('ranking') === 'test';
+
+        try {
+          let ranking;
+
+          if (useTestRanking) {
+            ranking = getRankingTestData();
+          } else {
+            const { data: participantes, error } = await supabaseClient
+              .from('participantes')
+              .select('nombre, ruta_id, asiste');
+
+            if (error) {
+              console.error('Error cargando ranking:', error);
+              loading.textContent = 'No pudimos cargar el ranking.';
+              return;
+            }
+
+            const raw = participantes || [];
+            const personasMap = new Map();
+            raw.forEach(p => {
+              const nombre = (p.nombre || '').trim();
+              if (!nombre) return;
+              if (!personasMap.has(nombre)) {
+                personasMap.set(nombre, { nombre: nombre, rutasSet: new Set() });
+              }
+              const persona = personasMap.get(nombre);
+              if (p.asiste === true) {
+                const claveRuta = p.ruta_id || p.ruta_id;
+                if (claveRuta) persona.rutasSet.add(claveRuta);
+              }
+            });
+
+            const ordenRangos = { 'Diamante': 6, 'Platino': 5, 'Oro': 4, 'Plata': 3, 'Bronce': 2, 'Novato': 1 };
+            ranking = Array.from(personasMap.values())
+              .map(persona => {
+                const rutasAsistidas = persona.rutasSet.size;
+                const rango = calcularRangoAventurado(rutasAsistidas);
+                return {
+                  nombre: persona.nombre,
+                  rutasAsistidas: rutasAsistidas,
+                  rango: rango
+                };
+              })
+              .filter(p => p.rutasAsistidas >= 2)
+              .sort((a, b) => {
+                const pesoA = ordenRangos[a.rango.nombre] || 0;
+                const pesoB = ordenRangos[b.rango.nombre] || 0;
+                if (pesoB !== pesoA) return pesoB - pesoA;
+                if (b.rutasAsistidas !== a.rutasAsistidas) return b.rutasAsistidas - a.rutasAsistidas;
+                return (a.nombre || '').localeCompare(b.nombre || '', 'es');
+              })
+              .slice(0, 10);
+          }
+
+          loading.style.display = 'none';
+          list.style.display = 'flex';
+
+          if (useTestRanking) {
+            const intro = document.querySelector('#rankingSection .ranking-intro');
+            if (intro) intro.innerHTML = 'Los que más rutas han conquistado con nosotros <span class="ranking-test-badge">Vista previa</span>';
+          }
+
+          if (ranking.length === 0) {
+            list.innerHTML = '<p class="ranking-intro" style="margin:0">¡Sé el primero en sumar rutas y aparecer aquí! 🥾</p>';
+            return;
+          }
+
+          const top3 = ranking.slice(0, 3);
+          const rest = ranking.slice(3);
+
+          const renderCard = (entry, position) => {
+            const r = entry.rango;
+            const badgeStyle = r.color ? `background:${r.color}22;color:${r.color};border:1px solid ${r.color}44` : '';
+            return `
+              <div class="ranking-card rank-${position}" role="listitem">
+                <span class="rank-num">${position}</span>
+                <span class="rank-emoji" aria-hidden="true">${r.emoji}</span>
+                <div class="rank-body">
+                  <div class="rank-name">${escapeHtml(entry.nombre)}</div>
+                  <div class="rank-meta">${entry.rutasAsistidas} ${entry.rutasAsistidas === 1 ? 'ruta' : 'rutas'}</div>
+                </div>
+                <span class="rank-badge" style="${badgeStyle}">${r.nombre}</span>
+              </div>`;
+          };
+
+          function escapeHtml(s) {
+            const div = document.createElement('div');
+            div.textContent = s;
+            return div.innerHTML;
+          }
+
+          // Orden de visualización del podio: 1 persona → [1º]; 2 → [2º, 1º]; 3 → [2º, 1º, 3º]
+          const displayIndices = top3.length === 1 ? [0] : top3.length === 2 ? [1, 0] : [1, 0, 2];
+          const displayPositions = top3.length === 1 ? [1] : top3.length === 2 ? [2, 1] : [2, 1, 3];
+          const podioCards = displayIndices.map((idx, i) => renderCard(top3[idx], displayPositions[i]));
+
+          const podioClass = 'ranking-podio ranking-podio--' + top3.length;
+          const podioHtml = `
+            <div class="${podioClass}" aria-label="Podio top 3">
+              ${podioCards.join('')}
+            </div>`;
+          const restHtml = rest.length > 0
+            ? `<div class="ranking-rest">${rest.map((e, i) => renderCard(e, i + 3)).join('')}</div>`
+            : '';
+
+          list.innerHTML = podioHtml + restHtml;
+        } catch (err) {
+          console.error('Error ranking:', err);
+          loading.textContent = 'No pudimos cargar el ranking.';
+        }
+      }
+
+      cargarRankingTop10();
     });
   </script>
 
