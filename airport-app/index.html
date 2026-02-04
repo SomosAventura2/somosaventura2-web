@@ -51,12 +51,8 @@
           window.location.href = 'login.html';
           return;
         }
-        // Usuario autenticado: ocultar loading y mostrar app
-        appLoading.hidden = true;
-        mainContent.hidden = false;
-        // Cuando exista app.js con router, aquí se podría: import('./js/app.js');
-        // Por ahora mostramos un mensaje de bienvenida mínimo
-        mainContent.innerHTML = '<p class="welcome-msg">Sesión iniciada. El router y el dashboard se cargarán en la siguiente fase.</p>';
+        // Usuario autenticado: ir a la app principal
+        window.location.replace('app.html');
       } catch (err) {
         console.error('Error en checkAuthAndRedirect:', err);
         window.location.href = 'login.html';

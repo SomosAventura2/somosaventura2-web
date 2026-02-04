@@ -90,6 +90,15 @@ export async function getCurrentUser() {
 }
 
 /**
+ * Obtiene el ID del usuario actual (para consultas Supabase).
+ * @returns {Promise<string|null>}
+ */
+export async function getUserId() {
+  const user = await getCurrentUser();
+  return user?.id ?? null;
+}
+
+/**
  * Obtiene la sesión actual (útil para comprobar si hay sesión sin getCurrentUser).
  * @returns {Promise<import('@supabase/supabase-js').Session | null>}
  */
@@ -119,6 +128,15 @@ export function onAuthStateChange(callback) {
 /**
  * Objeto del módulo para uso opcional (init/render si se integra con router).
  */
+/** Servicio de autenticación (alias para uso en app y módulos). */
+export const AuthService = {
+  getCurrentUser,
+  getUserId,
+  logout,
+  getSession,
+  onAuthStateChange,
+};
+
 export const AuthModule = {
   init() {
     onAuthStateChange((event, session) => {
@@ -129,6 +147,9 @@ export const AuthModule = {
   },
   async getCurrentUser() {
     return getCurrentUser();
+  },
+  async getUserId() {
+    return getUserId();
   },
   async login(email, password) {
     return login(email, password);

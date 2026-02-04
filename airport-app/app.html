@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="description" content="Airport - Gestión de pedidos">
+  <title>Airport - Gestión de Pedidos</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈</text></svg>">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div class="app-layout">
+    <header class="app-header" role="banner">
+      <div class="app-header-inner">
+        <a href="#dashboard" class="app-logo" aria-label="Airport inicio">✈ Airport</a>
+        <div class="app-header-user">
+          <span id="app-user-name" class="app-user-name">Usuario</span>
+          <button type="button" id="logout-btn" class="btn btn--secondary btn--sm">Cerrar sesión</button>
+        </div>
+      </div>
+    </header>
+
+    <aside id="app-sidebar" class="app-sidebar" aria-label="Navegación principal">
+      <nav class="app-sidebar-nav">
+        <a href="#dashboard" data-route="dashboard" class="app-nav-link app-nav-link--dashboard">🏠 Dashboard</a>
+        <a href="#orders" data-route="orders" class="app-nav-link app-nav-link--orders">📋 Pedidos</a>
+        <a href="#expenses" data-route="expenses" class="app-nav-link app-nav-link--expenses">💰 Gastos</a>
+        <a href="#categories" data-route="categories" class="app-nav-link app-nav-link--categories">📦 Categorías</a>
+        <a href="#profile" data-route="profile" class="app-nav-link app-nav-link--profile">👤 Perfil</a>
+      </nav>
+    </aside>
+
+    <main id="app-content" class="app-content" role="main" aria-live="polite">
+      <div id="app-content-inner" class="app-content-inner">
+        <p class="app-content-loading">Cargando...</p>
+      </div>
+    </main>
+
+    <nav id="app-bottom-nav" class="app-bottom-nav" aria-label="Navegación móvil">
+      <a href="#dashboard" data-route="dashboard" class="app-bottom-link" title="Dashboard">🏠</a>
+      <a href="#orders" data-route="orders" class="app-bottom-link" title="Pedidos">📋</a>
+      <a href="#expenses" data-route="expenses" class="app-bottom-link" title="Gastos">💰</a>
+      <a href="#categories" data-route="categories" class="app-bottom-link" title="Categorías">📦</a>
+      <a href="#profile" data-route="profile" class="app-bottom-link" title="Perfil">👤</a>
+    </nav>
+  </div>
+
+  <script type="module">
+    import { App } from './js/app.js';
+    App.init();
+  </script>
+</body>
+</html>

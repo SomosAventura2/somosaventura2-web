@@ -242,7 +242,7 @@
       try {
         const result = await login(userInput.value.trim(), passwordInput.value);
         if (result.success) {
-          window.location.href = 'index.html';
+          window.location.href = 'app.html';
           return;
         }
         showFormError(result.error || 'Error al iniciar sesión.');
