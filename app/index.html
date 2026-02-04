@@ -1156,12 +1156,26 @@
             z-index: 10100 !important;
         }
         
-        .modal.active:not(#modalConfirm):not(#modalHistorialRecurrente):not(#modalNuevaReserva):not(#modalNuevoParticipante):not(#modalDetalleReserva):not(#modalNuevaRuta):not(#modalEditarReserva):not(#modalNuevoGasto):not(#modalAnadirRutaPasada):not(#modalAnadirAventuradoHistorial) {
+        .modal.active:not(#modalConfirm):not(#modalHistorialRecurrente):not(#modalNuevaReserva):not(#modalNuevoParticipante):not(#modalDetalleReserva):not(#modalNuevaRuta):not(#modalEditarReserva):not(#modalNuevoGasto):not(#modalAnadirRutaPasada):not(#modalAnadirAventuradoHistorial):not(#modalEstadisticasHistorial) {
             z-index: 1000;
         }
 
         .modal.active {
             display: flex !important;
+        }
+
+        .stats-nav-btn {
+            transition: transform 0.12s ease, background-color 0.12s ease, opacity 0.12s ease;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .stats-nav-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        .stats-nav-btn:active {
+            transform: scale(0.85);
+            background-color: rgba(118, 200, 147, 0.25) !important;
+            opacity: 0.9;
         }
 
         .modal-content {
@@ -1891,6 +1905,19 @@
         </div>
     </div>
 
+    <!-- MODAL: ESTADÍSTICAS HISTORIAL (rutas archivadas) -->
+    <div id="modalEstadisticasHistorial" class="modal" onclick="closeModalOnBackdrop(event, 'modalEstadisticasHistorial')">
+        <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 420px;">
+            <div class="modal-header">📊 Estadísticas - Rutas</div>
+            <div id="modalEstadisticasHistorialContent" style="padding: 8px 0; max-height: 70vh; overflow-y: auto;">
+                <div style="text-align: center; color: var(--text-secondary);">Cargando...</div>
+            </div>
+            <div style="margin-top: 16px; text-align: center;">
+                <button type="button" class="btn btn-primary" style="width: 100%;" onclick="closeModal('modalEstadisticasHistorial')">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Indicador pull-to-refresh (fixed, se muestra al tirar hacia abajo) -->
     <div id="pullRefreshIndicator" class="pull-refresh-indicator" aria-hidden="true">
         <span class="pull-refresh-icon">↻</span>
@@ -2039,6 +2066,9 @@
         <div id="historial" class="section">
             <div class="search-filter-container">
                 <input type="text" class="search-box" id="searchHistorial" placeholder="Buscar en historial..." oninput="debouncedRenderHistorial()">
+            </div>
+            <div style="margin-bottom: 16px;">
+                <button type="button" class="btn btn-outline" style="width: 100%;" onclick="abrirModalEstadisticasHistorial()">📊 Estadísticas de historial</button>
             </div>
             <div id="listaHistorial"></div>
         </div>
@@ -4789,8 +4819,8 @@ async function agregarPersonaRapida(lider, ruta) {
                     'peligro'
                 );
                 if (!continuar) {
-                    // Restaurar el valor original en el input
-                    document.getElementById('editarCantidadReserva').value = cantidadActual;
+                    const elInput = document.getElementById('editarCantidadReserva');
+                    if (elInput) elInput.value = cantidadActual;
                     return;
                 }
             }
@@ -4821,8 +4851,8 @@ async function agregarPersonaRapida(lider, ruta) {
             } catch (error) {
                 console.error('Error al actualizar cantidad de cupos:', error);
                 showToast('Error al actualizar la cantidad: ' + error.message, 'error', 'Error');
-                // Restaurar el valor original en el input
-                document.getElementById('editarCantidadReserva').value = cantidadActual;
+                const elInput = document.getElementById('editarCantidadReserva');
+                if (elInput) elInput.value = cantidadActual;
             }
         }
 
@@ -4917,22 +4947,6 @@ async function agregarPersonaRapida(lider, ruta) {
 
             const html = `
                 <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">Ruta: ${ruta ? ruta.nombre : 'N/A'}</div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-                    <div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Cupos Reservados</div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <input type="number" id="editarCantidadReserva" value="${reserva.cantidad}" min="1" max="100"
-                                   style="width: 80px; padding: 8px; background: rgba(255,255,255,0.1); border: 2px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 18px; font-weight: 800; text-align: center;"
-                                   onchange="actualizarCantidadReserva('${lider}', '${reserva.rutaId}', parseInt(this.value))">
-                            <button class="btn btn-success" style="padding: 6px 12px; font-size: 12px; min-height: auto;"
-                                    onclick="actualizarCantidadReserva('${lider}', '${reserva.rutaId}', parseInt(document.getElementById('editarCantidadReserva').value))" title="Guardar cambios">💾</button>
-                        </div>
-                    </div>
-                    <div>
-                        <div style="font-size: 12px; color: var(--text-secondary);">Precio Referencial</div>
-                        <div style="font-size: 20px; font-weight: 800; color: var(--text-primary);">${precioCupo}€</div>
-                    </div>
-                </div>
                 <div class="divider"></div>
                 ${crearResumenPagos(reserva, ruta)}
                 ${(reserva.pagos && reserva.pagos.length > 0) ? `
@@ -4944,7 +4958,7 @@ async function agregarPersonaRapida(lider, ruta) {
                 <div class="divider"></div>
                 <div style="margin-top: 20px; padding: 16px; background: rgba(118, 200, 147, 0.1); border-radius: 12px;">
                     <div style="font-weight: 700; margin-bottom: 12px;">💵 Registrar Nuevo Pago</div>
-                    <div style="margin-bottom: 16px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                    <div id="bloqueSaldoDisponiblePagos" style="margin-bottom: 16px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
                         <div style="font-size: 13px; font-weight: 700; color: #3b82f6; margin-bottom: 8px;">💰 Saldo disponible: <span id="saldoDisponibleLider">€0.00</span></div>
                         <div class="form-group">
                             <label class="form-label" style="font-size: 12px;">Usar saldo (€)</label>
@@ -4996,7 +5010,9 @@ async function agregarPersonaRapida(lider, ruta) {
             openModal('modalDetalleReserva');
             obtenerSaldoLider(lider).then(saldo => {
                 const el = document.getElementById('saldoDisponibleLider');
+                const bloqueSaldo = document.getElementById('bloqueSaldoDisponiblePagos');
                 if (el) el.textContent = '€' + saldo.toFixed(2);
+                if (bloqueSaldo) bloqueSaldo.style.display = (saldo > 0) ? '' : 'none';
             });
         }
 
@@ -6004,6 +6020,8 @@ function formatearFechaCorta(fechaString) {
             }
             const btnWrap = document.getElementById('btnCompartirHistorialWrap');
             if (btnWrap) btnWrap.style.display = 'none';
+            const btnAnadirWrap = document.getElementById('btnAnadirRutaPasadaWrap');
+            if (btnAnadirWrap) btnAnadirWrap.style.display = '';
             const modal = document.getElementById('modalHistorialRecurrente');
             if (modal) modal.classList.add('active');
         }
@@ -6668,6 +6686,173 @@ async function marcarTodosPresentes() {
             document.getElementById('listaGastos').innerHTML = html;
         }
 
+        /** Inicio y fin de la semana actual (lunes a domingo). */
+        function getInicioFinSemanaActual() {
+            const now = new Date();
+            const day = now.getDay();
+            const diffLunes = day === 0 ? -6 : 1 - day;
+            const inicio = new Date(now);
+            inicio.setDate(now.getDate() + diffLunes);
+            inicio.setHours(0, 0, 0, 0);
+            const fin = new Date(inicio);
+            fin.setDate(inicio.getDate() + 6);
+            fin.setHours(23, 59, 59, 999);
+            return { inicio, fin };
+        }
+
+        /** Fecha límite: primera semana de trabajo (semana del 30 ago). No se puede navegar antes. */
+        const PRIMERA_SEMANA_INICIO = new Date(2025, 7, 25, 0, 0, 0, 0); // 25 ago 2025 (lunes, semana del 30)
+        const PRIMER_MES_INICIO = new Date(2025, 7, 1, 0, 0, 0, 0);       // 1 ago 2025
+
+        /** Semana con offset: 0 = actual, -1 = anterior, -2 = hace dos, etc. */
+        function getInicioFinSemanaConOffset(offset) {
+            const { inicio: baseInicio } = getInicioFinSemanaActual();
+            const inicio = new Date(baseInicio);
+            inicio.setDate(baseInicio.getDate() + offset * 7);
+            inicio.setHours(0, 0, 0, 0);
+            const fin = new Date(inicio);
+            fin.setDate(inicio.getDate() + 6);
+            fin.setHours(23, 59, 59, 999);
+            return { inicio, fin };
+        }
+
+        /** Inicio y fin del mes actual. */
+        function getInicioFinMesActual() {
+            const now = new Date();
+            const inicio = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+            const fin = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+            return { inicio, fin };
+        }
+
+        /** Mes con offset: 0 = actual, -1 = anterior, etc. */
+        function getInicioFinMesConOffset(offset) {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = now.getMonth() + offset;
+            const inicio = new Date(y, m, 1, 0, 0, 0, 0);
+            const fin = new Date(y, m + 1, 0, 23, 59, 59, 999);
+            return { inicio, fin };
+        }
+
+        function formatSemanaRango(inicio, fin) {
+            const d1 = inicio.getDate();
+            const d2 = fin.getDate();
+            const mes = inicio.toLocaleDateString('es-ES', { month: 'short' }).replace('.', '');
+            const mesCap = mes ? mes.charAt(0).toUpperCase() + mes.slice(1) : mes;
+            return d1 === d2 ? (d1 + ' ' + mesCap) : (d1 + ' - ' + d2 + ' ' + mesCap);
+        }
+
+        function formatMesRango(inicio) {
+            const año = inicio.getFullYear();
+            const mes = inicio.toLocaleDateString('es-ES', { month: 'long' });
+            const mesCap = mes ? mes.charAt(0).toUpperCase() + mes.slice(1) : mes;
+            const añoActual = new Date().getFullYear();
+            return año === añoActual ? mesCap : mesCap + ' ' + año;
+        }
+
+        function fechaRutaDentroRango(rutaFechaStr, inicio, fin) {
+            if (!rutaFechaStr) return false;
+            const d = new Date(rutaFechaStr + 'T12:00:00');
+            return d >= inicio && d <= fin;
+        }
+
+        /**
+         * Estadísticas agregadas solo de rutas archivadas cuya fecha cae en [desde, hasta].
+         * @param {Date} desde
+         * @param {Date} hasta
+         * @returns {{ rutasCount: number, profit: number, recaudado: number, gastos: number, participantesCount: number }}
+         */
+        function estadisticasHistorialArchivado(desde, hasta) {
+            const rutasEnRango = (data.rutas || []).filter(r =>
+                r.archivada && fechaRutaDentroRango(r.fecha, desde, hasta)
+            );
+            let profit = 0, recaudado = 0, gastos = 0, participantesCount = 0;
+            rutasEnRango.forEach(ruta => {
+                profit += calcularProfitNeto(ruta.id);
+                recaudado += calcularTotalRecaudado(ruta.id);
+                gastos += calcularTotalGastos(ruta.id);
+                const participantesRuta = (data.participantes || []).filter(p =>
+                    p.rutaId === ruta.id || p.ruta_id === ruta.id
+                );
+                participantesCount += participantesRuta.length;
+            });
+            return {
+                rutasCount: rutasEnRango.length,
+                profit,
+                recaudado,
+                gastos,
+                participantesCount
+            };
+        }
+
+        window._estadisticasHistorialState = { semanaOffset: 0, mesOffset: 0 };
+
+        function navegarEstadisticasHistorial(tipo, delta) {
+            const state = window._estadisticasHistorialState || { semanaOffset: 0, mesOffset: 0 };
+            if (delta > 0 && (tipo === 'semana' ? state.semanaOffset >= 0 : state.mesOffset >= 0)) return;
+            if (delta < 0) {
+                if (tipo === 'semana') {
+                    const { inicio } = getInicioFinSemanaConOffset(state.semanaOffset - 1);
+                    if (inicio.getTime() < PRIMERA_SEMANA_INICIO.getTime()) return;
+                } else {
+                    const { inicio } = getInicioFinMesConOffset(state.mesOffset - 1);
+                    if (inicio.getTime() < PRIMER_MES_INICIO.getTime()) return;
+                }
+            }
+            if (tipo === 'semana') window._estadisticasHistorialState.semanaOffset += delta;
+            else window._estadisticasHistorialState.mesOffset += delta;
+            renderModalEstadisticasHistorialContent();
+        }
+
+        function renderModalEstadisticasHistorialContent() {
+            const content = document.getElementById('modalEstadisticasHistorialContent');
+            if (!content) return;
+            const state = window._estadisticasHistorialState || { semanaOffset: 0, mesOffset: 0 };
+            const { inicio: inicioSem, fin: finSem } = getInicioFinSemanaConOffset(state.semanaOffset);
+            const { inicio: inicioMes, fin: finMes } = getInicioFinMesConOffset(state.mesOffset);
+            const sem = estadisticasHistorialArchivado(inicioSem, finSem);
+            const mes = estadisticasHistorialArchivado(inicioMes, finMes);
+            const fmt = (n) => (n || 0).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            const labelSem = formatSemanaRango(inicioSem, finSem);
+            const labelMes = formatMesRango(inicioMes);
+            const mostrarAdelanteSem = state.semanaOffset < 0;
+            const mostrarAdelanteMes = state.mesOffset < 0;
+            const mostrarAtrasSem = inicioSem.getTime() > PRIMERA_SEMANA_INICIO.getTime();
+            const mostrarAtrasMes = inicioMes.getTime() > PRIMER_MES_INICIO.getTime();
+            const btnFlecha = 'class="stats-nav-btn" style="flex: 0 0 auto; width: 28px; height: 28px; min-width: 28px; padding: 0; font-size: 14px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-primary);"';
+            const headerSem = `
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                    ${mostrarAtrasSem ? `<button type="button" ${btnFlecha} onclick="navegarEstadisticasHistorial('semana', -1)" title="Semana anterior">←</button>` : '<span style="flex: 0 0 28px; width: 28px;"></span>'}
+                    <span style="flex: 1; text-align: center; font-size: 14px; font-weight: 700; color: var(--accent); min-width: 0;">📅 ${escapeHtml(labelSem)}</span>
+                    ${mostrarAdelanteSem ? `<button type="button" ${btnFlecha} onclick="navegarEstadisticasHistorial('semana', 1)" title="Semana siguiente">→</button>` : '<span style="flex: 0 0 28px; width: 28px;"></span>'}
+                </div>`;
+            const headerMes = `
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                    ${mostrarAtrasMes ? `<button type="button" ${btnFlecha} onclick="navegarEstadisticasHistorial('mes', -1)" title="Mes anterior">←</button>` : '<span style="flex: 0 0 28px; width: 28px;"></span>'}
+                    <span style="flex: 1; text-align: center; font-size: 14px; font-weight: 700; color: var(--accent); min-width: 0;">📆 ${escapeHtml(labelMes)}</span>
+                    ${mostrarAdelanteMes ? `<button type="button" ${btnFlecha} onclick="navegarEstadisticasHistorial('mes', 1)" title="Mes siguiente">→</button>` : '<span style="flex: 0 0 28px; width: 28px;"></span>'}
+                </div>`;
+            const bloque = (header, s) => `
+                <div style="margin-bottom: 20px; padding: 16px; background: rgba(118, 200, 147, 0.08); border-radius: 12px; border: 1px solid var(--border);">
+                    ${header}
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div><span style="font-size: 11px; color: var(--text-secondary);">Rutas</span><div style="font-weight: 700;">${s.rutasCount}</div></div>
+                        <div><span style="font-size: 11px; color: var(--text-secondary);">Aventurados</span><div style="font-weight: 700;">${s.participantesCount}</div></div>
+                        <div><span style="font-size: 11px; color: var(--text-secondary);">Recaudado (Bs)</span><div style="font-weight: 700; color: var(--success);">${fmt(s.recaudado)}</div></div>
+                        <div><span style="font-size: 11px; color: var(--text-secondary);">Gastos (Bs)</span><div style="font-weight: 700; color: var(--danger);">${fmt(s.gastos)}</div></div>
+                        <div style="grid-column: 1 / -1;"><span style="font-size: 11px; color: var(--text-secondary);">Profit neto (Bs)</span><div style="font-size: 18px; font-weight: 800; color: ${s.profit >= 0 ? 'var(--success)' : 'var(--danger)'};">${fmt(s.profit)}</div></div>
+                    </div>
+                </div>`;
+            content.innerHTML = bloque(headerSem, sem) + bloque(headerMes, mes) +
+                '<div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">Solo rutas archivadas, por fecha de la ruta.</div>';
+        }
+
+        function abrirModalEstadisticasHistorial() {
+            window._estadisticasHistorialState = { semanaOffset: 0, mesOffset: 0 };
+            renderModalEstadisticasHistorialContent();
+            openModal('modalEstadisticasHistorial');
+        }
+
         // RENDER HISTORIAL
         function renderHistorial() {
             const search = document.getElementById('searchHistorial').value.toLowerCase();
@@ -6979,6 +7164,8 @@ async function marcarTodosPresentes() {
                     window._shareHistorialTexto = null;
                     const btnWrap = document.getElementById('btnCompartirHistorialWrap');
                     if (btnWrap) btnWrap.style.display = 'none';
+                    const btnAnadirWrap = document.getElementById('btnAnadirRutaPasadaWrap');
+                    if (btnAnadirWrap) btnAnadirWrap.style.display = 'none';
                     const modal = document.getElementById('modalHistorialRecurrente');
                     if (modal) modal.classList.add('active');
                 }
@@ -7045,6 +7232,8 @@ async function marcarTodosPresentes() {
                 window._shareHistorialTexto = textoShare;
                 const btnWrap = document.getElementById('btnCompartirHistorialWrap');
                 if (btnWrap) btnWrap.style.display = 'block';
+                const btnAnadirWrap = document.getElementById('btnAnadirRutaPasadaWrap');
+                if (btnAnadirWrap) btnAnadirWrap.style.display = '';
                 const modal = document.getElementById('modalHistorialRecurrente');
                 if (modal) modal.classList.add('active');
             }
