@@ -41,10 +41,31 @@ function calculateTotals(items = [], discountEur = 0) {
   return { subtotal_eur: subtotal, total_eur: total };
 }
 
-/** Columnas que no deben enviarse a Supabase (generadas o con default en DB). */
+/**
+ * Columnas permitidas al insertar en order_items.
+ * NO incluir subtotal_eur: se calcula automáticamente en la DB (trigger o GENERATED).
+ */
 const ITEM_INSERT_KEYS = [
   'order_id', 'category_id', 'description', 'size', 'color', 'quantity', 'price_eur',
 ];
+
+/** Claves prohibidas en inserts (columnas generadas o calculadas en DB). */
+const FORBIDDEN_ITEM_KEYS = ['subtotal_eur', 'total_eur', 'calculated', 'id', 'order_id', 'created_at'];
+
+/**
+ * Elimina de cada item cualquier clave que no deba enviarse a order_items.
+ * Defensivo: aunque buildItemRow solo usa ITEM_INSERT_KEYS, así evitamos errores si el formulario añade algo.
+ */
+function sanitizeItemsForInsert(items) {
+  return (items || []).map((it) => {
+    const clean = { ...it };
+    FORBIDDEN_ITEM_KEYS.forEach((key) => delete clean[key]);
+    Object.keys(clean).forEach((k) => {
+      if (k.includes('subtotal') || k.includes('total_eur')) delete clean[k];
+    });
+    return clean;
+  });
+}
 
 function buildItemRow(orderId, it) {
   const row = {
@@ -56,7 +77,6 @@ function buildItemRow(orderId, it) {
     quantity: Number(it.quantity) || 1,
     price_eur: Number(it.price_eur) || 0,
   };
-  // Enviar solo estas columnas; no incluir subtotal_eur (generada en DB).
   return Object.fromEntries(ITEM_INSERT_KEYS.map((k) => [k, row[k]]));
 }
 
@@ -98,7 +118,8 @@ export const OrdersService = {
     if (orderError) throw orderError;
 
     if (items.length > 0) {
-      const rows = items.map((it) => buildItemRow(order.id, it));
+      const sanitized = sanitizeItemsForInsert(items);
+      const rows = sanitized.map((it) => buildItemRow(order.id, it));
       const { error: itemsError } = await supabase.from('order_items').insert(rows);
       if (itemsError) throw itemsError;
     }
@@ -138,7 +159,8 @@ export const OrdersService = {
     await supabase.from('order_items').delete().eq('order_id', orderId);
 
     if (items.length > 0) {
-      const rows = items.map((it) => buildItemRow(orderId, it));
+      const sanitized = sanitizeItemsForInsert(items);
+      const rows = sanitized.map((it) => buildItemRow(orderId, it));
       const { error: itemsError } = await supabase.from('order_items').insert(rows);
       if (itemsError) throw itemsError;
     }
@@ -253,17 +275,10 @@ export const OrdersService = {
     const q = Number(itemData.quantity) || 1;
     const p = Number(itemData.price_eur) || 0;
     if (q <= 0 || p < 0) throw new Error('Cantidad y precio deben ser positivos');
+    const row = buildItemRow(orderId, itemData);
     const { data: item, error } = await supabase
       .from('order_items')
-      .insert({
-        order_id: orderId,
-        category_id: itemData.category_id || null,
-        description: (itemData.description || '').trim() || null,
-        size: (itemData.size || '').trim() || null,
-        color: (itemData.color || '').trim() || null,
-        quantity: q,
-        price_eur: p,
-      })
+      .insert(row)
       .select()
       .single();
     if (error) throw error;
