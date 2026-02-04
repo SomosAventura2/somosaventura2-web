@@ -15,14 +15,35 @@ function registerServiceWorker() {
 export const App = {
   async init() {
     registerServiceWorker();
-    const user = await getCurrentUser();
+    const contentInner = document.getElementById('app-content-inner');
+    const showError = (msg) => {
+      if (contentInner) contentInner.innerHTML = '<p class="page-placeholder--error">' + (msg || 'Error al cargar la app.') + '</p><a href="login.html" class="btn btn--primary">Volver al login</a>';
+    };
+    let user;
+    try {
+      user = await getCurrentUser();
+      if (!user) {
+        await new Promise((r) => setTimeout(r, 500));
+        user = await getCurrentUser();
+      }
+    } catch (e) {
+      console.error('Error getCurrentUser:', e);
+      showError('Error de sesión. Vuelve a iniciar sesión.');
+      return;
+    }
     if (!user) {
       window.location.href = 'login.html';
       return;
     }
 
     this.updateUserDisplay(user);
-    routerInit();
+    try {
+      routerInit();
+    } catch (e) {
+      console.error('Error router:', e);
+      showError('Error al cargar la navegación.');
+      return;
+    }
 
     if (!window.location.hash || window.location.hash === '#') {
       window.location.hash = '#dashboard';

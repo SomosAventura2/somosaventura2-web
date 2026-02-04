@@ -12,7 +12,16 @@ cd /d "%~dp0"
 REM Probar primero con Node.js (npx serve)
 where npx >nul 2>nul
 if %ERRORLEVEL% equ 0 (
-  npx serve . -p 3000
+  echo  Iniciando servidor en http://localhost:3000 ...
+  start "Servidor Airport" cmd /k "npx serve . -p 3000"
+  echo  Esperando que el servidor arranque...
+  timeout /t 4 /nobreak >nul
+  start http://localhost:3000/login.html
+  echo.
+  echo  Listo. La pagina se abrio en el navegador.
+  echo  El servidor esta en otra ventana. Cierrala para detenerlo.
+  echo.
+  pause
   goto :fin
 )
 
@@ -44,4 +53,3 @@ pause
 exit /b 1
 
 :fin
-pause

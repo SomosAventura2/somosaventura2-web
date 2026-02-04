@@ -258,6 +258,8 @@
       try {
         const result = await login(userInput.value.trim(), passwordInput.value);
         if (result.success) {
+          setLoading(true);
+          await new Promise(function (r) { setTimeout(r, 400); });
           window.location.href = 'app.html';
           return;
         }

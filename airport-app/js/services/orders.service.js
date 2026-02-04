@@ -89,7 +89,6 @@ export const OrdersService = {
         color: (it.color || '').trim() || null,
         quantity: Number(it.quantity) || 1,
         price_eur: Number(it.price_eur) || 0,
-        subtotal_eur: (Number(it.quantity) || 1) * (Number(it.price_eur) || 0),
       }));
       const { error: itemsError } = await supabase.from('order_items').insert(rows);
       if (itemsError) throw itemsError;
@@ -140,7 +139,6 @@ export const OrdersService = {
         color: (it.color || '').trim() || null,
         quantity: Number(it.quantity) || 1,
         price_eur: Number(it.price_eur) || 0,
-        subtotal_eur: (Number(it.quantity) || 1) * (Number(it.price_eur) || 0),
       }));
       const { error: itemsError } = await supabase.from('order_items').insert(rows);
       if (itemsError) throw itemsError;
@@ -250,7 +248,6 @@ export const OrdersService = {
     const q = Number(itemData.quantity) || 1;
     const p = Number(itemData.price_eur) || 0;
     if (q <= 0 || p < 0) throw new Error('Cantidad y precio deben ser positivos');
-    const subtotal_eur = q * p;
     const { data: item, error } = await supabase
       .from('order_items')
       .insert({
@@ -261,7 +258,6 @@ export const OrdersService = {
         color: (itemData.color || '').trim() || null,
         quantity: q,
         price_eur: p,
-        subtotal_eur,
       })
       .select()
       .single();
@@ -285,7 +281,6 @@ export const OrdersService = {
         color: (itemData.color || '').trim() || null,
         quantity: q,
         price_eur: p,
-        subtotal_eur: q * p,
       })
       .eq('id', itemId)
       .select()
