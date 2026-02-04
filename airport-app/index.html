@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="description" content="Airport - Sistema de gestión de pedidos">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Airport - Gestión de Pedidos</title>
+  <!-- PWA: enlace al manifest -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈</text></svg>">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Contenedor principal de la SPA (se llenará cuando exista app.js y router) -->
+  <div id="app" class="app-container" aria-live="polite">
+    <!-- Estado de carga inicial: comprobando autenticación -->
+    <div id="app-loading" class="loading-screen" role="status" aria-label="Cargando aplicación">
+      <div class="loading-spinner" aria-hidden="true"></div>
+      <p class="loading-text">Comprobando sesión...</p>
+    </div>
+    <!-- Aquí se cargará el contenido según la ruta (dashboard, orders, etc.) -->
+    <main id="main-content" class="main-content" hidden></main>
+  </div>
+
+  <!-- Script de configuración Supabase y comprobación de auth (antes del módulo auth) -->
+  <script type="module" src="js/supabase.js"></script>
+  <script type="module">
+    /**
+     * Punto de entrada inicial (pre-router).
+     * Comprueba si hay sesión de Supabase:
+     * - Si NO hay sesión → redirige a login.html
+     * - Si hay sesión → oculta loading y deja que app.js (cuando exista) tome el control
+     */
+    import { supabase } from './js/supabase.js';
+
+    const appLoading = document.getElementById('app-loading');
+    const mainContent = document.getElementById('main-content');
+
+    async function checkAuthAndRedirect() {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error al obtener sesión:', error);
+          window.location.href = 'login.html';
+          return;
+        }
+        if (!session) {
+          window.location.href = 'login.html';
+          return;
+        }
+        // Usuario autenticado: ocultar loading y mostrar app
+        appLoading.hidden = true;
+        mainContent.hidden = false;
+        // Cuando exista app.js con router, aquí se podría: import('./js/app.js');
+        // Por ahora mostramos un mensaje de bienvenida mínimo
+        mainContent.innerHTML = '<p class="welcome-msg">Sesión iniciada. El router y el dashboard se cargarán en la siguiente fase.</p>';
+      } catch (err) {
+        console.error('Error en checkAuthAndRedirect:', err);
+        window.location.href = 'login.html';
+      }
+    }
+
+    checkAuthAndRedirect();
+  </script>
+</body>
+</html>
