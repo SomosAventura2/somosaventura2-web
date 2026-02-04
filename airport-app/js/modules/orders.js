@@ -499,15 +499,17 @@ export const OrdersModule = {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const items = [];
+      // Recolectar ítems solo con campos permitidos (NO subtotal, subtotal_eur ni calculados)
       itemsContainer.querySelectorAll('.order-form-item').forEach((row) => {
         const desc = row.querySelector('input[name^="item_description"]')?.value?.trim();
         const q = Number(row.querySelector('input[name^="item_quantity"]')?.value) || 0;
         const p = Number(row.querySelector('input[name^="item_price"]')?.value) || 0;
         const catId = row.querySelector('select[name^="item_category"]')?.value?.trim() || null;
+        const size = row.querySelector('input[name^="item_size"]')?.value?.trim() || '';
         items.push({
           category_id: catId || null,
           description: desc || '',
-          size: row.querySelector('input[name^="item_size"]')?.value?.trim() || '',
+          size: size || null,
           color: '',
           quantity: q,
           price_eur: p,

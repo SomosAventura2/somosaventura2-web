@@ -83,23 +83,41 @@ function buildItemRow(orderId, it) {
 export const OrdersService = {
   STATUS_VALUES,
 
+  /**
+   * Crea un pedido y sus ítems.
+   * IMPORTANTE: No enviar subtotal_eur ni total_eur a orders ni a order_items;
+   * en Supabase pueden ser columnas GENERATED y darían error al insertar.
+   */
   async create(orderData) {
     const userId = await getUserId();
     if (!userId) throw new Error('No hay sesión');
 
-    const items = orderData.items || [];
-    const customerName = (orderData.customer_name || '').trim();
-    if (!customerName) throw new Error('El nombre del cliente es obligatorio');
-    if (!items.length) throw new Error('Debe agregar al menos un item al pedido');
+    if (!orderData.customer_name?.trim()) {
+      throw new Error('El nombre del cliente es requerido');
+    }
+    if (!orderData.items || !Array.isArray(orderData.items) || orderData.items.length === 0) {
+      throw new Error('El pedido debe tener al menos un item');
+    }
+
+    // Construir ítems solo con campos permitidos (sin subtotal_eur ni calculados)
+    const validItems = orderData.items.map((item) => ({
+      category_id: item.category_id || null,
+      description: (item.description || '').trim() || '',
+      size: (item.size || '').trim() || null,
+      color: (item.color || '').trim() || null,
+      quantity: Number(item.quantity) || 1,
+      price_eur: Number(item.price_eur) || 0,
+    }));
 
     const discountEur = Number(orderData.discount_eur) || 0;
-    const { subtotal_eur, total_eur } = calculateTotals(items, discountEur);
+    const { total_eur } = calculateTotals(validItems, discountEur);
     if (total_eur <= 0) throw new Error('El total debe ser mayor que 0');
 
+    // Insertar orden SIN subtotal_eur ni total_eur (por si son generadas en DB)
     const orderPayload = {
       order_number: orderData.order_number || generateOrderNumber(),
       order_date: orderData.order_date || new Date().toISOString().slice(0, 10),
-      customer_name: customerName,
+      customer_name: (orderData.customer_name || '').trim(),
       customer_contact: (orderData.customer_contact || '').trim() || null,
       status: orderData.status || 'agendado',
       delivery_date: orderData.delivery_date || null,
@@ -117,9 +135,8 @@ export const OrdersService = {
 
     if (orderError) throw orderError;
 
-    if (items.length > 0) {
-      const sanitized = sanitizeItemsForInsert(items);
-      const rows = sanitized.map((it) => buildItemRow(order.id, it));
+    if (validItems.length > 0) {
+      const rows = validItems.map((it) => buildItemRow(order.id, it));
       const { error: itemsError } = await supabase.from('order_items').insert(rows);
       if (itemsError) throw itemsError;
     }
