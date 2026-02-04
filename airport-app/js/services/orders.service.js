@@ -64,8 +64,6 @@ export const OrdersService = {
       customer_contact: (orderData.customer_contact || '').trim() || null,
       status: orderData.status || 'agendado',
       delivery_date: orderData.delivery_date || null,
-      total_eur: total_eur,
-      subtotal_eur: subtotal_eur,
       discount_eur: discountEur,
       notes: (orderData.notes || '').trim() || null,
       source: (orderData.source || '').trim() || null,
@@ -116,8 +114,6 @@ export const OrdersService = {
         customer_name: (orderData.customer_name || '').trim() || null,
         customer_contact: (orderData.customer_contact || '').trim() || null,
         status: orderData.status,
-        total_eur: total_eur,
-        subtotal_eur: subtotal_eur,
         discount_eur: discountEur,
         notes: (orderData.notes || '').trim() || null,
         source: (orderData.source || '').trim() || null,
@@ -176,13 +172,19 @@ export const OrdersService = {
       .eq('order_id', orderId)
       .order('payment_date', { ascending: false });
 
+    let totalEur = Number(order.total_eur);
+    if (totalEur == null || Number.isNaN(totalEur) || totalEur === 0) {
+      const fromItems = (items || []).reduce((s, it) => s + (Number(it.quantity) || 0) * (Number(it.price_eur) || 0), 0);
+      const discount = Number(order.discount_eur) || 0;
+      totalEur = Math.max(0, fromItems - discount);
+    }
     const totalPaid = (payments || []).reduce((s, p) => s + (Number(p.amount_eur) || 0), 0);
-    const balance = Math.max(0, (Number(order.total_eur) || 0) - totalPaid);
-    const paidPercentage =
-      (Number(order.total_eur) || 0) > 0 ? (totalPaid / (Number(order.total_eur) || 0)) * 100 : 0;
+    const balance = Math.max(0, totalEur - totalPaid);
+    const paidPercentage = totalEur > 0 ? (totalPaid / totalEur) * 100 : 0;
 
     return {
       ...order,
+      total_eur: totalEur,
       items: items || [],
       payments: payments || [],
       total_paid: totalPaid,
@@ -301,12 +303,6 @@ export const OrdersService = {
   },
 
   async recalculateOrderTotal(orderId, userId) {
-    const { data: items } = await supabase.from('order_items').select('quantity, price_eur').eq('order_id', orderId);
-    const subtotal_eur = (items || []).reduce((s, it) => s + (Number(it.quantity) || 0) * (Number(it.price_eur) || 0), 0);
-    const { data: order } = await supabase.from('orders').select('discount_eur').eq('id', orderId).eq('user_id', userId).single();
-    const discount = Number(order?.discount_eur) || 0;
-    const total_eur = Math.max(0, subtotal_eur - discount);
-    await supabase.from('orders').update({ subtotal_eur, total_eur }).eq('id', orderId).eq('user_id', userId);
   },
 
   async getPayments(orderId) {
