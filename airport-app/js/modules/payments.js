@@ -1,9 +1,9 @@
 /**
  * AIRPORT - Módulo de pagos
- * Modal para registrar pago a un pedido e historial.
+ * Modal para registrar pago (validando saldo), historial y cálculos.
  */
 
-import { PaymentsService } from '../services/payments.service.js';
+import { OrdersService } from '../services/orders.service.js';
 import { formatCurrency, formatDate } from '../utils.js';
 import { openModal, closeModal } from '../ui/modal.js';
 import { showToast } from '../ui/toast.js';
@@ -17,19 +17,37 @@ function escapeHtml(text) {
   return d.innerHTML;
 }
 
+/** Calcula saldo pendiente y porcentaje pagado */
+function calculateBalance(orderTotal, payments = []) {
+  const total = Number(orderTotal) || 0;
+  const totalPaid = (payments || []).reduce((s, p) => s + (Number(p.amount_eur) || 0), 0);
+  const balance = Math.max(0, total - totalPaid);
+  const paidPercentage = total > 0 ? (totalPaid / total) * 100 : 0;
+  return { balance, totalPaid, paidPercentage };
+}
+
 export const PaymentsModule = {
+  calculateBalance,
+
   /**
    * Abre el modal para registrar un pago al pedido.
-   * @param {string} orderId - ID del pedido
-   * @param {function} [onSaved] - Callback tras guardar (ej. refrescar detalle)
+   * Valida: monto > 0 y monto <= saldo pendiente (vía OrdersService.addPayment).
    */
-  showPaymentForm(orderId, onSaved) {
+  async showPaymentForm(orderId, onSaved) {
+    let balance = 0;
+    try {
+      balance = await OrdersService.calculateBalance(orderId);
+    } catch (e) {
+      showToast('No se pudo cargar el saldo', 'error');
+      return;
+    }
     const today = new Date().toISOString().slice(0, 10);
     const formHtml = `
       <form id="payment-form" class="payment-form">
+        <p class="payment-form-balance">Saldo pendiente: <strong>${formatCurrency(balance)}</strong></p>
         <div class="form-group">
           <label class="form-label">Monto (€) *</label>
-          <input type="number" name="amount_eur" step="0.01" min="0.01" required class="form-input" placeholder="0.00">
+          <input type="number" name="amount_eur" step="0.01" min="0.01" max="${balance}" required class="form-input" placeholder="0.00">
         </div>
         <div class="form-group">
           <label class="form-label">Fecha</label>
@@ -41,6 +59,14 @@ export const PaymentsModule = {
             <option value="">—</option>
             ${PAYMENT_METHODS.map((m) => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('')}
           </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Moneda original (opcional)</label>
+          <input type="text" name="original_currency" class="form-input" placeholder="USD, VES...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Monto original (opcional)</label>
+          <input type="number" name="original_amount" step="0.01" class="form-input" placeholder="0.00">
         </div>
         <div class="form-group">
           <label class="form-label">Referencia / Notas</label>
@@ -79,9 +105,11 @@ export const PaymentsModule = {
         payment_method: fd.get('payment_method'),
         reference: fd.get('reference'),
         notes: fd.get('notes'),
+        original_currency: fd.get('original_currency'),
+        original_amount: fd.get('original_amount'),
       };
       try {
-        await PaymentsService.create(orderId, payload);
+        await OrdersService.addPayment(orderId, payload);
         showToast('Pago registrado', 'success');
         closeModal();
         if (typeof onSaved === 'function') onSaved();

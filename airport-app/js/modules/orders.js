@@ -22,6 +22,22 @@ function getStatusLabel(status) {
   return STATUS_LABELS[status] || status || '—';
 }
 
+/** Badge HTML con color según estado */
+function getStatusBadge(status) {
+  const label = getStatusLabel(status);
+  const slug = (status || '').replace('_', '-');
+  return `<span class="order-card-status order-card-status--${slug}">${escapeHtml(label)}</span>`;
+}
+
+/** Calcula total del pedido: suma items - descuento */
+function calculateOrderTotal(items, discount = 0) {
+  const subtotal = (items || []).reduce(
+    (s, it) => s + (Number(it.quantity) || 0) * (Number(it.price_eur) || 0),
+    0
+  );
+  return { subtotal, total: Math.max(0, subtotal - (Number(discount) || 0)) };
+}
+
 function escapeHtml(text) {
   if (text == null) return '';
   const d = document.createElement('div');
@@ -65,6 +81,9 @@ export const OrdersModule = {
             <option value="">Todos</option>
             ${OrdersService.STATUS_VALUES.map((s) => `<option value="${s}">${getStatusLabel(s)}</option>`).join('')}
           </select>
+          <input type="date" id="filter-start-date" class="form-input orders-filter-date" aria-label="Desde">
+          <input type="date" id="filter-end-date" class="form-input orders-filter-date" aria-label="Hasta">
+          <button type="button" id="orders-clear-filters" class="btn btn--secondary">Limpiar filtros</button>
           <a href="#orders/new" class="btn btn--primary orders-btn-new" id="new-order-btn">+ Nuevo</a>
         </div>
       </header>
@@ -120,12 +139,15 @@ export const OrdersModule = {
           </div>
           <div class="order-card-body">
             <h3 class="order-card-customer">${name}</h3>
-            <p class="order-card-meta">${formatDate(order.order_date)} • ${escapeHtml(order.customer_contact || 'Sin contacto')}</p>
-            <p class="order-card-total">Total: ${formatCurrency(total)}</p>
+            <p class="order-card-meta"><span class="order-date">${formatDate(order.order_date)}</span> • <span class="order-contact">${escapeHtml(order.customer_contact || 'Sin contacto')}</span></p>
+            <div class="order-totals">
+              <span class="total">Total: ${formatCurrency(total)}</span>
+              <span class="balance">Saldo: ${formatCurrency(order.balance ?? total)}</span>
+            </div>
           </div>
           <div class="order-card-actions">
-            <a href="#orders/${order.id}" class="btn btn--secondary btn--sm" data-action="view">Ver</a>
-            <a href="#orders/${order.id}" class="btn btn--secondary btn--sm" data-action="detail">Detalle</a>
+            <button type="button" class="btn btn--secondary btn--sm" data-action="view">Ver</button>
+            <button type="button" class="btn btn--secondary btn--sm" data-action="edit">Editar</button>
           </div>
         </article>
       `;
@@ -160,24 +182,35 @@ export const OrdersModule = {
     const c = this.container;
     const search = c.querySelector('#search-orders');
     const statusFilter = c.querySelector('#status-filter');
+    const startDate = c.querySelector('#filter-start-date');
+    const endDate = c.querySelector('#filter-end-date');
     let searchTimeout;
+    const applyFilters = () => {
+      this.currentFilters.search = search?.value?.trim() || null;
+      this.currentFilters.status = statusFilter?.value || null;
+      this.currentFilters.startDate = startDate?.value || null;
+      this.currentFilters.endDate = endDate?.value || null;
+      this.currentPage = 1;
+      this.loadOrders();
+    };
     if (search) {
       search.addEventListener('input', () => {
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-          this.currentFilters.search = search.value.trim() || null;
-          this.currentPage = 1;
-          this.loadOrders();
-        }, 300);
+        searchTimeout = setTimeout(applyFilters, 300);
       });
     }
-    if (statusFilter) {
-      statusFilter.addEventListener('change', () => {
-        this.currentFilters.status = statusFilter.value || null;
-        this.currentPage = 1;
-        this.loadOrders();
-      });
-    }
+    if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+    if (startDate) startDate.addEventListener('change', applyFilters);
+    if (endDate) endDate.addEventListener('change', applyFilters);
+    c.querySelector('#orders-clear-filters')?.addEventListener('click', () => {
+      this.currentFilters = {};
+      if (search) search.value = '';
+      if (statusFilter) statusFilter.value = '';
+      if (startDate) startDate.value = '';
+      if (endDate) endDate.value = '';
+      this.currentPage = 1;
+      this.loadOrders();
+    });
     c.querySelector('#new-order-btn')?.addEventListener('click', (e) => {
       e.preventDefault();
       navigateTo('orders', 'new');
@@ -311,31 +344,42 @@ export const OrdersModule = {
   async renderOrderForm(orderId) {
     const isEdit = !!orderId;
     let order = null;
-    if (isEdit) {
-      try {
-        showLoading();
-        order = await OrdersService.getOrderWithDetails(orderId);
-      } catch (err) {
-        showToast('Error cargando pedido', 'error');
-        navigateTo('orders');
-        return;
-      } finally {
-        hideLoading();
-      }
+    showLoading();
+    let categories = [];
+    try {
+      const [cats, orderData] = await Promise.all([
+        OrdersService.getCategories(),
+        isEdit ? OrdersService.getOrderWithDetails(orderId) : Promise.resolve(null),
+      ]);
+      categories = cats || [];
+      order = orderData;
+    } catch (err) {
+      showToast('Error cargando datos', 'error');
+      navigateTo('orders');
+      return;
+    } finally {
+      hideLoading();
     }
-
+    const catOptions = (catId) =>
+      categories
+        .map(
+          (c) =>
+            `<option value="${c.id}" ${catId === c.id ? 'selected' : ''}>${escapeHtml(c.name)}</option>`
+        )
+        .join('');
     const items = order?.items || [];
     const itemsHtml = items.length
       ? items
           .map(
             (it, i) => `
         <div class="order-form-item" data-index="${i}">
-          <input type="text" name="item_description_${i}" value="${escapeHtml(it.description || '')}" placeholder="Descripción" class="form-input">
-          <input type="text" name="item_size_${i}" value="${escapeHtml(it.size || '')}" placeholder="Talla" class="form-input">
-          <input type="text" name="item_color_${i}" value="${escapeHtml(it.color || '')}" placeholder="Color" class="form-input">
-          <input type="number" name="item_quantity_${i}" value="${it.quantity ?? 1}" min="1" placeholder="Cant" class="form-input">
-          <input type="number" name="item_price_${i}" value="${it.price_eur ?? 0}" min="0" step="0.01" placeholder="Precio €" class="form-input">
-          <button type="button" class="btn btn--secondary btn--sm order-form-remove-item" data-index="${i}">Quitar</button>
+          <select name="item_category_${i}" class="form-select"><option value="">—</option>${catOptions(it.category_id)}</select>
+          <input type="text" name="item_description_${i}" value="${escapeHtml(it.description || '')}" placeholder="Descripción *" class="form-input">
+          <input type="text" name="item_size_${i}" value="${escapeHtml(it.size || '')}" placeholder="Talla/Color" class="form-input">
+          <input type="number" name="item_quantity_${i}" value="${it.quantity ?? 1}" min="1" placeholder="Cant *" class="form-input">
+          <input type="number" name="item_price_${i}" value="${it.price_eur ?? 0}" min="0" step="0.01" placeholder="Precio € *" class="form-input">
+          <span class="order-form-item-subtotal">${formatCurrency((it.quantity ?? 0) * (it.price_eur ?? 0))}</span>
+          <button type="button" class="btn btn--secondary btn--sm order-form-remove-item">−</button>
         </div>
       `
           )
@@ -375,12 +419,17 @@ export const OrdersModule = {
           <h2 class="orders-detail-h2">Items del pedido</h2>
           <div id="order-form-items">${itemsHtml}</div>
           <button type="button" class="btn btn--secondary" id="order-form-add-item">+ Agregar item</button>
-          <div class="order-form-totals">
-            <p><label class="form-label">Descuento (€)</label><input type="number" name="discount_eur" value="${order?.discount_eur ?? 0}" min="0" step="0.01" class="form-input"></p>
-            <p class="order-form-total-line">Total: <strong id="order-form-total">0.00 €</strong></p>
+          <div class="order-form-totals order-summary">
+            <div class="summary-row"><span>Subtotal:</span><span id="subtotal-display">0.00 €</span></div>
+            <div class="summary-row"><label class="form-label">Descuento (€)</label><input type="number" name="discount_eur" value="${order?.discount_eur ?? 0}" min="0" step="0.01" class="form-input" id="order-form-discount"></div>
+            <div class="summary-row total"><span>Total:</span><span id="order-form-total">0.00 €</span></div>
           </div>
         </section>
         <section class="orders-detail-section">
+          <div class="form-group">
+            <label class="form-label">Fecha entrega</label>
+            <input type="date" name="delivery_date" class="form-input" value="${order?.delivery_date ? order.delivery_date.slice(0, 10) : ''}">
+          </div>
           <div class="form-group">
             <label class="form-label">Estado</label>
             <select name="status" class="form-select">
@@ -410,25 +459,30 @@ export const OrdersModule = {
 
     let itemIndex = (form.querySelectorAll('.order-form-item')).length;
 
+    const catOpts = categories.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
     const addItem = () => {
       const div = document.createElement('div');
       div.className = 'order-form-item';
       div.dataset.index = itemIndex;
       div.innerHTML = `
-        <input type="text" name="item_description_${itemIndex}" placeholder="Descripción" class="form-input">
-        <input type="text" name="item_size_${itemIndex}" placeholder="Talla" class="form-input">
-        <input type="text" name="item_color_${itemIndex}" placeholder="Color" class="form-input">
-        <input type="number" name="item_quantity_${itemIndex}" value="1" min="1" placeholder="Cant" class="form-input">
-        <input type="number" name="item_price_${itemIndex}" value="0" min="0" step="0.01" placeholder="Precio €" class="form-input">
-        <button type="button" class="btn btn--secondary btn--sm order-form-remove-item">Quitar</button>
+        <select name="item_category_${itemIndex}" class="form-select"><option value="">—</option>${catOpts}</select>
+        <input type="text" name="item_description_${itemIndex}" placeholder="Descripción *" class="form-input">
+        <input type="text" name="item_size_${itemIndex}" placeholder="Talla/Color" class="form-input">
+        <input type="number" name="item_quantity_${itemIndex}" value="1" min="1" placeholder="Cant *" class="form-input">
+        <input type="number" name="item_price_${itemIndex}" value="0" min="0" step="0.01" placeholder="Precio € *" class="form-input">
+        <span class="order-form-item-subtotal">0.00 €</span>
+        <button type="button" class="btn btn--secondary btn--sm order-form-remove-item">−</button>
       `;
       itemsContainer.appendChild(div);
       itemIndex++;
       div.querySelector('.order-form-remove-item').addEventListener('click', () => {
-        div.remove();
+        if (itemsContainer.querySelectorAll('.order-form-item').length > 1) div.remove();
+        else showToast('Debe haber al menos un item', 'warning');
         this.updateFormTotal();
       });
-      [...div.querySelectorAll('input')].forEach((inp) => inp.addEventListener('input', () => this.updateFormTotal()));
+      [...div.querySelectorAll('input'), ...div.querySelectorAll('select')].forEach((el) =>
+        el.addEventListener('input', () => this.updateFormTotal())
+      );
     };
 
     this.container.querySelector('#order-form-add-item')?.addEventListener('click', addItem);
@@ -449,26 +503,39 @@ export const OrdersModule = {
         const desc = row.querySelector('input[name^="item_description"]')?.value?.trim();
         const q = Number(row.querySelector('input[name^="item_quantity"]')?.value) || 0;
         const p = Number(row.querySelector('input[name^="item_price"]')?.value) || 0;
+        const catId = row.querySelector('select[name^="item_category"]')?.value?.trim() || null;
         items.push({
+          category_id: catId || null,
           description: desc || '',
           size: row.querySelector('input[name^="item_size"]')?.value?.trim() || '',
-          color: row.querySelector('input[name^="item_color"]')?.value?.trim() || '',
+          color: '',
           quantity: q,
           price_eur: p,
         });
       });
+      const validItems = items.filter((it) => (it.description && it.description.length) || it.quantity > 0 || it.price_eur > 0);
       const data = {
         order_date: form.querySelector('[name="order_date"]')?.value || new Date().toISOString().slice(0, 10),
         customer_name: form.querySelector('[name="customer_name"]')?.value,
         customer_contact: form.querySelector('[name="customer_contact"]')?.value,
         source: form.querySelector('[name="source"]')?.value,
         notes: form.querySelector('[name="notes"]')?.value,
+        delivery_date: form.querySelector('[name="delivery_date"]')?.value || null,
         discount_eur: form.querySelector('[name="discount_eur"]')?.value || 0,
         status: form.querySelector('[name="status"]')?.value,
-        items: items.filter((it) => (it.description && it.description.length) || it.quantity > 0 || it.price_eur > 0),
+        items: validItems,
       };
       if (!data.customer_name?.trim()) {
         showToast('El nombre del cliente es obligatorio', 'warning');
+        return;
+      }
+      if (!validItems.length) {
+        showToast('Debe agregar al menos un item', 'warning');
+        return;
+      }
+      const { total } = calculateOrderTotal(validItems, data.discount_eur);
+      if (total <= 0) {
+        showToast('El total debe ser mayor que 0', 'warning');
         return;
       }
       try {
@@ -492,17 +559,21 @@ export const OrdersModule = {
   updateFormTotal() {
     const c = this.container;
     if (!c) return;
-    const items = c.querySelectorAll('.order-form-item');
-    let subtotal = 0;
-    items.forEach((row) => {
+    const items = [];
+    c.querySelectorAll('.order-form-item').forEach((row) => {
       const q = Number(row.querySelector('input[name^="item_quantity"]')?.value) || 0;
       const p = Number(row.querySelector('input[name^="item_price"]')?.value) || 0;
-      subtotal += q * p;
+      const sub = q * p;
+      items.push({ quantity: q, price_eur: p });
+      const subEl = row.querySelector('.order-form-item-subtotal');
+      if (subEl) subEl.textContent = formatCurrency(sub);
     });
     const discount = Number(c.querySelector('input[name="discount_eur"]')?.value) || 0;
-    const total = Math.max(0, subtotal - discount);
-    const el = c.querySelector('#order-form-total');
-    if (el) el.textContent = formatCurrency(total);
+    const { subtotal, total } = calculateOrderTotal(items, discount);
+    const subDisplay = c.querySelector('#subtotal-display');
+    if (subDisplay) subDisplay.textContent = formatCurrency(subtotal);
+    const totalEl = c.querySelector('#order-form-total');
+    if (totalEl) totalEl.textContent = formatCurrency(total);
   },
 };
 
