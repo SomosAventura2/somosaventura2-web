@@ -1,6 +1,6 @@
 /**
  * AIRPORT - Router SPA (hash-based)
- * Rutas: #dashboard, #orders, #expenses, #categories, #profile
+ * Rutas: #dashboard, #orders, #orders/new, #orders/:id, #expenses, #categories, #profile
  */
 
 const routes = {
@@ -15,39 +15,57 @@ let currentModule = null;
 let currentRoute = null;
 
 /**
- * Obtiene la ruta actual desde el hash (sin #).
- * @returns {string} - 'dashboard' | 'orders' | 'expenses' | 'categories' | 'profile'
+ * Parsea el hash y devuelve { routeName, subRoute, param }.
+ * Ej: #orders/new → { routeName: 'orders', subRoute: 'new' }
+ *     #orders/abc-123 → { routeName: 'orders', subRoute: 'detail', param: 'abc-123' }
+ */
+export function parseHash() {
+  const hash = (window.location.hash || '#dashboard').slice(1).toLowerCase();
+  const parts = hash.split('/').filter(Boolean);
+  const routeName = parts[0] && routes[parts[0]] ? parts[0] : 'dashboard';
+  const subRoute = parts[1] || null; // 'new' o uuid
+  const param =
+    subRoute && subRoute !== 'new' && subRoute.length > 10 ? subRoute : null;
+  return {
+    routeName,
+    subRoute: subRoute === 'new' ? 'new' : param ? 'detail' : null,
+    param: param || null,
+  };
+}
+
+/**
+ * Obtiene la ruta actual (nombre base para navegación).
  */
 export function getCurrentRoute() {
-  const hash = (window.location.hash || '#dashboard').slice(1).toLowerCase();
-  return routes[hash] ? hash : 'dashboard';
+  return parseHash().routeName;
 }
 
 /**
  * Navega a una ruta (cambia hash y carga el módulo).
  * @param {string} routeName - Nombre de la ruta
+ * @param {string} [subRoute] - 'new' o id para detalle
  */
-export async function navigateTo(routeName) {
-  const route = routes[routeName];
-  if (!route) {
-    window.location.hash = '#dashboard';
-    return;
-  }
-  window.location.hash = route.hash;
-  await loadRoute(routeName);
+export async function navigateTo(routeName, subRoute) {
+  let hash = routes[routeName]?.hash || '#dashboard';
+  if (subRoute) hash += '/' + subRoute;
+  window.location.hash = hash;
+  await loadRouteFromHash();
 }
 
 /**
- * Carga el módulo correspondiente a la ruta actual.
- * @param {string} [routeName] - Si no se pasa, se usa getCurrentRoute()
+ * Carga el módulo según el hash actual (incluye subrutas).
  */
-export async function loadRoute(routeName = getCurrentRoute()) {
+export async function loadRouteFromHash() {
+  const { routeName, subRoute, param } = parseHash();
   const route = routes[routeName];
   if (!route) return;
 
   currentRoute = routeName;
-  const container = document.getElementById('app-content-inner') || document.getElementById('app-content');
+  const container =
+    document.getElementById('app-content-inner') || document.getElementById('app-content');
   if (!container) return;
+
+  const routeOptions = { subRoute, param };
 
   try {
     if (currentModule?.destroy instanceof Function) {
@@ -57,10 +75,17 @@ export async function loadRoute(routeName = getCurrentRoute()) {
 
     const modulePath = `./modules/${route.module}.js`;
     const mod = await import(modulePath);
-    const Module = mod.default || mod[route.module] || mod.DashboardModule || mod.OrdersModule || mod.ExpensesModule || mod.CategoriesModule || mod.ProfileModule;
+    const Module =
+      mod.default ||
+      mod[route.module] ||
+      mod.DashboardModule ||
+      mod.OrdersModule ||
+      mod.ExpensesModule ||
+      mod.CategoriesModule ||
+      mod.ProfileModule;
     if (Module?.init) {
       currentModule = Module;
-      await Module.init(container);
+      await Module.init(container, routeOptions);
     } else {
       container.innerHTML = `<p class="page-placeholder">${route.label} — Módulo en desarrollo.</p>`;
     }
@@ -71,12 +96,25 @@ export async function loadRoute(routeName = getCurrentRoute()) {
 }
 
 /**
+ * Carga el módulo correspondiente a la ruta actual (compatibilidad).
+ * @param {string} [routeName] - Si no se pasa, se usa parseHash()
+ */
+export async function loadRoute(routeName) {
+  if (routeName) {
+    const route = routes[routeName];
+    if (route) window.location.hash = route.hash;
+  }
+  await loadRouteFromHash();
+}
+
+/**
  * Inicializa el router: escucha hashchange y carga la ruta inicial.
  */
 export function init() {
-  const handleHash = () => loadRoute(getCurrentRoute());
+  const handleHash = () => loadRouteFromHash();
   window.addEventListener('hashchange', handleHash);
-  if (!window.location.hash || !routes[window.location.hash.slice(1).toLowerCase()]) {
+  const { routeName } = parseHash();
+  if (!routeName || !routes[routeName]) {
     window.location.hash = '#dashboard';
   } else {
     handleHash();

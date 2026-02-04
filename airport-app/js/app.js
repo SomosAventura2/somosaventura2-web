@@ -1,14 +1,20 @@
 /**
  * AIRPORT - Aplicación principal (SPA)
- * Inicializa tras login: auth, router, logout.
+ * Inicializa tras login: auth, router, logout. PWA: registra service worker.
  */
 
 import { getCurrentUser, logout } from './modules/auth.js';
-import { init as routerInit, navigateTo, getCurrentRoute } from './router.js';
+import { init as routerInit, navigateTo } from './router.js';
 import { showToast } from './ui/toast.js';
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+}
 
 export const App = {
   async init() {
+    registerServiceWorker();
     const user = await getCurrentUser();
     if (!user) {
       window.location.href = 'login.html';
