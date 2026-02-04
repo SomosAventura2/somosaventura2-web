@@ -109,17 +109,17 @@
 
       <form id="login-form" class="login-form" novalidate>
         <div class="form-group">
-          <label for="email" class="form-label">Email</label>
+          <label for="user" class="form-label">Usuario o correo</label>
           <input
-            type="email"
-            id="email"
-            name="email"
+            type="text"
+            id="user"
+            name="user"
             class="form-input"
-            autocomplete="email"
-            placeholder="airportmaracay@gmail.com"
+            autocomplete="username"
+            placeholder="chanti"
             required
           >
-          <span id="email-error" class="form-error" aria-live="polite"></span>
+          <span id="user-error" class="form-error" aria-live="polite"></span>
         </div>
         <div class="form-group">
           <label for="password" class="form-label">Contraseña</label>
@@ -171,9 +171,9 @@
     import { login } from './js/modules/auth.js';
 
     const form = document.getElementById('login-form');
-    const emailInput = document.getElementById('email');
+    const userInput = document.getElementById('user');
     const passwordInput = document.getElementById('password');
-    const emailError = document.getElementById('email-error');
+    const userError = document.getElementById('user-error');
     const passwordError = document.getElementById('password-error');
     const loginErrorBox = document.getElementById('login-error');
     const submitBtn = document.getElementById('submit-btn');
@@ -192,29 +192,29 @@
 
     /** Limpia errores inline de los campos */
     function clearFieldErrors() {
-      emailError.textContent = '';
+      userError.textContent = '';
       passwordError.textContent = '';
-      emailInput.classList.remove('error');
+      userInput.classList.remove('error');
       passwordInput.classList.remove('error');
     }
 
     /**
-     * Validación básica: email no vacío y formato válido, contraseña no vacía.
+     * Validación: usuario/correo no vacío (si es correo, formato válido), contraseña no vacía.
      * @returns {boolean}
      */
     function validateForm() {
       clearFieldErrors();
       let valid = true;
-      const email = emailInput.value.trim();
+      const user = userInput.value.trim();
       const password = passwordInput.value;
 
-      if (!email) {
-        emailError.textContent = 'El email es obligatorio.';
-        emailInput.classList.add('error');
+      if (!user) {
+        userError.textContent = 'El usuario o correo es obligatorio.';
+        userInput.classList.add('error');
         valid = false;
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        emailError.textContent = 'Introduce un email válido.';
-        emailInput.classList.add('error');
+      } else if (user.includes('@') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user)) {
+        userError.textContent = 'Introduce un correo válido.';
+        userInput.classList.add('error');
         valid = false;
       }
 
@@ -240,7 +240,7 @@
 
       setLoading(true);
       try {
-        const result = await login(emailInput.value.trim(), passwordInput.value);
+        const result = await login(userInput.value.trim(), passwordInput.value);
         if (result.success) {
           window.location.href = 'index.html';
           return;

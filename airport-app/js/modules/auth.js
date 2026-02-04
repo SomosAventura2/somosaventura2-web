@@ -9,13 +9,36 @@ import { supabase } from '../supabase.js';
 let currentUser = null;
 
 /**
- * Inicia sesión con email y contraseña.
- * @param {string} email - Email del usuario
+ * Resuelve "usuario o correo" al email real (para login).
+ * Si el valor contiene @ se usa como email; si no, se busca en public.user_logins.
+ * @param {string} identifier - Usuario (ej. "chanti") o email
+ * @returns {Promise<string|null>} - Email para signInWithPassword, o null si no se encuentra
+ */
+export async function resolveLoginIdentifier(identifier) {
+  const trimmed = (identifier || '').trim();
+  if (!trimmed) return null;
+  if (trimmed.includes('@')) return trimmed;
+  const { data, error } = await supabase.from('user_logins').select('email').eq('username', trimmed).maybeSingle();
+  if (error) {
+    console.error('Error al resolver usuario:', error);
+    return null;
+  }
+  return data?.email ?? null;
+}
+
+/**
+ * Inicia sesión con usuario o email y contraseña.
+ * Acepta "chanti" (busca el email en user_logins) o el correo directamente.
+ * @param {string} identifier - Usuario (ej. "chanti") o email
  * @param {string} password - Contraseña
  * @returns {Promise<{ success: boolean, error?: string }>}
  */
-export async function login(email, password) {
+export async function login(identifier, password) {
   try {
+    const email = await resolveLoginIdentifier(identifier);
+    if (!email) {
+      return { success: false, error: 'Usuario o correo no encontrado.' };
+    }
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       return { success: false, error: error.message };
