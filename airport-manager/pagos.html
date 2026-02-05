@@ -18,12 +18,14 @@
         <div class="header-content">
             <a href="dashboard.html" class="logo">AIRPORT</a>
             <nav class="nav">
-                <a href="dashboard.html">Dashboard</a>
-                <a href="pedidos.html">Pedidos</a>
-                <a href="calendario.html">Calendario</a>
-                <a href="pagos.html">Pagos</a>
-                <a href="estadisticas.html">Stats</a>
-                <a href="#" onclick="logout()">Salir</a>
+                <div class="nav-scroll" id="navScroll">
+                    <a href="dashboard.html" class="nav-item">Dashboard</a>
+                    <a href="pedidos.html" class="nav-item">Pedidos</a>
+                    <a href="pagos.html" class="nav-item active">Pagos</a>
+                    <a href="calendario.html" class="nav-item">Calendario</a>
+                    <a href="estadisticas.html" class="nav-item">Stats</a>
+                </div>
+                <a href="#" class="nav-logout" onclick="logout()">Salir</a>
             </nav>
         </div>
     </header>
@@ -75,8 +77,8 @@
                             </select>
                         </div>
                     </div>
-                    <div class="pagos-form-group hidden" id="paymentMethodDollarsGroup">
-                        <label class="pagos-label" for="paymentMethodDollars">Método (dólares)*</label>
+                    <div class="pagos-form-group" id="paymentMethodDollarsGroup" style="display: none;">
+                        <label class="pagos-label" for="paymentMethodDollars">Método de pago*</label>
                         <select id="paymentMethodDollars" class="pagos-input">
                             <option value="efectivo_usd">Efectivo</option>
                             <option value="zelle">Zelle</option>
@@ -84,7 +86,7 @@
                     </div>
                     <div class="pagos-form-group" id="pagoMovilRefGroup">
                         <label class="pagos-label" for="paymentReference">Ref. Pago Móvil</label>
-                        <input type="text" id="paymentReference" class="pagos-input" placeholder="Opcional">
+                        <input type="text" id="paymentReference" class="pagos-input" placeholder="Opcional (solo BS)">
                     </div>
                     <div id="paymentMessage" class="pagos-message"></div>
                     <button type="submit" class="pagos-submit">Registrar Pago</button>

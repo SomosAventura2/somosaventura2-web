@@ -18,12 +18,14 @@
         <div class="header-content">
             <a href="dashboard.html" class="logo">AIRPORT</a>
             <nav class="nav">
-                <a href="dashboard.html">Dashboard</a>
-                <a href="pedidos.html">Pedidos</a>
-                <a href="calendario.html">Calendario</a>
-                <a href="pagos.html">Pagos</a>
-                <a href="estadisticas.html">Stats</a>
-                <a href="#" onclick="logout()">Salir</a>
+                <div class="nav-scroll" id="navScroll">
+                    <a href="dashboard.html" class="nav-item">Dashboard</a>
+                    <a href="pedidos.html" class="nav-item">Pedidos</a>
+                    <a href="pagos.html" class="nav-item">Pagos</a>
+                    <a href="calendario.html" class="nav-item active">Calendario</a>
+                    <a href="estadisticas.html" class="nav-item">Stats</a>
+                </div>
+                <a href="#" class="nav-logout" onclick="logout()">Salir</a>
             </nav>
         </div>
     </header>

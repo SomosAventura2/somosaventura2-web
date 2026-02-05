@@ -2,22 +2,24 @@ let session;
 let currentTab = 'pagos';
 
 function updatePaymentMethodVisibility() {
-    const currency = document.getElementById('paymentCurrency').value;
+    const sel = document.getElementById('paymentCurrency');
     const dollarsGroup = document.getElementById('paymentMethodDollarsGroup');
     const pagoMovilGroup = document.getElementById('pagoMovilRefGroup');
-    
-    if (currency === 'BS') {
-        dollarsGroup.classList.add('hidden');
-        pagoMovilGroup.classList.remove('hidden');
-        document.getElementById('paymentMethodDollars').removeAttribute('required');
-    } else if (currency === 'USD') {
-        dollarsGroup.classList.remove('hidden');
-        pagoMovilGroup.classList.add('hidden');
-        document.getElementById('paymentMethodDollars').setAttribute('required', 'required');
+    if (!sel || !dollarsGroup || !pagoMovilGroup) return;
+    const currency = sel.value;
+    const methodSelect = document.getElementById('paymentMethodDollars');
+    if (currency === 'USD') {
+        dollarsGroup.style.display = '';
+        pagoMovilGroup.style.display = 'none';
+        if (methodSelect) methodSelect.setAttribute('required', 'required');
     } else {
-        dollarsGroup.classList.add('hidden');
-        pagoMovilGroup.classList.add('hidden');
-        document.getElementById('paymentMethodDollars').removeAttribute('required');
+        dollarsGroup.style.display = 'none';
+        if (methodSelect) methodSelect.removeAttribute('required');
+        if (currency === 'BS') {
+            pagoMovilGroup.style.display = '';
+        } else {
+            pagoMovilGroup.style.display = 'none';
+        }
     }
 }
 
@@ -30,14 +32,16 @@ function getPaymentMethodFromForm() {
 }
 
 async function init() {
+    updatePaymentMethodVisibility();
+    const currencySel = document.getElementById('paymentCurrency');
+    if (currencySel) currencySel.addEventListener('change', updatePaymentMethodVisibility);
+
     session = await checkAuth();
     if (!session) return;
-    
+
     loadOrders();
     loadPayments();
     loadExpenses();
-
-    document.getElementById('paymentCurrency').addEventListener('change', updatePaymentMethodVisibility);
     updatePaymentMethodVisibility();
 }
 

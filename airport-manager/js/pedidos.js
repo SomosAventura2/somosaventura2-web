@@ -241,6 +241,7 @@ function addItem() {
     `;
     
     container.insertAdjacentHTML('beforeend', itemHtml);
+    if (window.initCustomSelects) window.initCustomSelects(container);
 }
 
 function removeItem(itemId) {
@@ -386,10 +387,15 @@ async function editOrder(orderId) {
             items.forEach(item => {
                 addItem();
                 const lastCard = document.querySelector('#itemsContainer .card:last-child');
-                lastCard.querySelector('.item-producto').value = item.producto;
+                const setSelect = (sel, val) => {
+                    if (!sel) return;
+                    sel.value = val;
+                    sel.dispatchEvent(new Event('change', { bubbles: true }));
+                };
+                setSelect(lastCard.querySelector('.item-producto'), item.producto);
                 lastCard.querySelector('.item-cantidad').value = item.cantidad;
-                lastCard.querySelector('.item-talla').value = item.talla;
-                lastCard.querySelector('.item-genero').value = item.genero;
+                setSelect(lastCard.querySelector('.item-talla'), item.talla);
+                setSelect(lastCard.querySelector('.item-genero'), item.genero);
                 lastCard.querySelector('.item-color').value = item.color;
             });
         }
