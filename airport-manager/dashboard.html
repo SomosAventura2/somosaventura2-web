@@ -2,11 +2,16 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Airport">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Dashboard - Airport Manager</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="images/icon-192.png">
 </head>
 <body>
     <header class="header">
@@ -23,7 +28,7 @@
         </div>
     </header>
 
-    <main class="container" style="padding: 2rem 1rem;">
+    <main class="container main-content">
         <h1 class="mb-4">Dashboard</h1>
 
         <!-- Stats Grid -->
@@ -73,7 +78,7 @@
         </div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="js/supabase-config.js"></script>
     <script>
         let session;
@@ -119,13 +124,11 @@
                 const totalIngresos = ingresosData?.reduce((sum, order) => sum + (parseFloat(order.amount_euros) || 0), 0) || 0;
                 document.getElementById('ingresosMes').textContent = `€${totalIngresos.toFixed(2)}`;
 
-                // Entregas pendientes
+                // Entregas pendientes: agendado + en_produccion + listo
                 const { data: pendientesData } = await supabase
                     .from('orders')
-                    .select('id', { count: 'exact' })
-                    .lte('delivery_date', today)
-                    .not('status', 'eq', 'entregado')
-                    .not('status', 'eq', 'cancelado');
+                    .select('id')
+                    .in('status', ['agendado', 'en_produccion', 'listo']);
 
                 document.getElementById('pendientes').textContent = pendientesData?.length || 0;
 
@@ -151,6 +154,8 @@
                     return;
                 }
 
+                const statusOpts = window.STATUS_OPTIONS || [];
+                const statusMenu = statusOpts.map(s => `<li><button type="button" class="status-dropdown-option" data-status="${s.value}">${s.label}</button></li>`).join('');
                 const html = `
                     <table class="table">
                         <thead>
@@ -164,12 +169,12 @@
                         </thead>
                         <tbody>
                             ${data.map(order => `
-                                <tr onclick="window.location.href='pedidos.html?id=${order.id}'" style="cursor: pointer;">
-                                    <td class="mono">#${order.order_number}</td>
-                                    <td>${order.customer_name}</td>
-                                    <td>${formatCurrency(order.amount_euros, 'EUR')}</td>
-                                    <td><span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></td>
-                                    <td>${formatDate(order.delivery_date)}</td>
+                                <tr>
+                                    <td class="mono" onclick="window.location.href='pedidos.html?id=${order.id}'" style="cursor: pointer;">#${order.order_number}</td>
+                                    <td onclick="window.location.href='pedidos.html?id=${order.id}'" style="cursor: pointer;">${order.customer_name}</td>
+                                    <td onclick="window.location.href='pedidos.html?id=${order.id}'" style="cursor: pointer;">${formatCurrency(order.amount_euros, 'EUR')}</td>
+                                    <td onclick="event.stopPropagation()"><div class="status-dropdown"><button type="button" class="status-dropdown-btn status-${order.status}" data-order-id="${order.id}">${getStatusText(order.status)} ▾</button><ul class="status-dropdown-menu">${statusMenu}</ul></div></td>
+                                    <td onclick="window.location.href='pedidos.html?id=${order.id}'" style="cursor: pointer;">${formatDate(order.delivery_date)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -177,6 +182,7 @@
                 `;
                 
                 container.innerHTML = html;
+                bindDashboardStatusDropdowns(container);
 
             } catch (error) {
                 console.error('Error loading recent orders:', error);
@@ -205,6 +211,8 @@
                     return;
                 }
 
+                const statusOpts = window.STATUS_OPTIONS || [];
+                const statusMenu = statusOpts.map(s => `<li><button type="button" class="status-dropdown-option" data-status="${s.value}">${s.label}</button></li>`).join('');
                 const html = `
                     <table class="table">
                         <thead>
@@ -220,10 +228,8 @@
                                 <tr>
                                     <td class="mono">#${order.order_number}</td>
                                     <td>${order.customer_name}</td>
-                                    <td><span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></td>
-                                    <td>
-                                        <a href="pedidos.html?id=${order.id}" class="btn btn-sm btn-outline">Ver</a>
-                                    </td>
+                                    <td><div class="status-dropdown"><button type="button" class="status-dropdown-btn status-${order.status}" data-order-id="${order.id}">${getStatusText(order.status)} ▾</button><ul class="status-dropdown-menu">${statusMenu}</ul></div></td>
+                                    <td><a href="pedidos.html?id=${order.id}" class="btn btn-sm btn-outline">Ver</a></td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -231,6 +237,7 @@
                 `;
                 
                 container.innerHTML = html;
+                bindDashboardStatusDropdowns(container);
 
             } catch (error) {
                 console.error('Error loading today deliveries:', error);
@@ -238,6 +245,46 @@
                     '<div class="alert alert-error">Error al cargar entregas de hoy</div>';
             }
         }
+
+        function bindDashboardStatusDropdowns(container) {
+            if (!container) return;
+            container.querySelectorAll('.status-dropdown').forEach(wrap => {
+                const btn = wrap.querySelector('.status-dropdown-btn');
+                const orderId = btn?.getAttribute('data-order-id');
+                if (!orderId) return;
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    container.querySelectorAll('.status-dropdown.open').forEach(d => d !== wrap && d.classList.remove('open'));
+                    wrap.classList.toggle('open');
+                });
+                wrap.querySelectorAll('.status-dropdown-option').forEach(opt => {
+                    opt.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const newStatus = opt.getAttribute('data-status');
+                        if (!newStatus) return;
+                        wrap.classList.remove('open');
+                        if (typeof updateOrderStatus === 'function') {
+                            await updateOrderStatus(orderId, newStatus);
+                            loadRecentOrders();
+                            loadTodayDeliveries();
+                            loadStats();
+                        }
+                    });
+                });
+            });
+        }
+
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.status-dropdown.open').forEach(d => d.classList.remove('open'));
+        });
+
+        window.addEventListener('orderStatusUpdated', () => {
+            loadRecentOrders();
+            loadTodayDeliveries();
+            loadStats();
+        });
 
         // Inicializar
         init();

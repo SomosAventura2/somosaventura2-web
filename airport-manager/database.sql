@@ -20,6 +20,7 @@ create table orders (
     payment_amount numeric(10,2) not null,
     payment_currency text not null check (payment_currency in ('BS', 'USD', 'USDT')),
     payment_method text not null,
+    pago_movil_reference text,
     status text not null default 'agendado' check (status in ('agendado', 'en_produccion', 'listo', 'entregado', 'cancelado')),
     delivery_date date not null,
     calendar_date date not null,
@@ -44,6 +45,7 @@ create table payments (
     payment_type text not null check (payment_type in ('inicial_50', 'restante_50')),
     amount numeric(10,2) not null,
     currency text not null check (currency in ('BS', 'USD', 'USDT')),
+    payment_method text,
     reference text
 );
 

@@ -12,17 +12,12 @@ async function init() {
 function changePeriod(period) {
     currentPeriod = period;
     
-    // Actualizar botones
-    document.querySelectorAll('#btnSemanal, #btnMensual, #btnTrimestral').forEach(btn => {
-        btn.classList.remove('btn-primary');
-        btn.classList.add('btn');
+    document.querySelectorAll('.stats-period-btn').forEach(btn => {
+        btn.classList.remove('active');
     });
-    
     const btnId = period === 'semanal' ? 'btnSemanal' : period === 'mensual' ? 'btnMensual' : 'btnTrimestral';
-    document.getElementById(btnId).classList.add('btn-primary');
-    document.getElementById(btnId).classList.remove('btn');
+    document.getElementById(btnId).classList.add('active');
     
-    // Actualizar título
     const titles = {
         'semanal': 'Esta Semana',
         'mensual': 'Este Mes',
@@ -51,9 +46,14 @@ function getPeriodDates() {
             break;
     }
     
+    // Inicio del día de inicio (00:00:00 en hora local, luego a ISO para Supabase)
+    const startOfStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    // Fin del día actual (23:59:59.999) para incluir todo el día en los filtros
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    
     return {
-        start: startDate.toISOString().split('T')[0],
-        end: now.toISOString().split('T')[0]
+        start: startOfStart.toISOString(),
+        end: endOfToday.toISOString()
     };
 }
 
@@ -69,53 +69,72 @@ async function loadStatistics() {
 
 async function loadFinancialStats(dates) {
     try {
-        // Ingresos (Pagos)
-        const { data: payments } = await supabase
+        if (!window.supabase) {
+            console.error('Stats: Supabase no disponible');
+            return;
+        }
+
+        // Ingresos (tabla payments: pagos del modal de pedidos + pagos registrados en Pagos)
+        const { data: payments, error: errPayments } = await supabase
             .from('payments')
-            .select('amount, currency')
+            .select('amount, currency, created_at')
             .gte('created_at', dates.start)
             .lte('created_at', dates.end);
-        
+
+        if (errPayments) {
+            console.error('Stats error payments:', errPayments);
+        }
+
         // Gastos
-        const { data: expenses } = await supabase
+        const { data: expenses, error: errExpenses } = await supabase
             .from('expenses')
             .select('amount, currency')
             .gte('created_at', dates.start)
             .lte('created_at', dates.end);
-        
-        // Ingresos en Euros (referencia)
-        const { data: orders } = await supabase
+
+        if (errExpenses) {
+            console.error('Stats error expenses:', errExpenses);
+        }
+
+        // Ingresos en Euros (referencia: monto de pedidos creados en el período, sin cancelados)
+        const { data: orders, error: errOrders } = await supabase
             .from('orders')
-            .select('amount_euros')
+            .select('amount_euros, created_at')
             .gte('created_at', dates.start)
             .lte('created_at', dates.end)
             .not('status', 'eq', 'cancelado');
-        
-        // Calcular totales
-        const ingresosBS = payments?.filter(p => p.currency === 'BS').reduce((sum, p) => sum + parseFloat(p.amount), 0) || 0;
-        const ingresosUSD = payments?.filter(p => ['USD', 'USDT'].includes(p.currency)).reduce((sum, p) => sum + parseFloat(p.amount), 0) || 0;
-        const ingresosEUR = orders?.reduce((sum, o) => sum + parseFloat(o.amount_euros || 0), 0) || 0;
-        
-        const gastosBS = expenses?.filter(e => e.currency === 'BS').reduce((sum, e) => sum + parseFloat(e.amount), 0) || 0;
-        const gastosUSD = expenses?.filter(e => e.currency === 'USD').reduce((sum, e) => sum + parseFloat(e.amount), 0) || 0;
-        
-        // Mostrar
+
+        if (errOrders) {
+            console.error('Stats error orders:', errOrders);
+        }
+
+        const paymentsList = payments || [];
+        const ordersList = orders || [];
+        const expensesList = expenses || [];
+
+        const ingresosBS = paymentsList.filter(p => p.currency === 'BS').reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+        const ingresosUSD = paymentsList.filter(p => ['USD', 'USDT'].includes(p.currency)).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+        const ingresosEUR = ordersList.reduce((sum, o) => sum + parseFloat(o.amount_euros || 0), 0);
+
+        const gastosBS = expensesList.filter(e => e.currency === 'BS').reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
+        const gastosUSD = expensesList.filter(e => e.currency === 'USD').reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
+
+        const balanceBS = ingresosBS - gastosBS;
+        const balanceUSD = ingresosUSD - gastosUSD;
+
         document.getElementById('ingresoBS').textContent = `Bs. ${ingresosBS.toFixed(2)}`;
         document.getElementById('ingresoUSD').textContent = `$${ingresosUSD.toFixed(2)}`;
         document.getElementById('ingresoEUR').textContent = `€${ingresosEUR.toFixed(2)}`;
-        
+
         document.getElementById('gastoBS').textContent = `Bs. ${gastosBS.toFixed(2)}`;
         document.getElementById('gastoUSD').textContent = `$${gastosUSD.toFixed(2)}`;
-        
-        const balanceBS = ingresosBS - gastosBS;
-        const balanceUSD = ingresosUSD - gastosUSD;
-        
+
         document.getElementById('balanceBS').textContent = `Bs. ${balanceBS.toFixed(2)}`;
         document.getElementById('balanceBS').style.color = balanceBS >= 0 ? 'var(--success)' : 'var(--error)';
-        
+
         document.getElementById('balanceUSD').textContent = `$${balanceUSD.toFixed(2)}`;
         document.getElementById('balanceUSD').style.color = balanceUSD >= 0 ? 'var(--success)' : 'var(--error)';
-        
+
     } catch (error) {
         console.error('Error loading financial stats:', error);
     }
@@ -131,7 +150,7 @@ async function loadOrderStats(dates) {
         
         if (!orders || orders.length === 0) {
             document.getElementById('periodMetrics').innerHTML = 
-                '<div style="text-align: center; padding: 2rem; color: var(--gray-500);">No hay pedidos en este período</div>';
+                '<p class="stats-empty">No hay pedidos en este período</p>';
             return;
         }
         
@@ -182,9 +201,11 @@ async function loadOrderStats(dates) {
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
+                aspectRatio: 1.1,
                 plugins: {
                     legend: {
-                        position: 'bottom'
+                        position: 'bottom',
+                        labels: { boxWidth: 10, font: { size: 10 } }
                     }
                 }
             }
@@ -197,23 +218,11 @@ async function loadOrderStats(dates) {
         const tasaEntrega = totalPedidos > 0 ? ((entregados / totalPedidos) * 100).toFixed(1) : 0;
         
         document.getElementById('periodMetrics').innerHTML = `
-            <div style="padding: 1rem 0;">
-                <div style="margin-bottom: 1rem;">
-                    <div style="font-size: 0.85rem; color: var(--gray-500); text-transform: uppercase;">Total de Pedidos</div>
-                    <div style="font-size: 2rem; font-weight: 700;">${totalPedidos}</div>
-                </div>
-                <div style="margin-bottom: 1rem;">
-                    <div style="font-size: 0.85rem; color: var(--gray-500); text-transform: uppercase;">Entregados</div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);">${entregados}</div>
-                </div>
-                <div style="margin-bottom: 1rem;">
-                    <div style="font-size: 0.85rem; color: var(--gray-500); text-transform: uppercase;">Pendientes</div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning);">${pendientes}</div>
-                </div>
-                <div>
-                    <div style="font-size: 0.85rem; color: var(--gray-500); text-transform: uppercase;">Tasa de Entrega</div>
-                    <div style="font-size: 1.5rem; font-weight: 700;">${tasaEntrega}%</div>
-                </div>
+            <div class="stats-metrics-grid">
+                <div class="stats-metric"><span class="stats-metric-label">Total</span><span class="stats-metric-value">${totalPedidos}</span></div>
+                <div class="stats-metric"><span class="stats-metric-label">Entregados</span><span class="stats-metric-value stats-metric-success">${entregados}</span></div>
+                <div class="stats-metric"><span class="stats-metric-label">Pendientes</span><span class="stats-metric-value stats-metric-warning">${pendientes}</span></div>
+                <div class="stats-metric"><span class="stats-metric-label">Tasa entrega</span><span class="stats-metric-value">${tasaEntrega}%</span></div>
             </div>
         `;
         
@@ -232,8 +241,7 @@ async function loadTopProducts(dates) {
             .not('status', 'eq', 'cancelado');
         
         if (!orders || orders.length === 0) {
-            document.getElementById('topProducts').innerHTML = 
-                '<div style="text-align: center; padding: 2rem; color: var(--gray-500);">No hay productos en este período</div>';
+            document.getElementById('topProducts').innerHTML = '<p class="stats-empty">No hay productos en este período</p>';
             return;
         }
         
@@ -257,41 +265,25 @@ async function loadTopProducts(dates) {
             .slice(0, 10);
         
         if (sortedProducts.length === 0) {
-            document.getElementById('topProducts').innerHTML = 
-                '<div style="text-align: center; padding: 2rem; color: var(--gray-500);">No hay productos registrados</div>';
+            document.getElementById('topProducts').innerHTML = '<p class="stats-empty">No hay productos registrados</p>';
             return;
         }
         
+        const totalUnits = sortedProducts.reduce((sum, [, c]) => sum + c, 0);
         const html = `
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Cantidad Vendida</th>
-                        <th>Porcentaje</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${sortedProducts.map(([product, count]) => {
-                        const total = sortedProducts.reduce((sum, [, c]) => sum + c, 0);
-                        const percentage = ((count / total) * 100).toFixed(1);
-                        return `
-                            <tr>
-                                <td><strong>${product}</strong></td>
-                                <td>${count} unidades</td>
-                                <td>
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <div style="flex: 1; height: 20px; background: var(--gray-200);">
-                                            <div style="height: 100%; background: var(--black); width: ${percentage}%;"></div>
-                                        </div>
-                                        <span>${percentage}%</span>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    }).join('')}
-                </tbody>
-            </table>
+            <ul class="stats-product-list">
+                ${sortedProducts.map(([product, count]) => {
+                    const percentage = totalUnits > 0 ? ((count / totalUnits) * 100).toFixed(0) : 0;
+                    return `
+                        <li class="stats-product-item">
+                            <span class="stats-product-name">${product}</span>
+                            <span class="stats-product-count">${count} ud</span>
+                            <div class="stats-product-bar"><div class="stats-product-bar-fill" style="width:${percentage}%"></div></div>
+                            <span class="stats-product-pct">${percentage}%</span>
+                        </li>
+                    `;
+                }).join('')}
+            </ul>
         `;
         
         document.getElementById('topProducts').innerHTML = html;

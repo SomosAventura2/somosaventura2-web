@@ -2,11 +2,16 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Airport">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Calendario - Airport Manager</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="images/icon-192.png">
 </head>
 <body>
     <header class="header">
@@ -23,42 +28,32 @@
         </div>
     </header>
 
-    <main class="container" style="padding: 2rem 1rem;">
-        <div class="calendar-header">
-            <button class="btn" onclick="previousMonth()">← Anterior</button>
-            <h1 id="currentMonth" class="mono"></h1>
-            <button class="btn" onclick="nextMonth()">Siguiente →</button>
+    <main class="container main-content calendario-page">
+        <div class="calendario-header">
+            <button type="button" class="calendario-nav-btn" onclick="previousMonth()">←</button>
+            <h1 class="calendario-title" id="currentMonth"></h1>
+            <button type="button" class="calendario-nav-btn" onclick="nextMonth()">→</button>
         </div>
 
-        <div class="calendar-container">
-            <div class="calendar-grid">
-                <div class="calendar-day-header">DOM</div>
-                <div class="calendar-day-header">LUN</div>
-                <div class="calendar-day-header">MAR</div>
-                <div class="calendar-day-header">MIÉ</div>
-                <div class="calendar-day-header">JUE</div>
-                <div class="calendar-day-header">VIE</div>
-                <div class="calendar-day-header">SÁB</div>
-                <div id="calendarDays"></div>
+        <section class="calendario-section">
+            <div class="calendar-scroll-wrap">
+                <div class="calendar-grid">
+                    <div class="calendar-weekhead">Lun</div>
+                <div class="calendar-weekhead">Mar</div>
+                <div class="calendar-weekhead">Mié</div>
+                <div class="calendar-weekhead">Jue</div>
+                <div class="calendar-weekhead">Vie</div>
+                <div class="calendar-weekhead">Sáb</div>
+                <div class="calendar-weekhead">Dom</div>
+                    <div id="calendarDays"></div>
+                </div>
             </div>
-        </div>
+        </section>
 
-        <div class="card mt-4">
-            <h3 class="mb-3">Leyenda</h3>
-            <div class="flex flex-gap-2 flex-wrap">
-                <div class="flex flex-align-center flex-gap-1">
-                    <div style="width: 20px; height: 20px; background: var(--black);"></div>
-                    <span>Pedido activo</span>
-                </div>
-                <div class="flex flex-align-center flex-gap-1">
-                    <div style="width: 20px; height: 20px; background: var(--black); opacity: 0.5;"></div>
-                    <span>Completado</span>
-                </div>
-            </div>
-        </div>
+        <p class="calendario-leyenda">Arrastra las pills a otro día para cambiar fecha. Marca el ✓ para marcar como entregado.</p>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/calendario.js"></script>

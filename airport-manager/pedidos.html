@@ -2,11 +2,16 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Airport">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Pedidos - Airport Manager</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="images/icon-192.png">
 </head>
 <body>
     <header class="header">
@@ -23,39 +28,26 @@
         </div>
     </header>
 
-    <main class="container" style="padding: 2rem 1rem;">
-        <div class="flex flex-between flex-align-center mb-4">
-            <h1>Pedidos</h1>
-            <button class="btn btn-primary" onclick="openNewOrderModal()">+ Nuevo Pedido</button>
+    <main class="container main-content pedidos-page">
+        <div class="pedidos-header">
+            <h1 class="pedidos-title">Pedidos</h1>
+            <button type="button" class="pedidos-btn-new" onclick="openNewOrderModal()">+ Nuevo</button>
         </div>
 
-        <!-- Filtros -->
-        <div class="card mb-4">
-            <div class="flex flex-gap-2 flex-wrap">
-                <select id="filterStatus" class="form-select" style="max-width: 200px;" onchange="loadOrders()">
-                    <option value="">Todos los estados</option>
-                    <option value="agendado">Agendado</option>
-                    <option value="en_produccion">En Producción</option>
-                    <option value="listo">Listo</option>
-                    <option value="entregado">Entregado</option>
-                    <option value="cancelado">Cancelado</option>
-                </select>
-                <input 
-                    type="text" 
-                    id="searchCustomer" 
-                    class="form-input" 
-                    placeholder="Buscar por cliente..."
-                    style="max-width: 300px;"
-                    oninput="loadOrders()"
-                >
-            </div>
-        </div>
+        <section class="pedidos-section pedidos-filters">
+            <select id="filterStatus" class="pedidos-filter-select" onchange="loadOrders()">
+                <option value="">Todos</option>
+                <option value="agendado">Agendado</option>
+                <option value="en_produccion">En Producción</option>
+                <option value="listo">Listo</option>
+                <option value="entregado">Entregado</option>
+                <option value="cancelado">Cancelado</option>
+            </select>
+            <input type="text" id="searchCustomer" class="pedidos-filter-search" placeholder="Buscar cliente..." oninput="loadOrders()">
+        </section>
 
-        <!-- Lista de Pedidos -->
-        <div id="ordersList">
-            <div style="text-align: center; padding: 3rem;">
-                <div class="loading" style="width: 40px; height: 40px;"></div>
-            </div>
+        <div id="ordersList" class="pedidos-list">
+            <div class="pedidos-loading"><span class="loading"></span></div>
         </div>
     </main>
 
@@ -103,20 +95,23 @@
                         <label class="form-label" for="paymentCurrency">Moneda*</label>
                         <select id="paymentCurrency" class="form-select" required>
                             <option value="BS">Bolívares</option>
-                            <option value="USD">Dólares Efectivo</option>
+                            <option value="USD">Dólares</option>
                             <option value="USDT">USDT</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="paymentMethod">Método de Pago*</label>
-                    <select id="paymentMethod" class="form-select" required>
-                        <option value="pago_movil">Pago Móvil (Bs)</option>
-                        <option value="efectivo_usd">Dólares Efectivo</option>
+                <div class="form-group hidden" id="paymentMethodDollarsGroup">
+                    <label class="form-label" for="paymentMethodDollars">Método de pago (dólares)*</label>
+                    <select id="paymentMethodDollars" class="form-select">
+                        <option value="efectivo_usd">Efectivo</option>
                         <option value="zelle">Zelle</option>
-                        <option value="usdt">USDT</option>
                     </select>
+                </div>
+
+                <div class="form-group" id="pagoMovilRefGroup">
+                    <label class="form-label" for="pagoMovilReference">Referencia Pago Móvil</label>
+                    <input type="text" id="pagoMovilReference" class="form-input" placeholder="Ej: 0102 12345678901 (opcional)">
                 </div>
 
                 <div class="grid grid-2">
@@ -155,7 +150,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/pedidos.js"></script>
 </body>

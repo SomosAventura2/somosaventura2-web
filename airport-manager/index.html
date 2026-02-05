@@ -2,11 +2,16 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Airport">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Airport Manager - Login</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="images/icon-192.png">
 </head>
 <body>
     <div class="login-container">
@@ -41,7 +46,8 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- UMD explícito para que el global supabase exista siempre -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="js/supabase-config.js"></script>
     <script>
         // Verificar si ya está autenticado
@@ -50,12 +56,11 @@
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const errorDiv = document.getElementById('errorMessage');
             const submitBtn = e.target.querySelector('button[type="submit"]');
             
-            // Deshabilitar botón
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="loading"></span> INICIANDO...';
             errorDiv.classList.add('hidden');
@@ -64,29 +69,33 @@
                 if (!supabase) {
                     throw new Error('Supabase no cargó. Comprueba la consola (F12) y que las credenciales en js/supabase-config.js sean correctas.');
                 }
+                console.log('Intentando login con email:', email, 'URL:', supabase.supabaseUrl);
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email,
                     password
                 });
                 
-                if (error) throw error;
+                if (error) {
+                    console.error('Supabase error:', error.status, error.message, error);
+                    throw error;
+                }
                 
-                // Redirigir al dashboard
+                console.log('Login OK, redirigiendo...', data?.user?.email);
                 window.location.href = 'dashboard.html';
                 
-            } catch (error) {
-                let msg = error.message || 'Error al iniciar sesión';
+            } catch (err) {
+                let msg = err.message || 'Error al iniciar sesión';
                 if (msg.includes('Invalid login credentials') || msg.includes('invalid')) {
-                    msg = 'Email o contraseña incorrectos. Si acabas de crear el usuario en Supabase, activa "Auto Confirm User" en Authentication → Users.';
+                    msg = 'Email o contraseña incorrectos. Comprueba en Supabase → Authentication → Users que el usuario exista, esté confirmado (Email confirmed) y la contraseña sea la misma.';
                 }
-                if (msg.includes('fetch') || msg.includes('Failed')) {
-                    msg = 'No se pudo conectar a Supabase. Revisa la URL y la Anon Key en js/supabase-config.js y que la app no se abra desde file:// (usa un servidor local o sube la app).';
+                if (msg.includes('fetch') || msg.includes('Failed') || msg.includes('Network')) {
+                    msg = 'Error de red. ¿Abres la app desde file://? Usa un servidor local (ej. npx serve .) o sube la app a Netlify. Revisa también la consola (F12).';
                 }
                 errorDiv.textContent = msg;
                 errorDiv.classList.remove('hidden');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'INICIAR SESIÓN';
-                console.error('Login error:', error);
+                console.error('Login error:', err);
             }
         });
     </script>

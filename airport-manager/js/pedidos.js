@@ -15,6 +15,10 @@ async function init() {
     
     loadOrders();
     loadCategories();
+
+    document.getElementById('paymentCurrency').addEventListener('change', updatePaymentMethodVisibility);
+
+    document.addEventListener('click', () => document.querySelectorAll('.status-dropdown.open').forEach(d => d.classList.remove('open')));
 }
 
 async function loadCategories() {
@@ -60,82 +64,115 @@ async function loadOrders() {
     } catch (error) {
         console.error('Error loading orders:', error);
         document.getElementById('ordersList').innerHTML = 
-            '<div class="alert alert-error">Error al cargar los pedidos</div>';
+            '<p class="pedidos-empty pedidos-error">Error al cargar los pedidos</p>';
     }
+}
+
+function getPaymentMethodText(method) {
+    const map = { pago_movil: 'Pago Móvil', efectivo_usd: 'Efectivo', zelle: 'Zelle', usdt: 'USDT' };
+    return map[method] || method || '-';
 }
 
 function displayOrders(orders) {
     const container = document.getElementById('ordersList');
     
     if (!orders || orders.length === 0) {
-        container.innerHTML = `
-            <div class="card text-center" style="padding: 3rem;">
-                <h3 style="color: var(--gray-500);">No hay pedidos registrados</h3>
-                <p style="color: var(--gray-500);">Crea tu primer pedido haciendo clic en "Nuevo Pedido"</p>
-            </div>
-        `;
+        container.innerHTML = '<p class="pedidos-empty">No hay pedidos. Pulsa "+ Nuevo" para crear uno.</p>';
         return;
     }
 
-    const html = orders.map(order => {
+    const statusOptions = window.STATUS_OPTIONS || [
+        { value: 'agendado', label: 'Agendado' }, { value: 'en_produccion', label: 'En Producción' },
+        { value: 'listo', label: 'Listo' }, { value: 'entregado', label: 'Entregado' }, { value: 'cancelado', label: 'Cancelado' }
+    ];
+    const html = `<ul class="pedidos-item-list">${orders.map(order => {
         const items = JSON.parse(order.items || '[]');
-        const itemsText = items.map(item => 
-            `${item.producto} x${item.cantidad} (${item.talla} ${item.genero})`
-        ).join(', ');
-
+        const itemsShort = items.length ? `${items[0].producto}${items.length > 1 ? ` +${items.length - 1}` : ''}` : '-';
+        const statusMenu = statusOptions.map(s => `
+            <li><button type="button" class="status-dropdown-option" data-status="${s.value}">${s.label}</button></li>
+        `).join('');
         return `
-            <div class="card">
-                <div class="flex flex-between flex-align-center mb-3">
-                    <div>
-                        <h3 class="mono">#${order.order_number}</h3>
-                        <div style="color: var(--gray-500); font-size: 0.85rem; margin-top: 0.25rem;">
-                            ${formatDateTime(order.created_at)}
-                        </div>
-                    </div>
-                    <span class="status-badge status-${order.status}">${getStatusText(order.status)}</span>
-                </div>
-
-                <div class="grid grid-2 mb-3">
-                    <div>
-                        <div style="font-size: 0.85rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 1px;">Cliente</div>
-                        <div style="font-weight: 600;">${order.customer_name}</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 0.85rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 1px;">Entrega</div>
-                        <div style="font-weight: 600;">${formatDate(order.delivery_date)}</div>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <div style="font-size: 0.85rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;">Productos</div>
-                    <div style="color: var(--gray-700);">${itemsText || 'Sin productos'}</div>
-                </div>
-
-                <div class="grid grid-3 mb-3">
-                    <div>
-                        <div style="font-size: 0.85rem; color: var(--gray-500);">Monto Total</div>
-                        <div style="font-weight: 600; font-size: 1.1rem;">${formatCurrency(order.amount_euros, 'EUR')}</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 0.85rem; color: var(--gray-500);">Pago Inicial</div>
-                        <div style="font-weight: 600;">${order.first_payment_percentage}%</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 0.85rem; color: var(--gray-500);">Método</div>
-                        <div style="font-weight: 600;">${order.payment_method}</div>
-                    </div>
-                </div>
-
-                <div class="flex flex-gap-2">
-                    <button class="btn btn-sm btn-outline" onclick="viewOrderDetails('${order.id}')">Ver Detalles</button>
-                    <button class="btn btn-sm" onclick="editOrder('${order.id}')">Editar</button>
-                    <button class="btn btn-sm btn-accent" onclick="deleteOrder('${order.id}')">Eliminar</button>
+        <li class="pedidos-item">
+            <div class="pedidos-item-main">
+                <span class="pedidos-item-number">#${order.order_number}</span>
+                <div class="status-dropdown">
+                    <button type="button" class="status-dropdown-btn status-${order.status}" data-order-id="${order.id}" aria-expanded="false">${getStatusText(order.status)} ▾</button>
+                    <ul class="status-dropdown-menu">${statusMenu}</ul>
                 </div>
             </div>
-        `;
-    }).join('');
+            <div class="pedidos-item-detail">${order.customer_name} · Entrega ${formatDate(order.delivery_date)}</div>
+            <div class="pedidos-item-meta">${itemsShort} · ${formatCurrency(order.amount_euros, 'EUR')} · ${order.first_payment_percentage}%</div>
+            <div class="pedidos-item-footer">
+                <span class="pedidos-item-date">${formatDateTime(order.created_at)}</span>
+                <div class="pedidos-item-actions">
+                    <button type="button" class="pedidos-item-btn" onclick="viewOrderDetails('${order.id}')">Ver</button>
+                    <button type="button" class="pedidos-item-btn" onclick="editOrder('${order.id}')">Editar</button>
+                    <button type="button" class="pedidos-item-btn pedidos-item-btn-danger" onclick="deleteOrder('${order.id}')">Eliminar</button>
+                </div>
+            </div>
+        </li>`;
+    }).join('')}</ul>`;
 
     container.innerHTML = html;
+    bindStatusDropdowns(container);
+}
+
+function bindStatusDropdowns(container) {
+    if (!container) container = document.getElementById('ordersList');
+    if (!container) return;
+    container.querySelectorAll('.status-dropdown').forEach(drop => {
+        const btn = drop.querySelector('.status-dropdown-btn');
+        const menu = drop.querySelector('.status-dropdown-menu');
+        const orderId = btn.dataset.orderId;
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('.status-dropdown.open').forEach(o => { if (o !== drop) o.classList.remove('open'); });
+            drop.classList.toggle('open');
+        });
+        drop.querySelectorAll('.status-dropdown-option').forEach(opt => {
+            opt.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const newStatus = opt.dataset.status;
+                try {
+                    await updateOrderStatus(orderId, newStatus);
+                    loadOrders();
+                } catch (err) {
+                    console.error(err);
+                    alert('Error al actualizar estado');
+                }
+                drop.classList.remove('open');
+            });
+        });
+    });
+}
+
+function updatePaymentMethodVisibility() {
+    const currency = document.getElementById('paymentCurrency').value;
+    const dollarsGroup = document.getElementById('paymentMethodDollarsGroup');
+    const pagoMovilGroup = document.getElementById('pagoMovilRefGroup');
+    
+    if (currency === 'BS') {
+        dollarsGroup.classList.add('hidden');
+        pagoMovilGroup.classList.remove('hidden');
+        document.getElementById('paymentMethodDollars').removeAttribute('required');
+    } else if (currency === 'USD') {
+        dollarsGroup.classList.remove('hidden');
+        pagoMovilGroup.classList.add('hidden');
+        document.getElementById('paymentMethodDollars').setAttribute('required', 'required');
+    } else {
+        // USDT
+        dollarsGroup.classList.add('hidden');
+        pagoMovilGroup.classList.add('hidden');
+        document.getElementById('paymentMethodDollars').removeAttribute('required');
+    }
+}
+
+function getPaymentMethodFromForm() {
+    const currency = document.getElementById('paymentCurrency').value;
+    if (currency === 'BS') return 'pago_movil';
+    if (currency === 'USD') return document.getElementById('paymentMethodDollars').value; // efectivo_usd o zelle
+    if (currency === 'USDT') return 'usdt';
+    return 'pago_movil';
 }
 
 function openNewOrderModal() {
@@ -145,6 +182,7 @@ function openNewOrderModal() {
     document.getElementById('orderId').value = '';
     document.getElementById('itemsContainer').innerHTML = '';
     addItem(); // Agregar un item por defecto
+    updatePaymentMethodVisibility();
     document.getElementById('orderModal').classList.add('active');
 }
 
@@ -253,7 +291,8 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
             first_payment_percentage: parseInt(document.getElementById('paymentPercentage').value),
             payment_amount: parseFloat(document.getElementById('paymentAmount').value),
             payment_currency: document.getElementById('paymentCurrency').value,
-            payment_method: document.getElementById('paymentMethod').value,
+            payment_method: getPaymentMethodFromForm(),
+            pago_movil_reference: (document.getElementById('pagoMovilReference').value || '').trim() || null,
             status: document.getElementById('status').value,
             delivery_date: document.getElementById('deliveryDate').value,
             calendar_date: document.getElementById('deliveryDate').value
@@ -272,12 +311,28 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
             
             messageDiv.innerHTML = '<div class="alert alert-success">Pedido actualizado exitosamente</div>';
         } else {
-            // Crear nuevo
-            const { error } = await supabase
+            // Crear nuevo pedido
+            const { data: newOrder, error: orderError } = await supabase
                 .from('orders')
-                .insert(orderData);
+                .insert(orderData)
+                .select('id, order_number')
+                .single();
             
-            if (error) throw error;
+            if (orderError) throw orderError;
+            
+            // Registrar el pago inicial en payments para que sume en ingresos (Bs/USD) de Stats
+            if (newOrder && parseFloat(orderData.payment_amount) > 0) {
+                await supabase
+                    .from('payments')
+                    .insert({
+                        order_id: newOrder.id,
+                        concept: `Pago inicial pedido #${newOrder.order_number}`,
+                        payment_type: 'inicial_50',
+                        amount: orderData.payment_amount,
+                        currency: orderData.payment_currency,
+                        reference: orderData.pago_movil_reference || null
+                    });
+            }
             
             messageDiv.innerHTML = '<div class="alert alert-success">Pedido creado exitosamente</div>';
         }
@@ -313,7 +368,11 @@ async function editOrder(orderId) {
         document.getElementById('paymentPercentage').value = data.first_payment_percentage;
         document.getElementById('paymentAmount').value = data.payment_amount;
         document.getElementById('paymentCurrency').value = data.payment_currency;
-        document.getElementById('paymentMethod').value = data.payment_method;
+        if (data.payment_currency === 'USD' && (data.payment_method === 'efectivo_usd' || data.payment_method === 'zelle')) {
+            document.getElementById('paymentMethodDollars').value = data.payment_method;
+        }
+        document.getElementById('pagoMovilReference').value = data.pago_movil_reference || '';
+        updatePaymentMethodVisibility();
         document.getElementById('status').value = data.status;
         document.getElementById('deliveryDate').value = data.delivery_date;
         
@@ -429,8 +488,14 @@ async function viewOrderDetails(orderId) {
             
             <div class="mb-3">
                 <div style="font-size: 0.85rem; color: var(--gray-500); text-transform: uppercase;">Método de Pago</div>
-                <div style="font-weight: 600;">${data.payment_method}</div>
+                <div style="font-weight: 600;">${getPaymentMethodText(data.payment_method)}</div>
             </div>
+            ${data.payment_method === 'pago_movil' && data.pago_movil_reference ? `
+            <div class="mb-3">
+                <div style="font-size: 0.85rem; color: var(--gray-500); text-transform: uppercase;">Referencia Pago Móvil</div>
+                <div style="font-weight: 600;">${data.pago_movil_reference}</div>
+            </div>
+            ` : ''}
             
             <button class="btn btn-primary" onclick="closeDetailsModal()">Cerrar</button>
         `;

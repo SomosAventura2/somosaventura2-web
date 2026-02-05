@@ -4,14 +4,16 @@
 const SUPABASE_URL = 'https://ecqfydexgfwynhekmhoz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVjcWZ5ZGV4Z2Z3eW5oZWttaG96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyOTMyMTQsImV4cCI6MjA4NTg2OTIxNH0.0BeIEQbD0NpuANAWUxUPJpX918Y5Bwh8N10EXRZtdX4';
 
-// Inicializar cliente de Supabase (CDN: window.supabase tiene createClient)
-const createClientFn = window.supabase?.createClient ?? window.supabase;
-const supabase = createClientFn ? createClientFn(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+// El UMD ya declara window.supabase (la librería). Creamos el cliente y reemplazamos el global para no redeclarar.
+var _lib = typeof window !== 'undefined' ? window.supabase : null;
+window.supabase = _lib && _lib.createClient
+    ? _lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
 
 // Verificar autenticación en cada página
 async function checkAuth() {
-    if (!supabase) return null;
-    const { data: { session } } = await supabase.auth.getSession();
+    if (!window.supabase) return null;
+    const { data: { session } } = await window.supabase.auth.getSession();
     
     if (!session && !window.location.pathname.includes('index.html') && window.location.pathname !== '/') {
         window.location.href = 'index.html';
@@ -26,7 +28,7 @@ async function checkAuth() {
 
 // Cerrar sesión
 async function logout() {
-    if (supabase) await supabase.auth.signOut();
+    if (window.supabase) await window.supabase.auth.signOut();
     window.location.href = 'index.html';
 }
 
@@ -84,4 +86,25 @@ function getStatusText(status) {
         'cancelado': 'Cancelado'
     };
     return texts[status] || status;
+}
+
+// Opciones de estado para el dropdown (mismo orden en toda la app)
+window.STATUS_OPTIONS = [
+    { value: 'agendado', label: 'Agendado' },
+    { value: 'en_produccion', label: 'En Producción' },
+    { value: 'listo', label: 'Listo' },
+    { value: 'entregado', label: 'Entregado' },
+    { value: 'cancelado', label: 'Cancelado' }
+];
+const STATUS_OPTIONS = window.STATUS_OPTIONS;
+
+// Actualizar estado de un pedido y notificar para refrescar listas
+async function updateOrderStatus(orderId, newStatus) {
+    if (!window.supabase) return;
+    const { error } = await window.supabase
+        .from('orders')
+        .update({ status: newStatus })
+        .eq('id', orderId);
+    if (error) throw error;
+    window.dispatchEvent(new CustomEvent('orderStatusUpdated', { detail: { orderId, newStatus } }));
 }

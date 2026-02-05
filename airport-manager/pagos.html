@@ -2,11 +2,16 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Airport">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Pagos y Gastos - Airport Manager</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="images/icon-192.png">
 </head>
 <body>
     <header class="header">
@@ -23,148 +28,131 @@
         </div>
     </header>
 
-    <main class="container" style="padding: 2rem 1rem;">
-        <h1 class="mb-4">Pagos y Gastos</h1>
+    <main class="container main-content pagos-page">
+        <h1 class="pagos-title">Pagos y Gastos</h1>
 
-        <!-- Pestañas -->
-        <div class="flex flex-gap-2 mb-4">
-            <button class="btn btn-primary" id="btnPagos" onclick="showTab('pagos')">Pagos</button>
-            <button class="btn" id="btnGastos" onclick="showTab('gastos')">Gastos</button>
+        <!-- Pestañas tipo Stats -->
+        <div class="pagos-tabs">
+            <button class="pagos-tab-btn active" id="btnPagos" onclick="showTab('pagos')">Pagos</button>
+            <button class="pagos-tab-btn" id="btnGastos" onclick="showTab('gastos')">Gastos</button>
         </div>
 
         <!-- Tab Pagos -->
         <div id="tabPagos">
-            <div class="flex flex-between flex-align-center mb-4">
-                <h2>Registrar Pago</h2>
-            </div>
-
-            <div class="card mb-4">
-                <form id="paymentForm">
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label class="form-label" for="paymentOrder">Pedido*</label>
-                            <select id="paymentOrder" class="form-select" required>
+            <section class="pagos-section">
+                <h2 class="pagos-section-title">Registrar Pago</h2>
+                <form id="paymentForm" class="pagos-form">
+                    <div class="pagos-form-row">
+                        <div class="pagos-form-group">
+                            <label class="pagos-label" for="paymentOrder">Pedido*</label>
+                            <select id="paymentOrder" class="pagos-input" required>
                                 <option value="">Seleccionar pedido...</option>
                             </select>
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="paymentType">Tipo de Pago*</label>
-                            <select id="paymentType" class="form-select" required>
-                                <option value="inicial_50">Pago Inicial (50%)</option>
-                                <option value="restante_50">Pago Restante</option>
+                        <div class="pagos-form-group">
+                            <label class="pagos-label" for="paymentType">Tipo*</label>
+                            <select id="paymentType" class="pagos-input" required>
+                                <option value="inicial_50">Inicial 50%</option>
+                                <option value="restante_50">Restante</option>
                             </select>
                         </div>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="paymentConcept">Concepto*</label>
-                        <input type="text" id="paymentConcept" class="form-input" required placeholder="Ej: Pago inicial pedido #123">
+                    <div class="pagos-form-group">
+                        <label class="pagos-label" for="paymentConcept">Concepto*</label>
+                        <input type="text" id="paymentConcept" class="pagos-input" required placeholder="Ej: Pago inicial #123">
                     </div>
-
-                    <div class="grid grid-3">
-                        <div class="form-group">
-                            <label class="form-label" for="paymentAmount">Monto*</label>
-                            <input type="number" id="paymentAmount" class="form-input" step="0.01" required>
+                    <div class="pagos-form-row">
+                        <div class="pagos-form-group">
+                            <label class="pagos-label" for="paymentAmount">Monto*</label>
+                            <input type="number" id="paymentAmount" class="pagos-input" step="0.01" required>
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="paymentCurrency">Moneda*</label>
-                            <select id="paymentCurrency" class="form-select" required>
+                        <div class="pagos-form-group">
+                            <label class="pagos-label" for="paymentCurrency">Moneda*</label>
+                            <select id="paymentCurrency" class="pagos-input" required>
                                 <option value="BS">Bolívares</option>
-                                <option value="USD">Dólares Efectivo</option>
+                                <option value="USD">Dólares</option>
                                 <option value="USDT">USDT</option>
                             </select>
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="paymentReference">Referencia</label>
-                            <input type="text" id="paymentReference" class="form-input" placeholder="Opcional">
-                        </div>
                     </div>
-
-                    <div id="paymentMessage"></div>
-
-                    <button type="submit" class="btn btn-primary">Registrar Pago</button>
+                    <div class="pagos-form-group hidden" id="paymentMethodDollarsGroup">
+                        <label class="pagos-label" for="paymentMethodDollars">Método (dólares)*</label>
+                        <select id="paymentMethodDollars" class="pagos-input">
+                            <option value="efectivo_usd">Efectivo</option>
+                            <option value="zelle">Zelle</option>
+                        </select>
+                    </div>
+                    <div class="pagos-form-group" id="pagoMovilRefGroup">
+                        <label class="pagos-label" for="paymentReference">Ref. Pago Móvil</label>
+                        <input type="text" id="paymentReference" class="pagos-input" placeholder="Opcional">
+                    </div>
+                    <div id="paymentMessage" class="pagos-message"></div>
+                    <button type="submit" class="pagos-submit">Registrar Pago</button>
                 </form>
-            </div>
+            </section>
 
-            <div class="card">
-                <h3 class="mb-3">Historial de Pagos</h3>
-                <div id="paymentsList">
-                    <div style="text-align: center; padding: 2rem;">
-                        <div class="loading"></div>
-                    </div>
+            <section class="pagos-section">
+                <h2 class="pagos-section-title">Historial de Pagos</h2>
+                <div id="paymentsList" class="pagos-list">
+                    <div class="pagos-loading"><span class="loading"></span></div>
                 </div>
-            </div>
+            </section>
         </div>
 
         <!-- Tab Gastos -->
         <div id="tabGastos" class="hidden">
-            <div class="flex flex-between flex-align-center mb-4">
-                <h2>Registrar Gasto</h2>
-            </div>
-
-            <div class="card mb-4">
-                <form id="expenseForm">
-                    <div class="form-group">
-                        <label class="form-label" for="expenseType">Tipo de Gasto*</label>
-                        <select id="expenseType" class="form-select" required onchange="toggleOrderField()">
-                            <option value="orden_especifico">Asociado a un Pedido</option>
+            <section class="pagos-section">
+                <h2 class="pagos-section-title">Registrar Gasto</h2>
+                <form id="expenseForm" class="pagos-form">
+                    <div class="pagos-form-group">
+                        <label class="pagos-label" for="expenseType">Tipo*</label>
+                        <select id="expenseType" class="pagos-input" required onchange="toggleOrderField()">
+                            <option value="orden_especifico">Asociado a Pedido</option>
                             <option value="general">Gasto General</option>
                         </select>
                     </div>
-
-                    <div class="form-group" id="expenseOrderGroup">
-                        <label class="form-label" for="expenseOrder">Pedido</label>
-                        <select id="expenseOrder" class="form-select">
+                    <div class="pagos-form-group" id="expenseOrderGroup">
+                        <label class="pagos-label" for="expenseOrder">Pedido</label>
+                        <select id="expenseOrder" class="pagos-input">
                             <option value="">Seleccionar pedido...</option>
                         </select>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="expenseConcept">Concepto*</label>
-                        <input type="text" id="expenseConcept" class="form-input" required placeholder="Ej: Tela, Mano de obra, Delivery">
+                    <div class="pagos-form-group">
+                        <label class="pagos-label" for="expenseConcept">Concepto*</label>
+                        <input type="text" id="expenseConcept" class="pagos-input" required placeholder="Ej: Tela, materiales">
                     </div>
-
-                    <div class="grid grid-3">
-                        <div class="form-group">
-                            <label class="form-label" for="expenseAmount">Monto*</label>
-                            <input type="number" id="expenseAmount" class="form-input" step="0.01" required>
+                    <div class="pagos-form-row pagos-form-row-3">
+                        <div class="pagos-form-group">
+                            <label class="pagos-label" for="expenseAmount">Monto*</label>
+                            <input type="number" id="expenseAmount" class="pagos-input" step="0.01" required>
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="expenseCurrency">Moneda*</label>
-                            <select id="expenseCurrency" class="form-select" required>
+                        <div class="pagos-form-group">
+                            <label class="pagos-label" for="expenseCurrency">Moneda*</label>
+                            <select id="expenseCurrency" class="pagos-input" required>
                                 <option value="BS">Bolívares</option>
-                                <option value="USD">Dólares Efectivo</option>
+                                <option value="USD">Dólares</option>
                             </select>
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="expenseReference">Referencia</label>
-                            <input type="text" id="expenseReference" class="form-input" placeholder="Opcional">
+                        <div class="pagos-form-group">
+                            <label class="pagos-label" for="expenseReference">Ref.</label>
+                            <input type="text" id="expenseReference" class="pagos-input" placeholder="Opc.">
                         </div>
                     </div>
-
-                    <div id="expenseMessage"></div>
-
-                    <button type="submit" class="btn btn-primary">Registrar Gasto</button>
+                    <div id="expenseMessage" class="pagos-message"></div>
+                    <button type="submit" class="pagos-submit">Registrar Gasto</button>
                 </form>
-            </div>
+            </section>
 
-            <div class="card">
-                <h3 class="mb-3">Historial de Gastos</h3>
-                <div id="expensesList">
-                    <div style="text-align: center; padding: 2rem;">
-                        <div class="loading"></div>
-                    </div>
+            <section class="pagos-section">
+                <h2 class="pagos-section-title">Historial de Gastos</h2>
+                <div id="expensesList" class="pagos-list">
+                    <div class="pagos-loading"><span class="loading"></span></div>
                 </div>
-            </div>
+            </section>
         </div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/pagos.js"></script>
 </body>

@@ -1,6 +1,34 @@
 let session;
 let currentTab = 'pagos';
 
+function updatePaymentMethodVisibility() {
+    const currency = document.getElementById('paymentCurrency').value;
+    const dollarsGroup = document.getElementById('paymentMethodDollarsGroup');
+    const pagoMovilGroup = document.getElementById('pagoMovilRefGroup');
+    
+    if (currency === 'BS') {
+        dollarsGroup.classList.add('hidden');
+        pagoMovilGroup.classList.remove('hidden');
+        document.getElementById('paymentMethodDollars').removeAttribute('required');
+    } else if (currency === 'USD') {
+        dollarsGroup.classList.remove('hidden');
+        pagoMovilGroup.classList.add('hidden');
+        document.getElementById('paymentMethodDollars').setAttribute('required', 'required');
+    } else {
+        dollarsGroup.classList.add('hidden');
+        pagoMovilGroup.classList.add('hidden');
+        document.getElementById('paymentMethodDollars').removeAttribute('required');
+    }
+}
+
+function getPaymentMethodFromForm() {
+    const currency = document.getElementById('paymentCurrency').value;
+    if (currency === 'BS') return 'pago_movil';
+    if (currency === 'USD') return document.getElementById('paymentMethodDollars').value;
+    if (currency === 'USDT') return 'usdt';
+    return 'pago_movil';
+}
+
 async function init() {
     session = await checkAuth();
     if (!session) return;
@@ -8,25 +36,22 @@ async function init() {
     loadOrders();
     loadPayments();
     loadExpenses();
+
+    document.getElementById('paymentCurrency').addEventListener('change', updatePaymentMethodVisibility);
+    updatePaymentMethodVisibility();
 }
 
 function showTab(tab) {
     currentTab = tab;
-    
+    document.querySelectorAll('.pagos-tab-btn').forEach(btn => btn.classList.remove('active'));
     if (tab === 'pagos') {
         document.getElementById('tabPagos').classList.remove('hidden');
         document.getElementById('tabGastos').classList.add('hidden');
-        document.getElementById('btnPagos').classList.add('btn-primary');
-        document.getElementById('btnPagos').classList.remove('btn');
-        document.getElementById('btnGastos').classList.remove('btn-primary');
-        document.getElementById('btnGastos').classList.add('btn');
+        document.getElementById('btnPagos').classList.add('active');
     } else {
         document.getElementById('tabPagos').classList.add('hidden');
         document.getElementById('tabGastos').classList.remove('hidden');
-        document.getElementById('btnGastos').classList.add('btn-primary');
-        document.getElementById('btnGastos').classList.remove('btn');
-        document.getElementById('btnPagos').classList.remove('btn-primary');
-        document.getElementById('btnPagos').classList.add('btn');
+        document.getElementById('btnGastos').classList.add('active');
     }
 }
 
@@ -80,40 +105,23 @@ function displayPayments(payments) {
     const container = document.getElementById('paymentsList');
     
     if (!payments || payments.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--gray-500);">No hay pagos registrados</div>';
+        container.innerHTML = '<p class="pagos-empty">No hay pagos registrados</p>';
         return;
     }
     
-    const html = `
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Pedido</th>
-                    <th>Concepto</th>
-                    <th>Tipo</th>
-                    <th>Monto</th>
-                    <th>Referencia</th>
-                    <th>Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${payments.map(payment => `
-                    <tr>
-                        <td>${formatDateTime(payment.created_at)}</td>
-                        <td>${payment.orders ? `#${payment.orders.order_number} - ${payment.orders.customer_name}` : 'N/A'}</td>
-                        <td>${payment.concept}</td>
-                        <td>${payment.payment_type === 'inicial_50' ? 'Inicial 50%' : 'Restante'}</td>
-                        <td><strong>${formatCurrency(payment.amount, payment.currency)}</strong></td>
-                        <td>${payment.reference || '-'}</td>
-                        <td>
-                            <button class="btn btn-sm btn-accent" onclick="deletePayment('${payment.id}')">Eliminar</button>
-                        </td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
+    const html = `<ul class="pagos-item-list">${payments.map(payment => `
+        <li class="pagos-item">
+            <div class="pagos-item-main">
+                <span class="pagos-item-amount">${formatCurrency(payment.amount, payment.currency)}</span>
+                <span class="pagos-item-meta">${payment.orders ? `#${payment.orders.order_number}` : 'N/A'} · ${payment.payment_type === 'inicial_50' ? 'Inicial' : 'Restante'}</span>
+            </div>
+            <div class="pagos-item-detail">${payment.concept}</div>
+            <div class="pagos-item-footer">
+                <span class="pagos-item-date">${formatDateTime(payment.created_at)}</span>
+                <button type="button" class="pagos-item-btn" onclick="deletePayment('${payment.id}')">Eliminar</button>
+            </div>
+        </li>
+    `).join('')}</ul>`;
     
     container.innerHTML = html;
 }
@@ -143,40 +151,23 @@ function displayExpenses(expenses) {
     const container = document.getElementById('expensesList');
     
     if (!expenses || expenses.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--gray-500);">No hay gastos registrados</div>';
+        container.innerHTML = '<p class="pagos-empty">No hay gastos registrados</p>';
         return;
     }
     
-    const html = `
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Pedido</th>
-                    <th>Concepto</th>
-                    <th>Tipo</th>
-                    <th>Monto</th>
-                    <th>Referencia</th>
-                    <th>Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${expenses.map(expense => `
-                    <tr>
-                        <td>${formatDateTime(expense.created_at)}</td>
-                        <td>${expense.orders ? `#${expense.orders.order_number} - ${expense.orders.customer_name}` : 'General'}</td>
-                        <td>${expense.concept}</td>
-                        <td>${expense.expense_type === 'orden_especifico' ? 'Pedido' : 'General'}</td>
-                        <td><strong>${formatCurrency(expense.amount, expense.currency)}</strong></td>
-                        <td>${expense.reference || '-'}</td>
-                        <td>
-                            <button class="btn btn-sm btn-accent" onclick="deleteExpense('${expense.id}')">Eliminar</button>
-                        </td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
+    const html = `<ul class="pagos-item-list">${expenses.map(expense => `
+        <li class="pagos-item">
+            <div class="pagos-item-main">
+                <span class="pagos-item-amount">${formatCurrency(expense.amount, expense.currency)}</span>
+                <span class="pagos-item-meta">${expense.expense_type === 'orden_especifico' && expense.orders ? `#${expense.orders.order_number}` : 'General'}</span>
+            </div>
+            <div class="pagos-item-detail">${expense.concept}</div>
+            <div class="pagos-item-footer">
+                <span class="pagos-item-date">${formatDateTime(expense.created_at)}</span>
+                <button type="button" class="pagos-item-btn" onclick="deleteExpense('${expense.id}')">Eliminar</button>
+            </div>
+        </li>
+    `).join('')}</ul>`;
     
     container.innerHTML = html;
 }
@@ -212,6 +203,7 @@ document.getElementById('paymentForm').addEventListener('submit', async (e) => {
             payment_type: document.getElementById('paymentType').value,
             amount: parseFloat(document.getElementById('paymentAmount').value),
             currency: document.getElementById('paymentCurrency').value,
+            payment_method: getPaymentMethodFromForm(),
             reference: document.getElementById('paymentReference').value || null
         };
         
@@ -223,6 +215,7 @@ document.getElementById('paymentForm').addEventListener('submit', async (e) => {
         
         messageDiv.innerHTML = '<div class="alert alert-success">Pago registrado exitosamente</div>';
         e.target.reset();
+        updatePaymentMethodVisibility();
         loadPayments();
         
         setTimeout(() => {

@@ -1,194 +1,167 @@
 let session;
 let currentDate = new Date();
 let orders = [];
+let sortableInstances = [];
+
+const STATUSES_IN_CALENDAR = ['agendado', 'en_produccion', 'listo'];
 
 async function init() {
     session = await checkAuth();
     if (!session) return;
-    
     renderCalendar();
 }
 
 function renderCalendar() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    
-    // Actualizar título
-    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     document.getElementById('currentMonth').textContent = `${monthNames[month]} ${year}`;
-    
-    // Primer día del mes
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const startDayOfWeek = firstDay.getDay();
-    const daysInMonth = lastDay.getDate();
-    
-    // Días del mes anterior
-    const prevMonthLastDay = new Date(year, month, 0).getDate();
-    
-    const calendarDays = document.getElementById('calendarDays');
-    calendarDays.innerHTML = '';
-    
-    // Días del mes anterior
-    for (let i = startDayOfWeek - 1; i >= 0; i--) {
-        const day = prevMonthLastDay - i;
-        const dayDiv = createDayElement(day, true, year, month - 1);
-        calendarDays.appendChild(dayDiv);
-    }
-    
-    // Días del mes actual
-    for (let day = 1; day <= daysInMonth; day++) {
-        const dayDiv = createDayElement(day, false, year, month);
-        calendarDays.appendChild(dayDiv);
-    }
-    
-    // Días del mes siguiente
-    const totalCells = calendarDays.children.length;
-    const remainingCells = 42 - totalCells; // 6 rows x 7 days
-    for (let day = 1; day <= remainingCells; day++) {
-        const dayDiv = createDayElement(day, true, year, month + 1);
-        calendarDays.appendChild(dayDiv);
-    }
-    
-    // Cargar pedidos
-    loadOrdersForMonth();
-}
 
-function createDayElement(day, otherMonth, year, month) {
-    const dayDiv = document.createElement('div');
-    dayDiv.className = 'calendar-day' + (otherMonth ? ' other-month' : '');
-    
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    dayDiv.dataset.date = dateStr;
-    
-    dayDiv.innerHTML = `<div class="calendar-day-number">${day}</div>`;
-    
-    // Hacer el día un contenedor sortable
-    new Sortable(dayDiv, {
-        group: 'calendar',
-        animation: 150,
-        ghostClass: 'sortable-ghost',
-        onEnd: handleOrderDrop
+    const container = document.getElementById('calendarDays');
+    container.innerHTML = '';
+
+    sortableInstances.forEach(s => s.destroy());
+    sortableInstances = [];
+
+    // Lunes = primera columna. Rango: desde el Lunes de la semana del día 1 hasta el Domingo de la semana del último día del mes.
+    const firstOfMonth = new Date(year, month, 1);
+    const offset = (firstOfMonth.getDay() + 6) % 7; // 0 = Lunes
+    const firstMonday = 1 - offset;
+    const lastDayNum = new Date(year, month + 1, 0).getDate();
+    const lastDate = new Date(year, month, lastDayNum);
+    const lastWeekday = (lastDate.getDay() + 6) % 7; // 0=Lun, 6=Dom
+    const daysToSunday = 6 - lastWeekday;
+    const startDate = new Date(year, month, firstMonday);
+    const endDate = new Date(year, month, lastDayNum + daysToSunday);
+
+    const cellDate = new Date(startDate);
+    while (cellDate <= endDate) {
+        const dateStr = cellDate.toISOString().split('T')[0];
+        const dayNum = cellDate.getDate();
+        const isOtherMonth = cellDate.getMonth() !== month;
+        const dayEl = document.createElement('div');
+        dayEl.className = 'calendar-day' + (isOtherMonth ? ' calendar-day-other' : '');
+        dayEl.dataset.date = dateStr;
+        dayEl.innerHTML = `<div class="calendar-day-num">${dayNum}</div><div class="calendar-day-pills"></div>`;
+        container.appendChild(dayEl);
+        cellDate.setDate(cellDate.getDate() + 1);
+    }
+
+    container.querySelectorAll('.calendar-day').forEach(dayEl => {
+        const pillsContainer = dayEl.querySelector('.calendar-day-pills');
+        const s = new Sortable(pillsContainer, {
+            group: 'orders',
+            animation: 150,
+            ghostClass: 'calendar-pill-ghost',
+            chosenClass: 'calendar-pill-chosen',
+            onEnd: handleOrderDrop
+        });
+        sortableInstances.push(s);
     });
-    
-    return dayDiv;
+
+    loadOrdersForMonth();
 }
 
 async function loadOrdersForMonth() {
     try {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
-        
-        const firstDay = new Date(year, month, 1).toISOString().split('T')[0];
-        const lastDay = new Date(year, month + 1, 0).toISOString().split('T')[0];
-        
+        const firstOfMonth = new Date(year, month, 1);
+        const offset = (firstOfMonth.getDay() + 6) % 7;
+        const firstMonday = 1 - offset;
+        const lastDayNum = new Date(year, month + 1, 0).getDate();
+        const lastDate = new Date(year, month, lastDayNum);
+        const lastWeekday = (lastDate.getDay() + 6) % 7;
+        const daysToSunday = 6 - lastWeekday;
+        const rangeStart = new Date(year, month, firstMonday);
+        const rangeEnd = new Date(year, month, lastDayNum + daysToSunday);
+        const firstDay = rangeStart.toISOString().split('T')[0];
+        const lastDay = rangeEnd.toISOString().split('T')[0];
+
         const { data, error } = await supabase
             .from('orders')
             .select('*')
+            .in('status', STATUSES_IN_CALENDAR)
             .gte('calendar_date', firstDay)
             .lte('calendar_date', lastDay)
-            .not('status', 'eq', 'cancelado');
-        
+            .order('order_number');
+
         if (error) throw error;
-        
         orders = data || [];
         displayOrdersOnCalendar();
-        
     } catch (error) {
         console.error('Error loading orders:', error);
     }
 }
 
 function displayOrdersOnCalendar() {
-    // Limpiar pedidos existentes
-    document.querySelectorAll('.calendar-order').forEach(el => el.remove());
-    
-    orders.forEach(order => {
-        const dayElement = document.querySelector(`[data-date="${order.calendar_date}"]`);
-        if (dayElement) {
-            const orderDiv = document.createElement('div');
-            orderDiv.className = 'calendar-order';
-            orderDiv.dataset.orderId = order.id;
-            orderDiv.draggable = true;
-            
-            const isCompleted = order.status === 'entregado';
-            if (isCompleted) {
-                orderDiv.classList.add('completed');
+    document.querySelectorAll('.calendar-pill').forEach(el => el.remove());
+
+    const toShow = orders.filter(o => STATUSES_IN_CALENDAR.includes(o.status));
+    toShow.forEach(order => {
+        const dateStr = order.calendar_date;
+        const pillsContainer = document.querySelector(`[data-date="${dateStr}"] .calendar-day-pills`);
+        if (!pillsContainer) return;
+
+        const pill = document.createElement('div');
+        pill.className = 'calendar-pill';
+        pill.dataset.orderId = order.id;
+        pill.draggable = true;
+        pill.innerHTML = `
+            <label class="calendar-pill-inner">
+                <input type="checkbox" class="calendar-pill-checkbox" onclick="event.stopPropagation(); toggleOrderComplete('${order.id}', this.checked)">
+                <span class="calendar-pill-text">#${order.order_number} ${order.customer_name}</span>
+            </label>
+        `;
+        pill.onclick = (e) => {
+            if (e.target.type !== 'checkbox' && !e.target.closest('input')) {
+                window.location.href = `pedidos.html`;
             }
-            
-            orderDiv.innerHTML = `
-                <input type="checkbox" 
-                       ${isCompleted ? 'checked' : ''} 
-                       onclick="toggleOrderComplete('${order.id}', this.checked)"
-                       style="margin-right: 0.25rem;">
-                #${order.order_number} - ${order.customer_name}
-            `;
-            
-            orderDiv.onclick = (e) => {
-                if (e.target.type !== 'checkbox') {
-                    window.location.href = `pedidos.html?id=${order.id}`;
-                }
-            };
-            
-            dayElement.appendChild(orderDiv);
-        }
+        };
+        pillsContainer.appendChild(pill);
     });
 }
 
 async function handleOrderDrop(evt) {
     const orderId = evt.item.dataset.orderId;
-    const newDate = evt.to.dataset.date;
-    
+    const toCell = evt.to.closest('.calendar-day');
+    const newDate = toCell ? toCell.dataset.date : null;
     if (!orderId || !newDate) return;
-    
+
     try {
         const { error } = await supabase
             .from('orders')
-            .update({ 
-                calendar_date: newDate,
-                delivery_date: newDate 
-            })
+            .update({ calendar_date: newDate, delivery_date: newDate })
             .eq('id', orderId);
-        
+
         if (error) throw error;
-        
-        // Actualizar el orden local
         const order = orders.find(o => o.id === orderId);
         if (order) {
             order.calendar_date = newDate;
             order.delivery_date = newDate;
         }
-        
     } catch (error) {
         console.error('Error updating order date:', error);
-        alert('Error al mover el pedido');
-        renderCalendar(); // Recargar en caso de error
+        renderCalendar();
     }
 }
 
 async function toggleOrderComplete(orderId, isCompleted) {
     try {
         const newStatus = isCompleted ? 'entregado' : 'listo';
-        
         const { error } = await supabase
             .from('orders')
             .update({ status: newStatus })
             .eq('id', orderId);
-        
+
         if (error) throw error;
-        
-        // Actualizar el orden local
         const order = orders.find(o => o.id === orderId);
-        if (order) {
-            order.status = newStatus;
-        }
-        
+        if (order) order.status = newStatus;
         displayOrdersOnCalendar();
-        
     } catch (error) {
         console.error('Error updating order status:', error);
-        alert('Error al actualizar el estado');
+        renderCalendar();
     }
 }
 
@@ -202,5 +175,4 @@ function nextMonth() {
     renderCalendar();
 }
 
-// Inicializar
 init();

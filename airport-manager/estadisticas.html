@@ -2,11 +2,16 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Airport">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Estadísticas - Airport Manager</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="images/icon-192.png">
 </head>
 <body>
     <header class="header">
@@ -23,100 +28,84 @@
         </div>
     </header>
 
-    <main class="container" style="padding: 2rem 1rem;">
-        <h1 class="mb-4">Estadísticas</h1>
+    <main class="container main-content stats-page">
+        <h1 class="stats-title">Stats</h1>
 
         <!-- Filtro de Período -->
-        <div class="card mb-4">
-            <div class="flex flex-gap-2">
-                <button class="btn btn-primary" id="btnSemanal" onclick="changePeriod('semanal')">Semanal</button>
-                <button class="btn" id="btnMensual" onclick="changePeriod('mensual')">Mensual</button>
-                <button class="btn" id="btnTrimestral" onclick="changePeriod('trimestral')">Trimestral</button>
-            </div>
+        <div class="stats-period">
+            <button class="stats-period-btn active" id="btnSemanal" onclick="changePeriod('semanal')">Semanal</button>
+            <button class="stats-period-btn" id="btnMensual" onclick="changePeriod('mensual')">Mensual</button>
+            <button class="stats-period-btn" id="btnTrimestral" onclick="changePeriod('trimestral')">Trimestral</button>
         </div>
 
-        <!-- Resumen Financiero -->
-        <div class="card mb-4">
-            <h2 class="mb-3">Resumen Financiero - <span id="periodTitle">Esta Semana</span></h2>
-            
-            <div class="grid grid-2 mb-4">
-                <div>
-                    <h3 class="mb-2">Ingresos</h3>
-                    <div class="grid grid-2">
-                        <div>
-                            <div style="font-size: 0.85rem; color: var(--gray-500);">Bolívares</div>
-                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);" id="ingresoBS">Bs. 0</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 0.85rem; color: var(--gray-500);">Dólares</div>
-                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);" id="ingresoUSD">$0</div>
-                        </div>
+        <!-- Resumen Financiero compacto -->
+        <section class="stats-section">
+            <h2 class="stats-section-title"><span id="periodTitle">Esta Semana</span></h2>
+            <div class="stats-finance">
+                <div class="stats-finance-row">
+                    <div class="stats-finance-item stats-income">
+                        <span class="stats-finance-label">Ingresos Bs</span>
+                        <span class="stats-finance-value" id="ingresoBS">Bs. 0</span>
                     </div>
-                    <div class="mt-2">
-                        <div style="font-size: 0.85rem; color: var(--gray-500);">Referencia en Euros</div>
-                        <div style="font-size: 2rem; font-weight: 700;" id="ingresoEUR">€0</div>
+                    <div class="stats-finance-item stats-income">
+                        <span class="stats-finance-label">Ingresos $</span>
+                        <span class="stats-finance-value" id="ingresoUSD">$0</span>
                     </div>
                 </div>
-
-                <div>
-                    <h3 class="mb-2">Gastos</h3>
-                    <div class="grid grid-2">
-                        <div>
-                            <div style="font-size: 0.85rem; color: var(--gray-500);">Bolívares</div>
-                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--error);" id="gastoBS">Bs. 0</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 0.85rem; color: var(--gray-500);">Dólares</div>
-                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--error);" id="gastoUSD">$0</div>
-                        </div>
+                <div class="stats-finance-row">
+                    <span class="stats-finance-label">Ref. €</span>
+                    <span class="stats-finance-value stats-eur" id="ingresoEUR">€0</span>
+                </div>
+                <div class="stats-finance-divider"></div>
+                <div class="stats-finance-row">
+                    <div class="stats-finance-item stats-expense">
+                        <span class="stats-finance-label">Gastos Bs</span>
+                        <span class="stats-finance-value" id="gastoBS">Bs. 0</span>
+                    </div>
+                    <div class="stats-finance-item stats-expense">
+                        <span class="stats-finance-label">Gastos $</span>
+                        <span class="stats-finance-value" id="gastoUSD">$0</span>
                     </div>
                 </div>
-            </div>
-
-            <div style="border-top: 2px solid var(--gray-200); padding-top: 1rem;">
-                <h3 class="mb-2">Balance Neto</h3>
-                <div class="grid grid-2">
-                    <div>
-                        <div style="font-size: 0.85rem; color: var(--gray-500);">Bolívares</div>
-                        <div style="font-size: 1.75rem; font-weight: 700;" id="balanceBS">Bs. 0</div>
+                <div class="stats-finance-divider"></div>
+                <div class="stats-finance-row">
+                    <div class="stats-finance-item">
+                        <span class="stats-finance-label">Balance Bs</span>
+                        <span class="stats-finance-value" id="balanceBS">Bs. 0</span>
                     </div>
-                    <div>
-                        <div style="font-size: 0.85rem; color: var(--gray-500);">Dólares</div>
-                        <div style="font-size: 1.75rem; font-weight: 700;" id="balanceUSD">$0</div>
+                    <div class="stats-finance-item">
+                        <span class="stats-finance-label">Balance $</span>
+                        <span class="stats-finance-value" id="balanceUSD">$0</span>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Estadísticas de Pedidos -->
-        <div class="grid grid-2">
-            <div class="card">
-                <h3 class="mb-3">Pedidos por Estado</h3>
+        <!-- Pedidos por Estado + Métricas -->
+        <section class="stats-section stats-chart-section">
+            <h2 class="stats-section-title">Pedidos por Estado</h2>
+            <div class="stats-chart-wrap">
                 <canvas id="statusChart"></canvas>
             </div>
+        </section>
 
-            <div class="card">
-                <h3 class="mb-3">Métricas del Período</h3>
-                <div id="periodMetrics">
-                    <div style="text-align: center; padding: 2rem;">
-                        <div class="loading"></div>
-                    </div>
-                </div>
+        <section class="stats-section">
+            <h2 class="stats-section-title">Métricas</h2>
+            <div id="periodMetrics" class="stats-metrics">
+                <div class="stats-loading"><span class="loading"></span></div>
             </div>
-        </div>
+        </section>
 
         <!-- Productos Más Vendidos -->
-        <div class="card mt-4">
-            <h3 class="mb-3">Productos Más Solicitados</h3>
-            <div id="topProducts">
-                <div style="text-align: center; padding: 2rem;">
-                    <div class="loading"></div>
-                </div>
+        <section class="stats-section">
+            <h2 class="stats-section-title">Top Productos</h2>
+            <div id="topProducts" class="stats-top-products">
+                <div class="stats-loading"><span class="loading"></span></div>
             </div>
-        </div>
+        </section>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/supabase-config.js"></script>
     <script src="js/estadisticas.js"></script>
