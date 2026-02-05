@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>Airport Manager - Login</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-logo">AIRPORT</div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        class="form-input" 
+                        required 
+                        placeholder="tu@email.com"
+                    >
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="password">Contraseña</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        class="form-input" 
+                        required 
+                        placeholder="••••••••"
+                    >
+                </div>
+                <div id="errorMessage" class="alert alert-error hidden"></div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    INICIAR SESIÓN
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script>
+        // Verificar si ya está autenticado
+        checkAuth();
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMessage');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            // Deshabilitar botón
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span> INICIANDO...';
+            errorDiv.classList.add('hidden');
+            
+            try {
+                if (!supabase) {
+                    throw new Error('Supabase no cargó. Comprueba la consola (F12) y que las credenciales en js/supabase-config.js sean correctas.');
+                }
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+                
+                if (error) throw error;
+                
+                // Redirigir al dashboard
+                window.location.href = 'dashboard.html';
+                
+            } catch (error) {
+                let msg = error.message || 'Error al iniciar sesión';
+                if (msg.includes('Invalid login credentials') || msg.includes('invalid')) {
+                    msg = 'Email o contraseña incorrectos. Si acabas de crear el usuario en Supabase, activa "Auto Confirm User" en Authentication → Users.';
+                }
+                if (msg.includes('fetch') || msg.includes('Failed')) {
+                    msg = 'No se pudo conectar a Supabase. Revisa la URL y la Anon Key en js/supabase-config.js y que la app no se abra desde file:// (usa un servidor local o sube la app).';
+                }
+                errorDiv.textContent = msg;
+                errorDiv.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'INICIAR SESIÓN';
+                console.error('Login error:', error);
+            }
+        });
+    </script>
+</body>
+</html>

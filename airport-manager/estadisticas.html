@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>Estadísticas - Airport Manager</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="dashboard.html" class="logo">AIRPORT</a>
+            <nav class="nav">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="pedidos.html">Pedidos</a>
+                <a href="calendario.html">Calendario</a>
+                <a href="pagos.html">Pagos</a>
+                <a href="estadisticas.html">Stats</a>
+                <a href="#" onclick="logout()">Salir</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <h1 class="mb-4">Estadísticas</h1>
+
+        <!-- Filtro de Período -->
+        <div class="card mb-4">
+            <div class="flex flex-gap-2">
+                <button class="btn btn-primary" id="btnSemanal" onclick="changePeriod('semanal')">Semanal</button>
+                <button class="btn" id="btnMensual" onclick="changePeriod('mensual')">Mensual</button>
+                <button class="btn" id="btnTrimestral" onclick="changePeriod('trimestral')">Trimestral</button>
+            </div>
+        </div>
+
+        <!-- Resumen Financiero -->
+        <div class="card mb-4">
+            <h2 class="mb-3">Resumen Financiero - <span id="periodTitle">Esta Semana</span></h2>
+            
+            <div class="grid grid-2 mb-4">
+                <div>
+                    <h3 class="mb-2">Ingresos</h3>
+                    <div class="grid grid-2">
+                        <div>
+                            <div style="font-size: 0.85rem; color: var(--gray-500);">Bolívares</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);" id="ingresoBS">Bs. 0</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: var(--gray-500);">Dólares</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);" id="ingresoUSD">$0</div>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <div style="font-size: 0.85rem; color: var(--gray-500);">Referencia en Euros</div>
+                        <div style="font-size: 2rem; font-weight: 700;" id="ingresoEUR">€0</div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="mb-2">Gastos</h3>
+                    <div class="grid grid-2">
+                        <div>
+                            <div style="font-size: 0.85rem; color: var(--gray-500);">Bolívares</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--error);" id="gastoBS">Bs. 0</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: var(--gray-500);">Dólares</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--error);" id="gastoUSD">$0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="border-top: 2px solid var(--gray-200); padding-top: 1rem;">
+                <h3 class="mb-2">Balance Neto</h3>
+                <div class="grid grid-2">
+                    <div>
+                        <div style="font-size: 0.85rem; color: var(--gray-500);">Bolívares</div>
+                        <div style="font-size: 1.75rem; font-weight: 700;" id="balanceBS">Bs. 0</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.85rem; color: var(--gray-500);">Dólares</div>
+                        <div style="font-size: 1.75rem; font-weight: 700;" id="balanceUSD">$0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas de Pedidos -->
+        <div class="grid grid-2">
+            <div class="card">
+                <h3 class="mb-3">Pedidos por Estado</h3>
+                <canvas id="statusChart"></canvas>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-3">Métricas del Período</h3>
+                <div id="periodMetrics">
+                    <div style="text-align: center; padding: 2rem;">
+                        <div class="loading"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos Más Vendidos -->
+        <div class="card mt-4">
+            <h3 class="mb-3">Productos Más Solicitados</h3>
+            <div id="topProducts">
+                <div style="text-align: center; padding: 2rem;">
+                    <div class="loading"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/estadisticas.js"></script>
+</body>
+</html>

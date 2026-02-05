@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>Calendario - Airport Manager</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="dashboard.html" class="logo">AIRPORT</a>
+            <nav class="nav">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="pedidos.html">Pedidos</a>
+                <a href="calendario.html">Calendario</a>
+                <a href="pagos.html">Pagos</a>
+                <a href="estadisticas.html">Stats</a>
+                <a href="#" onclick="logout()">Salir</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <div class="calendar-header">
+            <button class="btn" onclick="previousMonth()">← Anterior</button>
+            <h1 id="currentMonth" class="mono"></h1>
+            <button class="btn" onclick="nextMonth()">Siguiente →</button>
+        </div>
+
+        <div class="calendar-container">
+            <div class="calendar-grid">
+                <div class="calendar-day-header">DOM</div>
+                <div class="calendar-day-header">LUN</div>
+                <div class="calendar-day-header">MAR</div>
+                <div class="calendar-day-header">MIÉ</div>
+                <div class="calendar-day-header">JUE</div>
+                <div class="calendar-day-header">VIE</div>
+                <div class="calendar-day-header">SÁB</div>
+                <div id="calendarDays"></div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <h3 class="mb-3">Leyenda</h3>
+            <div class="flex flex-gap-2 flex-wrap">
+                <div class="flex flex-align-center flex-gap-1">
+                    <div style="width: 20px; height: 20px; background: var(--black);"></div>
+                    <span>Pedido activo</span>
+                </div>
+                <div class="flex flex-align-center flex-gap-1">
+                    <div style="width: 20px; height: 20px; background: var(--black); opacity: 0.5;"></div>
+                    <span>Completado</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/calendario.js"></script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>Dashboard - Airport Manager</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="dashboard.html" class="logo">AIRPORT</a>
+            <nav class="nav">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="pedidos.html">Pedidos</a>
+                <a href="calendario.html">Calendario</a>
+                <a href="pagos.html">Pagos</a>
+                <a href="estadisticas.html">Stats</a>
+                <a href="#" onclick="logout()">Salir</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <h1 class="mb-4">Dashboard</h1>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalPedidos">0</div>
+                <div class="stat-label">Pedidos Activos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pedidosHoy">0</div>
+                <div class="stat-label">Pedidos Hoy</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="ingresosMes">€0</div>
+                <div class="stat-label">Ingresos del Mes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pendientes">0</div>
+                <div class="stat-label">Entregas Pendientes</div>
+            </div>
+        </div>
+
+        <!-- Pedidos Recientes -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Pedidos Recientes</h2>
+                <a href="pedidos.html" class="btn btn-sm">Ver Todos</a>
+            </div>
+            <div id="pedidosRecientes">
+                <div style="text-align: center; padding: 2rem; color: var(--gray-500);">
+                    Cargando pedidos...
+                </div>
+            </div>
+        </div>
+
+        <!-- Entregas de Hoy -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Entregas para Hoy</h2>
+                <a href="calendario.html" class="btn btn-sm">Ver Calendario</a>
+            </div>
+            <div id="entregasHoy">
+                <div style="text-align: center; padding: 2rem; color: var(--gray-500);">
+                    Cargando entregas...
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script>
+        let session;
+
+        async function init() {
+            session = await checkAuth();
+            if (!session) return;
+            
+            loadStats();
+            loadRecentOrders();
+            loadTodayDeliveries();
+        }
+
+        async function loadStats() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const firstDayMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+
+                // Total pedidos activos
+                const { data: activosData } = await supabase
+                    .from('orders')
+                    .select('id', { count: 'exact' })
+                    .not('status', 'eq', 'entregado')
+                    .not('status', 'eq', 'cancelado');
+
+                document.getElementById('totalPedidos').textContent = activosData?.length || 0;
+
+                // Pedidos de hoy
+                const { data: hoyData } = await supabase
+                    .from('orders')
+                    .select('id', { count: 'exact' })
+                    .gte('created_at', today);
+
+                document.getElementById('pedidosHoy').textContent = hoyData?.length || 0;
+
+                // Ingresos del mes
+                const { data: ingresosData } = await supabase
+                    .from('orders')
+                    .select('amount_euros')
+                    .gte('created_at', firstDayMonth)
+                    .not('status', 'eq', 'cancelado');
+
+                const totalIngresos = ingresosData?.reduce((sum, order) => sum + (parseFloat(order.amount_euros) || 0), 0) || 0;
+                document.getElementById('ingresosMes').textContent = `€${totalIngresos.toFixed(2)}`;
+
+                // Entregas pendientes
+                const { data: pendientesData } = await supabase
+                    .from('orders')
+                    .select('id', { count: 'exact' })
+                    .lte('delivery_date', today)
+                    .not('status', 'eq', 'entregado')
+                    .not('status', 'eq', 'cancelado');
+
+                document.getElementById('pendientes').textContent = pendientesData?.length || 0;
+
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadRecentOrders() {
+            try {
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                if (error) throw error;
+
+                const container = document.getElementById('pedidosRecientes');
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--gray-500);">No hay pedidos registrados</div>';
+                    return;
+                }
+
+                const html = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Cliente</th>
+                                <th>Monto</th>
+                                <th>Estado</th>
+                                <th>Entrega</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(order => `
+                                <tr onclick="window.location.href='pedidos.html?id=${order.id}'" style="cursor: pointer;">
+                                    <td class="mono">#${order.order_number}</td>
+                                    <td>${order.customer_name}</td>
+                                    <td>${formatCurrency(order.amount_euros, 'EUR')}</td>
+                                    <td><span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></td>
+                                    <td>${formatDate(order.delivery_date)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading recent orders:', error);
+                document.getElementById('pedidosRecientes').innerHTML = 
+                    '<div class="alert alert-error">Error al cargar pedidos recientes</div>';
+            }
+        }
+
+        async function loadTodayDeliveries() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select('*')
+                    .eq('delivery_date', today)
+                    .not('status', 'eq', 'cancelado')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                const container = document.getElementById('entregasHoy');
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--gray-500);">No hay entregas programadas para hoy</div>';
+                    return;
+                }
+
+                const html = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Cliente</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(order => `
+                                <tr>
+                                    <td class="mono">#${order.order_number}</td>
+                                    <td>${order.customer_name}</td>
+                                    <td><span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></td>
+                                    <td>
+                                        <a href="pedidos.html?id=${order.id}" class="btn btn-sm btn-outline">Ver</a>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading today deliveries:', error);
+                document.getElementById('entregasHoy').innerHTML = 
+                    '<div class="alert alert-error">Error al cargar entregas de hoy</div>';
+            }
+        }
+
+        // Inicializar
+        init();
+    </script>
+</body>
+</html>

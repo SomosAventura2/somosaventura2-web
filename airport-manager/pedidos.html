@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>Pedidos - Airport Manager</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="dashboard.html" class="logo">AIRPORT</a>
+            <nav class="nav">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="pedidos.html">Pedidos</a>
+                <a href="calendario.html">Calendario</a>
+                <a href="pagos.html">Pagos</a>
+                <a href="estadisticas.html">Stats</a>
+                <a href="#" onclick="logout()">Salir</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <div class="flex flex-between flex-align-center mb-4">
+            <h1>Pedidos</h1>
+            <button class="btn btn-primary" onclick="openNewOrderModal()">+ Nuevo Pedido</button>
+        </div>
+
+        <!-- Filtros -->
+        <div class="card mb-4">
+            <div class="flex flex-gap-2 flex-wrap">
+                <select id="filterStatus" class="form-select" style="max-width: 200px;" onchange="loadOrders()">
+                    <option value="">Todos los estados</option>
+                    <option value="agendado">Agendado</option>
+                    <option value="en_produccion">En Producción</option>
+                    <option value="listo">Listo</option>
+                    <option value="entregado">Entregado</option>
+                    <option value="cancelado">Cancelado</option>
+                </select>
+                <input 
+                    type="text" 
+                    id="searchCustomer" 
+                    class="form-input" 
+                    placeholder="Buscar por cliente..."
+                    style="max-width: 300px;"
+                    oninput="loadOrders()"
+                >
+            </div>
+        </div>
+
+        <!-- Lista de Pedidos -->
+        <div id="ordersList">
+            <div style="text-align: center; padding: 3rem;">
+                <div class="loading" style="width: 40px; height: 40px;"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Nuevo/Editar Pedido -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeOrderModal()">&times;</button>
+            <h2 id="modalTitle" class="mb-4">Nuevo Pedido</h2>
+            <form id="orderForm">
+                <input type="hidden" id="orderId">
+                
+                <div class="form-group">
+                    <label class="form-label" for="customerName">Nombre del Cliente*</label>
+                    <input type="text" id="customerName" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Productos del Pedido*</label>
+                    <div id="itemsContainer"></div>
+                    <button type="button" class="btn btn-outline btn-sm mt-2" onclick="addItem()">+ Agregar Producto</button>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="amountEuros">Monto en Euros (Referencia)*</label>
+                        <input type="number" id="amountEuros" class="form-input" step="0.01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="paymentPercentage">Pago Inicial*</label>
+                        <select id="paymentPercentage" class="form-select" required>
+                            <option value="50">50% - Agendar</option>
+                            <option value="100">100% - Completo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="paymentAmount">Monto del Pago*</label>
+                        <input type="number" id="paymentAmount" class="form-input" step="0.01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="paymentCurrency">Moneda*</label>
+                        <select id="paymentCurrency" class="form-select" required>
+                            <option value="BS">Bolívares</option>
+                            <option value="USD">Dólares Efectivo</option>
+                            <option value="USDT">USDT</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="paymentMethod">Método de Pago*</label>
+                    <select id="paymentMethod" class="form-select" required>
+                        <option value="pago_movil">Pago Móvil (Bs)</option>
+                        <option value="efectivo_usd">Dólares Efectivo</option>
+                        <option value="zelle">Zelle</option>
+                        <option value="usdt">USDT</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="status">Estado*</label>
+                        <select id="status" class="form-select" required>
+                            <option value="agendado">Agendado</option>
+                            <option value="en_produccion">En Producción</option>
+                            <option value="listo">Listo</option>
+                            <option value="entregado">Entregado</option>
+                            <option value="cancelado">Cancelado</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="deliveryDate">Fecha de Entrega*</label>
+                        <input type="date" id="deliveryDate" class="form-input" required>
+                    </div>
+                </div>
+
+                <div id="formMessage"></div>
+
+                <div class="flex flex-gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary">Guardar Pedido</button>
+                    <button type="button" class="btn btn-outline" onclick="closeOrderModal()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Ver Detalles -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeDetailsModal()">&times;</button>
+            <div id="orderDetails"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/pedidos.js"></script>
+</body>
+</html>
