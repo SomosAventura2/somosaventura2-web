@@ -68,6 +68,11 @@ async function init() {
     loadPayments();
     loadExpenses();
     updatePaymentMethodVisibility();
+
+    if (window.initCustomSelects) {
+        window.initCustomSelects(document.querySelector('#tabPagos'));
+        window.initCustomSelects(document.querySelector('#tabGastos'));
+    }
 }
 
 function showTab(tab) {
@@ -108,6 +113,20 @@ async function loadOrders() {
 
         paymentSelect.innerHTML = '<option value="">Seleccionar pedido...</option>' + options;
         expenseSelect.innerHTML = '<option value="">Seleccionar pedido...</option>' + options;
+
+        [paymentSelect, expenseSelect].forEach(function (sel) {
+            var wrap = sel && sel.closest('.custom-select-wrap');
+            if (wrap) {
+                wrap.parentNode.insertBefore(sel, wrap);
+                wrap.remove();
+            }
+        });
+        if (window.initCustomSelects) {
+            var formPagos = document.querySelector('#tabPagos .pagos-form');
+            var formGastos = document.querySelector('#tabGastos .pagos-form');
+            if (formPagos) window.initCustomSelects(formPagos);
+            if (formGastos) window.initCustomSelects(formGastos);
+        }
     } catch (error) {
         console.error('Error loading orders:', error);
         if (paymentSelect) paymentSelect.innerHTML = '<option value="">Seleccionar pedido...</option>';
@@ -261,7 +280,7 @@ document.getElementById('paymentForm').addEventListener('submit', async (e) => {
     const messageDiv = document.getElementById('paymentMessage');
     
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="loading"></span> Guardando...';
+    submitBtn.innerHTML = '<div class="spinner-container spinner-container--inline"><div class="spinner"></div></div> Guardando...';
     messageDiv.innerHTML = '';
     
     try {
@@ -308,7 +327,7 @@ document.getElementById('expenseForm').addEventListener('submit', async (e) => {
     const messageDiv = document.getElementById('expenseMessage');
     
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="loading"></span> Guardando...';
+    submitBtn.innerHTML = '<div class="spinner-container spinner-container--inline"><div class="spinner"></div></div> Guardando...';
     messageDiv.innerHTML = '';
     
     try {

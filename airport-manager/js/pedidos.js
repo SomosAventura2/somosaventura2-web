@@ -66,32 +66,11 @@ async function init() {
         });
     }
 
+    // Cerrar dropdowns al hacer click fuera
     document.addEventListener('click', function (e) {
-        if (!e.target.closest('#statusMenuFloating') && !e.target.closest('.status-dropdown-btn')) {
-            closeStatusMenu();
-        }
+        if (e.target.closest('.status-dropdown')) return;
+        document.querySelectorAll('.status-dropdown.open').forEach(function (d) { d.classList.remove('open'); });
     });
-
-    (function () {
-        var menu = document.getElementById('statusMenuFloating');
-        if (!menu) return;
-        menu.querySelectorAll('.status-dropdown-option').forEach(function (opt) {
-            opt.addEventListener('click', function (e) {
-                e.stopPropagation();
-                var orderId = statusMenuOrderId;
-                var newStatus = opt.getAttribute('data-status');
-                closeStatusMenu();
-                if (!orderId || !newStatus) return;
-                updateOrderStatus(orderId, newStatus).then(function () {
-                    if (window.queryCacheInvalidate) window.queryCacheInvalidate('orders_');
-                    loadOrders();
-                }).catch(function (err) {
-                    console.error(err);
-                    if (window.Toast) window.Toast.show('Error al actualizar estado', 'error'); else alert('Error al actualizar estado');
-                });
-            });
-        });
-    })();
 
     const params = new URLSearchParams(window.location.search);
     const customerIdParam = params.get('customer_id');
@@ -264,9 +243,21 @@ document.getElementById('newCustomerForm').addEventListener('submit', async (e) 
             .single();
         if (error) throw error;
         selectCustomer(created);
+        // Re-habilitar el botón de guardar pedido si existe
+        const mainSubmitBtn = document.querySelector('#orderForm button[type="submit"]');
+        if (mainSubmitBtn) {
+            mainSubmitBtn.disabled = false;
+            mainSubmitBtn.textContent = 'Guardar Pedido';
+        }
         closeNewCustomerModal();
     } catch (err) {
         msgEl.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+        // Re-habilitar el botón de guardar pedido si existe también en caso de error
+        const mainSubmitBtn = document.querySelector('#orderForm button[type="submit"]');
+        if (mainSubmitBtn) {
+            mainSubmitBtn.disabled = false;
+            mainSubmitBtn.textContent = 'Guardar Pedido';
+        }
     }
 });
 
@@ -345,14 +336,28 @@ function displayOrders(orders) {
         return;
     }
 
+    var statusOpts = window.STATUS_OPTIONS || [
+        { value: 'agendado', label: 'Agendado' },
+        { value: 'en_produccion', label: 'En Producción' },
+        { value: 'listo', label: 'Listo' },
+        { value: 'entregado', label: 'Entregado' }
+    ];
+
     const html = `<ul class="pedidos-item-list">${orders.map(order => {
         const items = JSON.parse(order.items || '[]');
         const itemsShort = items.length ? `${items[0].producto}${items.length > 1 ? ` +${items.length - 1}` : ''}` : '-';
+        const otherStatuses = statusOpts.filter(s => s.value !== order.status);
+        const statusMenu = otherStatuses.map(s =>
+            `<li><button type="button" class="status-dropdown-option" data-status="${s.value}">${s.label}</button></li>`
+        ).join('');
         return `
         <li class="pedidos-item pedidos-item--${order.status}">
             <div class="pedidos-item-main">
                 <span class="pedidos-item-number">#${order.order_number}</span>
-                <button type="button" class="status-dropdown-btn status-${order.status}" data-order-id="${order.id}">${getStatusText(order.status)} ▾</button>
+                <div class="status-dropdown">
+                    <button type="button" class="status-dropdown-btn status-${order.status}" data-order-id="${order.id}">${getStatusText(order.status)} ▾</button>
+                    <ul class="status-dropdown-menu">${statusMenu}</ul>
+                </div>
             </div>
             <div class="pedidos-item-detail">${order.customer_name} · Entrega ${formatDate(order.delivery_date)}</div>
             <div class="pedidos-item-meta">${itemsShort} · ${formatCurrency(order.amount_euros, 'EUR')} · ${order.first_payment_percentage}%</div>
@@ -368,38 +373,44 @@ function displayOrders(orders) {
     }).join('')}</ul>`;
 
     container.innerHTML = html;
-    bindStatusButtons(container);
+    bindStatusDropdowns(container);
 }
 
-var statusMenuOrderId = null;
-
-function openStatusMenu(btn) {
-    var menu = document.getElementById('statusMenuFloating');
-    if (!menu) return;
-    statusMenuOrderId = btn.getAttribute('data-order-id');
-    var rect = btn.getBoundingClientRect();
-    menu.style.display = 'block';
-    menu.style.position = 'fixed';
-    menu.style.left = rect.left + 'px';
-    menu.style.top = (rect.bottom + 4) + 'px';
-    menu.style.minWidth = Math.max(rect.width, 140) + 'px';
-    menu.style.zIndex = '10000';
-}
-
-function closeStatusMenu() {
-    var menu = document.getElementById('statusMenuFloating');
-    if (menu) menu.style.display = 'none';
-    statusMenuOrderId = null;
-}
-
-function bindStatusButtons(container) {
-    if (!container) container = document.getElementById('ordersList');
+function bindStatusDropdowns(container) {
     if (!container) return;
 
-    container.querySelectorAll('.status-dropdown-btn').forEach(function (btn) {
+    container.querySelectorAll('.status-dropdown').forEach(function (wrap) {
+        var btn = wrap.querySelector('.status-dropdown-btn');
+        var orderId = btn && btn.getAttribute('data-order-id');
+        if (!orderId) return;
+
         btn.addEventListener('click', function (e) {
+            e.preventDefault();
             e.stopPropagation();
-            openStatusMenu(btn);
+            document.querySelectorAll('.status-dropdown.open').forEach(function (d) {
+                if (d !== wrap) d.classList.remove('open');
+            });
+            wrap.classList.toggle('open');
+        });
+
+        wrap.querySelectorAll('.status-dropdown-option').forEach(function (opt) {
+            opt.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var newStatus = opt.getAttribute('data-status');
+                if (!newStatus) return;
+                wrap.classList.remove('open');
+                (function (oid, status) {
+                    updateOrderStatus(oid, status).then(function () {
+                        if (window.queryCacheInvalidate) window.queryCacheInvalidate('orders_');
+                        loadOrders();
+                    }).catch(function (err) {
+                        console.error(err);
+                        if (window.Toast) window.Toast.show('Error al actualizar estado', 'error');
+                        else alert('Error al actualizar estado');
+                    });
+                })(orderId, newStatus);
+            });
         });
     });
 }
@@ -568,7 +579,7 @@ function addItem() {
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                     <label class="form-label">Cantidad*</label>
-                    <input type="number" class="form-input item-cantidad" min="1" value="1" required>
+                    <input type="number" inputmode="numeric" class="form-input item-cantidad" min="1" value="1" required>
                 </div>
             </div>
 
@@ -656,7 +667,10 @@ document.getElementById('orderModal').addEventListener('change', async function 
 function removeItem(itemId) {
     const item = document.getElementById(`item-${itemId}`);
     if (item) {
-        item.remove();
+        item.style.transition = 'opacity 0.2s, transform 0.2s';
+        item.style.opacity = '0';
+        item.style.transform = 'translateX(-20px)';
+        setTimeout(function () { item.remove(); }, 200);
     }
 }
 
@@ -684,7 +698,7 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
     const messageDiv = document.getElementById('formMessage');
     
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="loading"></span> Guardando...';
+    submitBtn.innerHTML = '<div class="spinner-container spinner-container--inline"><div class="spinner"></div></div> Guardando...';
     messageDiv.innerHTML = '';
     
     try {
@@ -759,10 +773,14 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
         }
         try { localStorage.removeItem(ORDER_DRAFT_KEY); } catch (e) {}
         if (window.queryCacheInvalidate) window.queryCacheInvalidate('orders_');
+        // Limpiar el mensaje de éxito antes de cerrar
+        setTimeout(() => {
+            messageDiv.innerHTML = '';
+        }, 300);
         setTimeout(() => {
             closeOrderModal();
             loadOrders();
-        }, 1500);
+        }, 500); // Reducido de 1500ms a 500ms
         
     } catch (error) {
         console.error('Error saving order:', error);

@@ -67,7 +67,7 @@
                     <div class="pagos-form-row">
                         <div class="pagos-form-group">
                             <label class="pagos-label" for="paymentAmount">Monto*</label>
-                            <input type="number" id="paymentAmount" class="pagos-input" step="0.01" required>
+                            <input type="number" inputmode="decimal" id="paymentAmount" class="pagos-input" step="0.01" required>
                         </div>
                         <div class="pagos-form-group">
                             <label class="pagos-label" for="paymentCurrency">Moneda*</label>
@@ -97,7 +97,7 @@
             <section class="pagos-section">
                 <h2 class="pagos-section-title">Historial de Pagos</h2>
                 <div id="paymentsList" class="pagos-list">
-                    <div class="pagos-loading"><span class="loading"></span></div>
+                    <div class="pagos-loading"><div class="spinner-container"><div class="spinner"></div></div></div>
                 </div>
             </section>
         </div>
@@ -127,7 +127,7 @@
                     <div class="pagos-form-row pagos-form-row-3">
                         <div class="pagos-form-group">
                             <label class="pagos-label" for="expenseAmount">Monto*</label>
-                            <input type="number" id="expenseAmount" class="pagos-input" step="0.01" required>
+                            <input type="number" inputmode="decimal" id="expenseAmount" class="pagos-input" step="0.01" required>
                         </div>
                         <div class="pagos-form-group">
                             <label class="pagos-label" for="expenseCurrency">Moneda*</label>
@@ -149,7 +149,7 @@
             <section class="pagos-section">
                 <h2 class="pagos-section-title">Historial de Gastos</h2>
                 <div id="expensesList" class="pagos-list">
-                    <div class="pagos-loading"><span class="loading"></span></div>
+                    <div class="pagos-loading"><div class="spinner-container"><div class="spinner"></div></div></div>
                 </div>
             </section>
         </div>

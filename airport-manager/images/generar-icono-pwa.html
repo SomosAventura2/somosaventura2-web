@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Generar iconos PWA (negro → azul tema)</title>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 2rem auto; padding: 1rem; }
+        h1 { font-size: 1.25rem; }
+        input[type="file"] { margin: 1rem 0; }
+        .preview { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
+        .preview img { border: 1px solid #ccc; }
+        button { background: #0f2744; color: #fff; border: none; padding: 0.5rem 1rem; cursor: pointer; margin-right: 0.5rem; margin-top: 0.5rem; }
+        button:hover { background: #0a1c33; }
+        p { color: #555; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <h1>Generar iconos PWA en azul (#0f2744)</h1>
+    <p>Sube tu logo (A con avión). Se reemplazará el negro por el azul del tema y podrás descargar icon-192.png e icon-512.png.</p>
+    <input type="file" id="file" accept="image/*">
+    <div class="preview" id="preview"></div>
+    <div id="buttons"></div>
+
+    <script>
+        var AZUL_TEMA = '#0f2744';
+        var fileInput = document.getElementById('file');
+        var preview = document.getElementById('preview');
+        var buttons = document.getElementById('buttons');
+        var img = new Image();
+
+        function hexToRgb(hex) {
+            var m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+            return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [0, 0, 0];
+        }
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(function (x) { return ('0' + Math.round(x).toString(16)).slice(-2); }).join('');
+        }
+        function isBlackOrNear(r, g, b, fuzz) {
+            fuzz = fuzz || 60;
+            return r < fuzz && g < fuzz && b < fuzz && (r + g + b) < 3 * fuzz;
+        }
+
+        function processImage(srcImg, size) {
+            var canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(srcImg, 0, 0, size, size);
+            var data = ctx.getImageData(0, 0, size, size);
+            var blue = hexToRgb(AZUL_TEMA);
+            for (var i = 0; i < data.data.length; i += 4) {
+                var r = data.data[i], g = data.data[i + 1], b = data.data[i + 2], a = data.data[i + 3];
+                if (a > 20 && isBlackOrNear(r, g, b, 80)) {
+                    data.data[i] = blue[0];
+                    data.data[i + 1] = blue[1];
+                    data.data[i + 2] = blue[2];
+                }
+            }
+            ctx.putImageData(data, 0, 0);
+            return canvas;
+        }
+
+        fileInput.addEventListener('change', function () {
+            var file = this.files[0];
+            if (!file) return;
+            var url = URL.createObjectURL(file);
+            img.onload = function () {
+                URL.revokeObjectURL(url);
+                preview.innerHTML = '';
+                buttons.innerHTML = '';
+                [192, 512].forEach(function (size) {
+                    var canvas = processImage(img, size);
+                    var div = document.createElement('div');
+                    div.innerHTML = '<div>'+size+'×'+size+'</div>';
+                    var imgPreview = document.createElement('img');
+                    imgPreview.src = canvas.toDataURL('image/png');
+                    imgPreview.width = Math.min(size, 120);
+                    div.appendChild(imgPreview);
+                    preview.appendChild(div);
+                    var btn = document.createElement('button');
+                    btn.textContent = 'Descargar icon-' + size + '.png';
+                    btn.onclick = function () {
+                        var a = document.createElement('a');
+                        a.download = 'icon-' + size + '.png';
+                        a.href = canvas.toDataURL('image/png');
+                        a.click();
+                    };
+                    buttons.appendChild(btn);
+                });
+            };
+            img.src = url;
+        });
+    </script>
+</body>
+</html>

@@ -176,6 +176,7 @@ function initNavScroll() {
     }
     function scrollToIndex(index) {
         var w = getItemWidth();
+        scrollEl.style.scrollBehavior = 'auto';
         scrollEl.scrollLeft = index * w;
     }
     function getCurrentIndex() {
@@ -197,6 +198,20 @@ function initNavScroll() {
 
     var scrollEndTimer;
     scrollEl.addEventListener('scroll', function () {
+        // Prefetch: al empezar el scroll, precargar la página hacia la que se está yendo
+        var idx = getCurrentIndex();
+        idx = Math.max(0, Math.min(idx, items.length - 1));
+        var link = items[idx];
+        var href = link && link.getAttribute('href');
+        if (href && href !== '#' && !href.startsWith('javascript:')) {
+            var existing = document.querySelector('link[rel="prefetch"][href="' + href + '"]');
+            if (!existing) {
+                var prefetch = document.createElement('link');
+                prefetch.rel = 'prefetch';
+                prefetch.href = href;
+                document.head.appendChild(prefetch);
+            }
+        }
         clearTimeout(scrollEndTimer);
         scrollEndTimer = setTimeout(function () {
             var idx = getCurrentIndex();
@@ -210,17 +225,16 @@ function initNavScroll() {
                     window.location.href = href;
                 }
             }
-        }, 150);
+        }, 50); // Cambiado de 150ms para transición más rápida
     }, { passive: true });
 }
 
 // Desplegables personalizados (no nativos iOS)
 function initCustomSelects(container) {
     var root = container || document;
-    var selects = root.querySelectorAll('select.form-select, select.form-input, select.pagos-input, select.pedidos-filter-select, select.stats-select');
+    var selects = root.querySelectorAll('select.form-select, select.form-input, select.pagos-input, select.pedidos-filter-select, select.stats-select, #paymentOrder, #paymentType, #paymentCurrency, #paymentMethodDollars, #expenseType, #expenseOrder, #expenseCurrency');
     selects.forEach(function (sel) {
         if (sel.closest('.custom-select-wrap')) return;
-        if (sel.id === 'paymentOrder' || sel.id === 'expenseOrder') return;
         sel.setAttribute('tabindex', '-1');
         sel.classList.add('custom-select-native');
         var wrap = document.createElement('div');

@@ -160,7 +160,6 @@
                 }
 
                 const statusOpts = window.STATUS_OPTIONS || [];
-                const statusMenu = statusOpts.map(s => `<li><button type="button" class="status-dropdown-option" data-status="${s.value}">${s.label}</button></li>`).join('');
                 const html = `
                     <table class="table">
                         <thead>
@@ -173,7 +172,10 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${data.map(order => `
+                            ${data.map(order => {
+                                const otherStatuses = statusOpts.filter(s => s.value !== order.status);
+                                const statusMenu = otherStatuses.map(s => `<li><button type="button" class="status-dropdown-option" data-status="${s.value}">${s.label}</button></li>`).join('');
+                                return `
                                 <tr>
                                     <td class="mono" onclick="window.location.href='pedidos.html?id=${order.id}'" style="cursor: pointer;">#${order.order_number}</td>
                                     <td onclick="window.location.href='pedidos.html?id=${order.id}'" style="cursor: pointer;">${order.customer_name}</td>
@@ -181,7 +183,7 @@
                                     <td onclick="event.stopPropagation()"><div class="status-dropdown"><button type="button" class="status-dropdown-btn status-${order.status}" data-order-id="${order.id}">${getStatusText(order.status)} ▾</button><ul class="status-dropdown-menu">${statusMenu}</ul></div></td>
                                     <td onclick="window.location.href='pedidos.html?id=${order.id}'" style="cursor: pointer;">${formatDate(order.delivery_date)}</td>
                                 </tr>
-                            `).join('')}
+                            `}).join('')}
                         </tbody>
                     </table>
                 `;
@@ -217,7 +219,6 @@
                 }
 
                 const statusOpts = window.STATUS_OPTIONS || [];
-                const statusMenu = statusOpts.map(s => `<li><button type="button" class="status-dropdown-option" data-status="${s.value}">${s.label}</button></li>`).join('');
                 const html = `
                     <table class="table">
                         <thead>
@@ -229,14 +230,17 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${data.map(order => `
+                            ${data.map(order => {
+                                const otherStatuses = statusOpts.filter(s => s.value !== order.status);
+                                const statusMenu = otherStatuses.map(s => `<li><button type="button" class="status-dropdown-option" data-status="${s.value}">${s.label}</button></li>`).join('');
+                                return `
                                 <tr>
                                     <td class="mono">#${order.order_number}</td>
                                     <td>${order.customer_name}</td>
                                     <td><div class="status-dropdown"><button type="button" class="status-dropdown-btn status-${order.status}" data-order-id="${order.id}">${getStatusText(order.status)} ▾</button><ul class="status-dropdown-menu">${statusMenu}</ul></div></td>
                                     <td><a href="pedidos.html?id=${order.id}" class="btn btn-sm btn-outline">Ver</a></td>
                                 </tr>
-                            `).join('')}
+                            `}).join('')}
                         </tbody>
                     </table>
                 `;

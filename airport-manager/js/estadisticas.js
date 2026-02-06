@@ -338,9 +338,9 @@ async function loadClientesTab() {
     const tableEl = document.getElementById('clientesTableWrap');
     const segmentEl = document.getElementById('clientesSegmentos');
     if (!metricsEl || !tableEl) return;
-    metricsEl.innerHTML = '<div class="stats-loading"><span class="loading"></span></div>';
-    tableEl.innerHTML = '<div class="stats-loading"><span class="loading"></span></div>';
-    if (segmentEl) segmentEl.innerHTML = '<div class="stats-loading"><span class="loading"></span></div>';
+    metricsEl.innerHTML = '<div class="stats-loading"><div class="spinner-container"><div class="spinner"></div></div></div>';
+    tableEl.innerHTML = '<div class="stats-loading"><div class="spinner-container"><div class="spinner"></div></div></div>';
+    if (segmentEl) segmentEl.innerHTML = '<div class="stats-loading"><div class="spinner-container"><div class="spinner"></div></div></div>';
     try {
         const { data: customers, error } = await supabase
             .from('customers')
@@ -487,7 +487,7 @@ async function viewCustomerHistory(customerId) {
     const modal = document.getElementById('customerHistoryModal');
     if (!content || !modal) return;
     modal.classList.add('active');
-    content.innerHTML = '<div class="stats-loading"><span class="loading"></span></div>';
+    content.innerHTML = '<div class="stats-loading"><div class="spinner-container"><div class="spinner"></div></div></div>';
     try {
         const { data: customer, error: errC } = await supabase
             .from('customers')

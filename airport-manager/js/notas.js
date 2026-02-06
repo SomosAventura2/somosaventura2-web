@@ -41,6 +41,7 @@ function loadNotes() {
         return '<li class="notas-item" data-id="' + n.id + '">' +
             '<span class="notas-item-text">' + escapeHtml(n.text) + '</span>' +
             (dateStr ? '<span class="notas-item-date" title="Fecha de creación">' + dateStr + '</span>' : '') +
+            '<button type="button" class="notas-item-edit" onclick="editNote(\'' + n.id + '\')" aria-label="Editar">✏️</button>' +
             '<button type="button" class="notas-item-delete" onclick="deleteNote(\'' + n.id + '\')" aria-label="Borrar">×</button>' +
             '</li>';
     }).join('');
@@ -70,6 +71,22 @@ function deleteNote(id) {
     saveNotes(notes);
     loadNotes();
     if (window.Toast) window.Toast.show('Nota eliminada', 'success', 1500);
+}
+
+function editNote(noteId) {
+    var notes = getNotes();
+    var note = notes.filter(function (n) { return n.id === noteId; })[0];
+    if (!note) return;
+    var newContent = prompt('Editar nota:', note.text);
+    if (newContent === null) return;
+    newContent = newContent.trim();
+    if (newContent === '') return;
+    var idx = notes.findIndex(function (n) { return n.id === noteId; });
+    if (idx === -1) return;
+    notes[idx] = { id: note.id, text: newContent, createdAt: note.createdAt };
+    saveNotes(notes);
+    loadNotes();
+    if (window.Toast) window.Toast.show('Nota actualizada', 'success', 1500);
 }
 
 init();

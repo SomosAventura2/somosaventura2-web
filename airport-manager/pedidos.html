@@ -49,15 +49,7 @@
         </section>
 
         <div id="ordersList" class="pedidos-list">
-            <div class="pedidos-loading"><span class="loading"></span></div>
-        </div>
-
-        <!-- Menú flotante único para cambiar estado (se posiciona al hacer clic en cualquier botón) -->
-        <div id="statusMenuFloating" class="status-menu-floating" style="display: none;">
-            <button type="button" class="status-dropdown-option" data-status="agendado">Agendado</button>
-            <button type="button" class="status-dropdown-option" data-status="en_produccion">En Producción</button>
-            <button type="button" class="status-dropdown-option" data-status="listo">Listo</button>
-            <button type="button" class="status-dropdown-option" data-status="entregado">Entregado</button>
+            <div class="pedidos-loading"><div class="spinner-container"><div class="spinner"></div></div></div>
         </div>
     </main>
 
@@ -94,7 +86,7 @@
                 <div class="grid grid-2">
                     <div class="form-group">
                         <label class="form-label" for="amountEuros">Monto en Euros (Referencia)*</label>
-                        <input type="number" id="amountEuros" class="form-input" step="0.01" required>
+                        <input type="number" inputmode="decimal" id="amountEuros" class="form-input" step="0.01" required>
                     </div>
 
                     <div class="form-group">
@@ -111,7 +103,7 @@
                     <div class="grid grid-2">
                         <div class="form-group">
                             <label class="form-label" for="paymentAmount">Monto del Pago*</label>
-                            <input type="number" id="paymentAmount" class="form-input" step="0.01" value="0">
+                            <input type="number" inputmode="decimal" id="paymentAmount" class="form-input" step="0.01" value="0">
                         </div>
 
                         <div class="form-group">
