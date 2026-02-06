@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Airport">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Calendario - Airport Manager</title>
+    <title>Notas - Airport Manager</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="images/icon-192.png">
@@ -22,8 +22,8 @@
                     <a href="dashboard.html" class="nav-item">Dashboard</a>
                     <a href="pedidos.html" class="nav-item">Pedidos</a>
                     <a href="pagos.html" class="nav-item">Pagos</a>
-                    <a href="calendario.html" class="nav-item active">Calendario</a>
-                    <a href="notas.html" class="nav-item">Notas</a>
+                    <a href="calendario.html" class="nav-item">Calendario</a>
+                    <a href="notas.html" class="nav-item active">Notas</a>
                     <a href="estadisticas.html" class="nav-item">Stats</a>
                 </div>
                 <a href="#" class="nav-logout" onclick="logout()">Salir</a>
@@ -31,34 +31,20 @@
         </div>
     </header>
 
-    <main class="container main-content calendario-page">
-        <div class="calendario-header">
-            <button type="button" class="calendario-nav-btn" onclick="previousMonth()">←</button>
-            <h1 class="calendario-title" id="currentMonth"></h1>
-            <button type="button" class="calendario-nav-btn" onclick="nextMonth()">→</button>
-        </div>
+    <main class="container main-content notas-page">
+        <h1 class="notas-title">Notas rápidas</h1>
+        <p class="notas-subtitle">Añade recordatorios y bórralos al terminar.</p>
 
-        <section class="calendario-section">
-            <div class="calendar-scroll-wrap">
-                <div class="calendar-grid">
-                    <div class="calendar-weekhead">Lun</div>
-                <div class="calendar-weekhead">Mar</div>
-                <div class="calendar-weekhead">Mié</div>
-                <div class="calendar-weekhead">Jue</div>
-                <div class="calendar-weekhead">Vie</div>
-                <div class="calendar-weekhead">Sáb</div>
-                <div class="calendar-weekhead">Dom</div>
-                    <div id="calendarDays"></div>
-                </div>
-            </div>
+        <section class="notas-add">
+            <input type="text" id="notaInput" class="notas-input" placeholder="Escribe una nota o recordatorio..." maxlength="500" autocomplete="off">
+            <button type="button" class="notas-btn-add" onclick="addNote()">Agregar</button>
         </section>
 
-        <p class="calendario-leyenda">Arrastra las pills a otro día para cambiar fecha. Marca el ✓ para marcar como listo.</p>
+        <ul id="notasList" class="notas-list"></ul>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="js/supabase-config.js"></script>
-    <script src="js/calendario.js"></script>
+    <script src="js/notas.js"></script>
 </body>
 </html>

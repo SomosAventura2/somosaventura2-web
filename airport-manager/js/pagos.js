@@ -36,8 +36,13 @@ async function init() {
     const currencySel = document.getElementById('paymentCurrency');
     if (currencySel) currencySel.addEventListener('change', updatePaymentMethodVisibility);
 
+    var expenseTypeSel = document.getElementById('expenseType');
+    if (expenseTypeSel) expenseTypeSel.addEventListener('change', toggleOrderField);
+
     session = await checkAuth();
     if (!session) return;
+
+    toggleOrderField();
 
     window.pullToRefreshCallback = function () {
         return Promise.all([loadOrders(), loadPayments(), loadExpenses()]);
@@ -76,31 +81,37 @@ function showTab(tab) {
         document.getElementById('tabPagos').classList.add('hidden');
         document.getElementById('tabGastos').classList.remove('hidden');
         document.getElementById('btnGastos').classList.add('active');
+        toggleOrderField();
     }
 }
 
+var ACTIVE_ORDER_STATUSES = ['agendado', 'en_produccion', 'listo'];
+
 async function loadOrders() {
     try {
+        const paymentSelect = document.getElementById('paymentOrder');
+        const expenseSelect = document.getElementById('expenseOrder');
+        if (!paymentSelect || !expenseSelect) return;
+
         const { data, error } = await supabase
             .from('orders')
             .select('id, order_number, customer_name')
-            .not('status', 'eq', 'cancelado')
+            .in('status', ACTIVE_ORDER_STATUSES)
             .order('order_number', { ascending: false });
-        
+
         if (error) throw error;
-        
-        const paymentSelect = document.getElementById('paymentOrder');
-        const expenseSelect = document.getElementById('expenseOrder');
-        
-        const options = data.map(order => 
-            `<option value="${order.id}">#${order.order_number} - ${order.customer_name}</option>`
-        ).join('');
-        
+
+        const options = (data || []).map(function (order) {
+            var name = (order.customer_name || '').trim() || 'Sin nombre';
+            return '<option value="' + order.id + '">#' + order.order_number + ' - ' + name + '</option>';
+        }).join('');
+
         paymentSelect.innerHTML = '<option value="">Seleccionar pedido...</option>' + options;
         expenseSelect.innerHTML = '<option value="">Seleccionar pedido...</option>' + options;
-        
     } catch (error) {
         console.error('Error loading orders:', error);
+        if (paymentSelect) paymentSelect.innerHTML = '<option value="">Seleccionar pedido...</option>';
+        if (expenseSelect) expenseSelect.innerHTML = '<option value="">Seleccionar pedido...</option>';
     }
 }
 
@@ -227,16 +238,19 @@ function displayExpenses(expenses) {
 }
 
 function toggleOrderField() {
-    const expenseType = document.getElementById('expenseType').value;
-    const orderGroup = document.getElementById('expenseOrderGroup');
-    const orderSelect = document.getElementById('expenseOrder');
-    
+    var expenseTypeEl = document.getElementById('expenseType');
+    var orderGroup = document.getElementById('expenseOrderGroup');
+    var orderSelect = document.getElementById('expenseOrder');
+    if (!expenseTypeEl || !orderGroup) return;
+    var expenseType = expenseTypeEl.value;
     if (expenseType === 'general') {
         orderGroup.classList.add('hidden');
-        orderSelect.required = false;
+        orderGroup.style.display = 'none';
+        if (orderSelect) orderSelect.removeAttribute('required');
     } else {
         orderGroup.classList.remove('hidden');
-        orderSelect.required = true;
+        orderGroup.style.display = '';
+        if (orderSelect) orderSelect.setAttribute('required', 'required');
     }
 }
 

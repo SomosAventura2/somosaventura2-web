@@ -190,7 +190,7 @@ async function loadOrderStats(dates) {
             }
         });
         
-        // Gráfico de dona
+        // Gráfico de dona (sin cancelado en la app)
         if (statusChart) {
             statusChart.destroy();
         }
@@ -199,21 +199,19 @@ async function loadOrderStats(dates) {
         statusChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Agendado', 'En Producción', 'Listo', 'Entregado', 'Cancelado'],
+                labels: ['Agendado', 'En Producción', 'Listo', 'Entregado'],
                 datasets: [{
                     data: [
                         statusCounts.agendado,
                         statusCounts.en_produccion,
                         statusCounts.listo,
-                        statusCounts.entregado,
-                        statusCounts.cancelado
+                        statusCounts.entregado
                     ],
                     backgroundColor: [
+                        '#FEE2E2',
                         '#FEF3C7',
-                        '#DBEAFE',
                         '#D1FAE5',
-                        '#F3F4F6',
-                        '#FEE2E2'
+                        '#BFDBFE'
                     ],
                     borderColor: '#000000',
                     borderWidth: 2

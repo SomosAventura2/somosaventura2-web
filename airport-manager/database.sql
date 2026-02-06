@@ -21,7 +21,7 @@ create table orders (
     customer_name text not null,
     items jsonb not null default '[]'::jsonb,
     amount_euros numeric(10,2) not null,
-    first_payment_percentage integer not null check (first_payment_percentage in (50, 100)),
+    first_payment_percentage integer not null check (first_payment_percentage in (0, 50, 100)),
     payment_amount numeric(10,2) not null,
     payment_currency text not null check (payment_currency in ('BS', 'USD', 'USDT')),
     payment_method text not null,
@@ -338,6 +338,10 @@ exception
   when others then
     raise notice 'Realtime: % (si usas Supabase Cloud, la publicación supabase_realtime ya suele existir)', sqlerrm;
 end $$;
+
+-- Si la tabla orders ya existía con check (50, 100), permitir 0 (pago inicial "Ninguno"):
+-- ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_first_payment_percentage_check;
+-- ALTER TABLE orders ADD CONSTRAINT orders_first_payment_percentage_check CHECK (first_payment_percentage IN (0, 50, 100));
 
 -- =============================================
 -- COMENTARIOS FINALES

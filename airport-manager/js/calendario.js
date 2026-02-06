@@ -3,7 +3,7 @@ let currentDate = new Date();
 let orders = [];
 let sortableInstances = [];
 
-const STATUSES_IN_CALENDAR = ['agendado', 'en_produccion', 'listo'];
+const STATUSES_IN_CALENDAR = ['agendado', 'en_produccion'];
 
 async function init() {
     session = await checkAuth();
@@ -149,7 +149,7 @@ async function handleOrderDrop(evt) {
 
 async function toggleOrderComplete(orderId, isCompleted) {
     try {
-        const newStatus = isCompleted ? 'entregado' : 'listo';
+        const newStatus = isCompleted ? 'listo' : 'en_produccion';
         const { error } = await supabase
             .from('orders')
             .update({ status: newStatus })

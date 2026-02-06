@@ -121,11 +121,11 @@ function formatDateTime(date) {
 // Obtener color según estado
 function getStatusColor(status) {
     const colors = {
-        'agendado': 'bg-yellow-500',
-        'en_produccion': 'bg-blue-500',
+        'agendado': 'bg-red-500',
+        'en_produccion': 'bg-yellow-500',
         'listo': 'bg-green-500',
-        'entregado': 'bg-gray-500',
-        'cancelado': 'bg-red-500'
+        'entregado': 'bg-blue-200',
+        'cancelado': 'bg-gray-400'
     };
     return colors[status] || 'bg-gray-500';
 }
@@ -142,13 +142,12 @@ function getStatusText(status) {
     return texts[status] || status;
 }
 
-// Opciones de estado para el dropdown (mismo orden en toda la app)
+// Opciones de estado para el dropdown (sin cancelado en la app)
 window.STATUS_OPTIONS = [
     { value: 'agendado', label: 'Agendado' },
     { value: 'en_produccion', label: 'En Producción' },
     { value: 'listo', label: 'Listo' },
-    { value: 'entregado', label: 'Entregado' },
-    { value: 'cancelado', label: 'Cancelado' }
+    { value: 'entregado', label: 'Entregado' }
 ];
 const STATUS_OPTIONS = window.STATUS_OPTIONS;
 
@@ -218,9 +217,10 @@ function initNavScroll() {
 // Desplegables personalizados (no nativos iOS)
 function initCustomSelects(container) {
     var root = container || document;
-    var selects = root.querySelectorAll('select.form-select, select.form-input, select.pagos-input, select.pedidos-filter-select');
+    var selects = root.querySelectorAll('select.form-select, select.form-input, select.pagos-input, select.pedidos-filter-select, select.stats-select');
     selects.forEach(function (sel) {
         if (sel.closest('.custom-select-wrap')) return;
+        if (sel.id === 'paymentOrder' || sel.id === 'expenseOrder') return;
         sel.setAttribute('tabindex', '-1');
         sel.classList.add('custom-select-native');
         var wrap = document.createElement('div');

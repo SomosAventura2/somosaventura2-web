@@ -8,6 +8,7 @@ let productCategories = [
     'Tote Bag',
     'Otro'
 ];
+const ADD_CATEGORY_VALUE = '__add_category__';
 let customerSearchTimer = null;
 const VIP_MIN_ORDERS = 3;
 const VIP_MIN_SPENT = 150;
@@ -31,6 +32,10 @@ async function init() {
     document.getElementById('filterStatus').addEventListener('change', () => loadOrders());
 
     document.getElementById('paymentCurrency').addEventListener('change', updatePaymentMethodVisibility);
+    const paymentPercentageEl = document.getElementById('paymentPercentage');
+    if (paymentPercentageEl) {
+        paymentPercentageEl.addEventListener('change', updatePaymentInitialVisibility);
+    }
 
     let draftSaveTimer;
     const orderForm = document.getElementById('orderForm');
@@ -61,7 +66,32 @@ async function init() {
         });
     }
 
-    document.addEventListener('click', () => document.querySelectorAll('.status-dropdown.open').forEach(d => d.classList.remove('open')));
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('#statusMenuFloating') && !e.target.closest('.status-dropdown-btn')) {
+            closeStatusMenu();
+        }
+    });
+
+    (function () {
+        var menu = document.getElementById('statusMenuFloating');
+        if (!menu) return;
+        menu.querySelectorAll('.status-dropdown-option').forEach(function (opt) {
+            opt.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var orderId = statusMenuOrderId;
+                var newStatus = opt.getAttribute('data-status');
+                closeStatusMenu();
+                if (!orderId || !newStatus) return;
+                updateOrderStatus(orderId, newStatus).then(function () {
+                    if (window.queryCacheInvalidate) window.queryCacheInvalidate('orders_');
+                    loadOrders();
+                }).catch(function (err) {
+                    console.error(err);
+                    if (window.Toast) window.Toast.show('Error al actualizar estado', 'error'); else alert('Error al actualizar estado');
+                });
+            });
+        });
+    })();
 
     const params = new URLSearchParams(window.location.search);
     const customerIdParam = params.get('customer_id');
@@ -315,24 +345,14 @@ function displayOrders(orders) {
         return;
     }
 
-    const statusOptions = window.STATUS_OPTIONS || [
-        { value: 'agendado', label: 'Agendado' }, { value: 'en_produccion', label: 'En Producción' },
-        { value: 'listo', label: 'Listo' }, { value: 'entregado', label: 'Entregado' }, { value: 'cancelado', label: 'Cancelado' }
-    ];
     const html = `<ul class="pedidos-item-list">${orders.map(order => {
         const items = JSON.parse(order.items || '[]');
         const itemsShort = items.length ? `${items[0].producto}${items.length > 1 ? ` +${items.length - 1}` : ''}` : '-';
-        const statusMenu = statusOptions.map(s => `
-            <li><button type="button" class="status-dropdown-option" data-status="${s.value}">${s.label}</button></li>
-        `).join('');
         return `
-        <li class="pedidos-item">
+        <li class="pedidos-item pedidos-item--${order.status}">
             <div class="pedidos-item-main">
                 <span class="pedidos-item-number">#${order.order_number}</span>
-                <div class="status-dropdown">
-                    <button type="button" class="status-dropdown-btn status-${order.status}" data-order-id="${order.id}" aria-expanded="false">${getStatusText(order.status)} ▾</button>
-                    <ul class="status-dropdown-menu">${statusMenu}</ul>
-                </div>
+                <button type="button" class="status-dropdown-btn status-${order.status}" data-order-id="${order.id}">${getStatusText(order.status)} ▾</button>
             </div>
             <div class="pedidos-item-detail">${order.customer_name} · Entrega ${formatDate(order.delivery_date)}</div>
             <div class="pedidos-item-meta">${itemsShort} · ${formatCurrency(order.amount_euros, 'EUR')} · ${order.first_payment_percentage}%</div>
@@ -348,37 +368,58 @@ function displayOrders(orders) {
     }).join('')}</ul>`;
 
     container.innerHTML = html;
-    bindStatusDropdowns(container);
+    bindStatusButtons(container);
 }
 
-function bindStatusDropdowns(container) {
+var statusMenuOrderId = null;
+
+function openStatusMenu(btn) {
+    var menu = document.getElementById('statusMenuFloating');
+    if (!menu) return;
+    statusMenuOrderId = btn.getAttribute('data-order-id');
+    var rect = btn.getBoundingClientRect();
+    menu.style.display = 'block';
+    menu.style.position = 'fixed';
+    menu.style.left = rect.left + 'px';
+    menu.style.top = (rect.bottom + 4) + 'px';
+    menu.style.minWidth = Math.max(rect.width, 140) + 'px';
+    menu.style.zIndex = '10000';
+}
+
+function closeStatusMenu() {
+    var menu = document.getElementById('statusMenuFloating');
+    if (menu) menu.style.display = 'none';
+    statusMenuOrderId = null;
+}
+
+function bindStatusButtons(container) {
     if (!container) container = document.getElementById('ordersList');
     if (!container) return;
-    container.querySelectorAll('.status-dropdown').forEach(drop => {
-        const btn = drop.querySelector('.status-dropdown-btn');
-        const menu = drop.querySelector('.status-dropdown-menu');
-        const orderId = btn.dataset.orderId;
-        btn.addEventListener('click', (e) => {
+
+    container.querySelectorAll('.status-dropdown-btn').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            document.querySelectorAll('.status-dropdown.open').forEach(o => { if (o !== drop) o.classList.remove('open'); });
-            drop.classList.toggle('open');
-        });
-        drop.querySelectorAll('.status-dropdown-option').forEach(opt => {
-            opt.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                const newStatus = opt.dataset.status;
-                try {
-                    await updateOrderStatus(orderId, newStatus);
-                    if (window.queryCacheInvalidate) window.queryCacheInvalidate('orders_');
-                    loadOrders();
-                } catch (err) {
-                    console.error(err);
-                    if (window.Toast) Toast.show('Error al actualizar estado', 'error'); else alert('Error al actualizar estado');
-                }
-                drop.classList.remove('open');
-            });
+            openStatusMenu(btn);
         });
     });
+}
+
+function updatePaymentInitialVisibility() {
+    const pct = (document.getElementById('paymentPercentage') && document.getElementById('paymentPercentage').value) || '50';
+    const wrap = document.getElementById('paymentInitialFields');
+    const amountInput = document.getElementById('paymentAmount');
+    const currencySelect = document.getElementById('paymentCurrency');
+    if (!wrap) return;
+    if (pct === '0') {
+        wrap.classList.add('hidden');
+        if (amountInput) { amountInput.removeAttribute('required'); amountInput.value = '0'; }
+        if (currencySelect) currencySelect.removeAttribute('required');
+    } else {
+        wrap.classList.remove('hidden');
+        if (amountInput) amountInput.setAttribute('required', 'required');
+        if (currencySelect) currencySelect.setAttribute('required', 'required');
+        updatePaymentMethodVisibility();
+    }
 }
 
 function updatePaymentMethodVisibility() {
@@ -448,7 +489,7 @@ function restoreOrderDraft() {
         if (draft.paymentPercentage) document.getElementById('paymentPercentage').value = draft.paymentPercentage;
         if (draft.paymentAmount) document.getElementById('paymentAmount').value = draft.paymentAmount;
         if (draft.paymentCurrency) document.getElementById('paymentCurrency').value = draft.paymentCurrency;
-        updatePaymentMethodVisibility();
+        updatePaymentInitialVisibility();
         if (draft.paymentMethodDollars) document.getElementById('paymentMethodDollars').value = draft.paymentMethodDollars;
         if (draft.pagoMovilReference) document.getElementById('pagoMovilReference').value = draft.pagoMovilReference;
         if (draft.status) document.getElementById('status').value = draft.status;
@@ -498,7 +539,7 @@ function openNewOrderModal() {
     document.getElementById('selectedCustomerCard').classList.add('hidden');
     document.getElementById('itemsContainer').innerHTML = '';
     addItem();
-    updatePaymentMethodVisibility();
+    updatePaymentInitialVisibility();
     document.getElementById('orderModal').classList.add('active');
     if (localStorage.getItem(ORDER_DRAFT_KEY) && confirm('¿Restaurar el último borrador?')) {
         restoreOrderDraft();
@@ -522,6 +563,7 @@ function addItem() {
                     <label class="form-label">Producto*</label>
                     <select class="form-input item-producto" required>
                         ${productCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
+                        <option value="${ADD_CATEGORY_VALUE}">+ Agregar categoría</option>
                     </select>
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
@@ -562,6 +604,54 @@ function addItem() {
     container.insertAdjacentHTML('beforeend', itemHtml);
     if (window.initCustomSelects) window.initCustomSelects(container);
 }
+
+function refreshItemProductoSelects(newCategoryValue, selectThatTriggered) {
+    const modal = document.getElementById('orderModal');
+    if (!modal) return;
+    const optionsHtml = productCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('') +
+        `<option value="${ADD_CATEGORY_VALUE}">+ Agregar categoría</option>`;
+    modal.querySelectorAll('select.item-producto').forEach(function (sel) {
+        const previousValue = sel.value;
+        const wrap = sel.closest('.custom-select-wrap');
+        if (wrap) {
+            wrap.parentNode.insertBefore(sel, wrap);
+            wrap.remove();
+        }
+        sel.innerHTML = optionsHtml;
+        if (sel === selectThatTriggered && newCategoryValue) {
+            sel.value = newCategoryValue;
+        } else if (productCategories.indexOf(previousValue) !== -1) {
+            sel.value = previousValue;
+        } else {
+            sel.value = productCategories[0] || '';
+        }
+    });
+    if (window.initCustomSelects) window.initCustomSelects(modal);
+}
+
+document.getElementById('orderModal').addEventListener('change', async function (e) {
+    if (!e.target.classList.contains('item-producto') || e.target.value !== ADD_CATEGORY_VALUE) return;
+    const name = (window.prompt('Nombre de la nueva categoría') || '').trim();
+    if (!name) {
+        e.target.value = productCategories[0] || '';
+        if (e.target.closest('.custom-select-wrap')) {
+            const t = e.target.closest('.custom-select-wrap').querySelector('.custom-select-trigger');
+            if (t) t.textContent = e.target.value;
+        }
+        return;
+    }
+    try {
+        const { error } = await supabase.from('product_categories').insert({ name: name, active: true });
+        if (error) throw error;
+        productCategories.push(name);
+        productCategories.sort();
+        refreshItemProductoSelects(name, e.target);
+        if (window.Toast) window.Toast.show('Categoría añadida', 'success'); else alert('Categoría añadida');
+    } catch (err) {
+        if (window.Toast) window.Toast.show(err.message || 'Error al crear categoría', 'error'); else alert(err.message);
+        e.target.value = productCategories[0] || '';
+    }
+});
 
 function removeItem(itemId) {
     const item = document.getElementById(`item-${itemId}`);
@@ -709,14 +799,14 @@ async function editOrder(orderId) {
             card.classList.add('hidden');
         }
         document.getElementById('amountEuros').value = data.amount_euros;
-        document.getElementById('paymentPercentage').value = data.first_payment_percentage;
+        document.getElementById('paymentPercentage').value = String(data.first_payment_percentage || 50);
         document.getElementById('paymentAmount').value = data.payment_amount;
-        document.getElementById('paymentCurrency').value = data.payment_currency;
+        document.getElementById('paymentCurrency').value = data.payment_currency || 'BS';
         if (data.payment_currency === 'USD' && (data.payment_method === 'efectivo_usd' || data.payment_method === 'zelle')) {
             document.getElementById('paymentMethodDollars').value = data.payment_method;
         }
         document.getElementById('pagoMovilReference').value = data.pago_movil_reference || '';
-        updatePaymentMethodVisibility();
+        updatePaymentInitialVisibility();
         document.getElementById('status').value = data.status;
         document.getElementById('deliveryDate').value = data.delivery_date;
         

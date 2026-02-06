@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#0f2744">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Airport">
@@ -23,6 +23,7 @@
                     <a href="pedidos.html" class="nav-item active">Pedidos</a>
                     <a href="pagos.html" class="nav-item">Pagos</a>
                     <a href="calendario.html" class="nav-item">Calendario</a>
+                    <a href="notas.html" class="nav-item">Notas</a>
                     <a href="estadisticas.html" class="nav-item">Stats</a>
                 </div>
                 <a href="#" class="nav-logout" onclick="logout()">Salir</a>
@@ -32,7 +33,7 @@
 
     <main class="container main-content pedidos-page">
         <div class="pedidos-header">
-            <h1 class="pedidos-title">Pedidos</h1>
+            <h1 class="pedidos-title mb-4">Pedidos</h1>
             <button type="button" class="pedidos-btn-new" onclick="openNewOrderModal()">+ Nuevo</button>
         </div>
 
@@ -43,13 +44,20 @@
                 <option value="en_produccion">En Producción</option>
                 <option value="listo">Listo</option>
                 <option value="entregado">Entregado</option>
-                <option value="cancelado">Cancelado</option>
             </select>
             <input type="text" id="searchCustomer" class="pedidos-filter-search" placeholder="Buscar cliente...">
         </section>
 
         <div id="ordersList" class="pedidos-list">
             <div class="pedidos-loading"><span class="loading"></span></div>
+        </div>
+
+        <!-- Menú flotante único para cambiar estado (se posiciona al hacer clic en cualquier botón) -->
+        <div id="statusMenuFloating" class="status-menu-floating" style="display: none;">
+            <button type="button" class="status-dropdown-option" data-status="agendado">Agendado</button>
+            <button type="button" class="status-dropdown-option" data-status="en_produccion">En Producción</button>
+            <button type="button" class="status-dropdown-option" data-status="listo">Listo</button>
+            <button type="button" class="status-dropdown-option" data-status="entregado">Entregado</button>
         </div>
     </main>
 
@@ -92,39 +100,42 @@
                     <div class="form-group">
                         <label class="form-label" for="paymentPercentage">Pago Inicial*</label>
                         <select id="paymentPercentage" class="form-select" required>
+                            <option value="0">Ninguno</option>
                             <option value="50">50% - Agendar</option>
                             <option value="100">100% - Completo</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="grid grid-2">
-                    <div class="form-group">
-                        <label class="form-label" for="paymentAmount">Monto del Pago*</label>
-                        <input type="number" id="paymentAmount" class="form-input" step="0.01" required>
+                <div id="paymentInitialFields">
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="paymentAmount">Monto del Pago*</label>
+                            <input type="number" id="paymentAmount" class="form-input" step="0.01" value="0">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="paymentCurrency">Moneda*</label>
+                            <select id="paymentCurrency" class="form-select">
+                                <option value="BS">Bolívares</option>
+                                <option value="USD">Dólares</option>
+                                <option value="USDT">USDT</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label" for="paymentCurrency">Moneda*</label>
-                        <select id="paymentCurrency" class="form-select" required>
-                            <option value="BS">Bolívares</option>
-                            <option value="USD">Dólares</option>
-                            <option value="USDT">USDT</option>
+                    <div class="form-group hidden" id="paymentMethodDollarsGroup">
+                        <label class="form-label" for="paymentMethodDollars">Método de pago (dólares)*</label>
+                        <select id="paymentMethodDollars" class="form-select">
+                            <option value="efectivo_usd">Efectivo</option>
+                            <option value="zelle">Zelle</option>
                         </select>
                     </div>
-                </div>
 
-                <div class="form-group hidden" id="paymentMethodDollarsGroup">
-                    <label class="form-label" for="paymentMethodDollars">Método de pago (dólares)*</label>
-                    <select id="paymentMethodDollars" class="form-select">
-                        <option value="efectivo_usd">Efectivo</option>
-                        <option value="zelle">Zelle</option>
-                    </select>
-                </div>
-
-                <div class="form-group" id="pagoMovilRefGroup">
-                    <label class="form-label" for="pagoMovilReference">Referencia Pago Móvil</label>
-                    <input type="text" id="pagoMovilReference" class="form-input" placeholder="Ej: 0102 12345678901 (opcional)">
+                    <div class="form-group" id="pagoMovilRefGroup">
+                        <label class="form-label" for="pagoMovilReference">Referencia Pago Móvil</label>
+                        <input type="text" id="pagoMovilReference" class="form-input" placeholder="Ej: 0102 12345678901 (opcional)">
+                    </div>
                 </div>
 
                 <div class="grid grid-2">
@@ -135,7 +146,6 @@
                             <option value="en_produccion">En Producción</option>
                             <option value="listo">Listo</option>
                             <option value="entregado">Entregado</option>
-                            <option value="cancelado">Cancelado</option>
                         </select>
                     </div>
 
