@@ -39,6 +39,26 @@ async function init() {
     session = await checkAuth();
     if (!session) return;
 
+    window.pullToRefreshCallback = function () {
+        return Promise.all([loadOrders(), loadPayments(), loadExpenses()]);
+    };
+    window.addEventListener('offlineQueueFlush', function () {
+        Promise.all([loadOrders(), loadPayments(), loadExpenses()]).then(function () {
+            if (window.Toast) window.Toast.show('Conexión restaurada. Datos actualizados.', 'success', 2000);
+        });
+    });
+    if (window.subscribeRealtimeTable) {
+        var refreshPagos = function () {
+            window.queryCacheInvalidate('pagos_');
+            loadOrders();
+            loadPayments();
+            loadExpenses();
+        };
+        window.subscribeRealtimeTable('orders', refreshPagos);
+        window.subscribeRealtimeTable('payments', refreshPagos);
+        window.subscribeRealtimeTable('expenses', refreshPagos);
+    }
+
     loadOrders();
     loadPayments();
     loadExpenses();
@@ -84,7 +104,22 @@ async function loadOrders() {
     }
 }
 
+function showPaymentsSkeleton() {
+    const el = document.getElementById('paymentsList');
+    if (!el) return;
+    el.innerHTML = '<ul class="pagos-item-list">' + Array(3).fill(0).map(() => `
+        <li class="pagos-item"><div class="skeleton-line" style="width:80px;height:1.2rem;margin-bottom:0.4rem"></div><div class="skeleton-line" style="width:100%;height:0.9rem;margin-bottom:0.3rem"></div><div class="skeleton-line" style="width:60%;height:0.8rem"></div></li>
+    `).join('') + '</ul>';
+}
+
 async function loadPayments() {
+    const cacheKey = 'pagos_payments';
+    const cached = window.queryCacheGet && window.queryCacheGet(cacheKey);
+    if (cached) {
+        displayPayments(cached);
+        return;
+    }
+    showPaymentsSkeleton();
     try {
         const { data, error } = await supabase
             .from('payments')
@@ -95,7 +130,7 @@ async function loadPayments() {
             .order('created_at', { ascending: false });
         
         if (error) throw error;
-        
+        if (window.queryCacheSet) window.queryCacheSet(cacheKey, data);
         displayPayments(data);
         
     } catch (error) {
@@ -130,7 +165,22 @@ function displayPayments(payments) {
     container.innerHTML = html;
 }
 
+function showExpensesSkeleton() {
+    const el = document.getElementById('expensesList');
+    if (!el) return;
+    el.innerHTML = '<ul class="pagos-item-list">' + Array(3).fill(0).map(() => `
+        <li class="pagos-item"><div class="skeleton-line" style="width:80px;height:1.2rem;margin-bottom:0.4rem"></div><div class="skeleton-line" style="width:100%;height:0.9rem;margin-bottom:0.3rem"></div><div class="skeleton-line" style="width:60%;height:0.8rem"></div></li>
+    `).join('') + '</ul>';
+}
+
 async function loadExpenses() {
+    const cacheKey = 'pagos_expenses';
+    const cached = window.queryCacheGet && window.queryCacheGet(cacheKey);
+    if (cached) {
+        displayExpenses(cached);
+        return;
+    }
+    showExpensesSkeleton();
     try {
         const { data, error } = await supabase
             .from('expenses')
@@ -141,7 +191,7 @@ async function loadExpenses() {
             .order('created_at', { ascending: false });
         
         if (error) throw error;
-        
+        if (window.queryCacheSet) window.queryCacheSet(cacheKey, data);
         displayExpenses(data);
         
     } catch (error) {
@@ -218,8 +268,10 @@ document.getElementById('paymentForm').addEventListener('submit', async (e) => {
         if (error) throw error;
         
         messageDiv.innerHTML = '<div class="alert alert-success">Pago registrado exitosamente</div>';
+        if (window.Toast) Toast.show('Pago registrado', 'success');
         e.target.reset();
         updatePaymentMethodVisibility();
+        if (window.queryCacheInvalidate) window.queryCacheInvalidate('pagos_payments');
         loadPayments();
         
         setTimeout(() => {
@@ -265,7 +317,9 @@ document.getElementById('expenseForm').addEventListener('submit', async (e) => {
         if (error) throw error;
         
         messageDiv.innerHTML = '<div class="alert alert-success">Gasto registrado exitosamente</div>';
+        if (window.Toast) Toast.show('Gasto registrado', 'success');
         e.target.reset();
+        if (window.queryCacheInvalidate) window.queryCacheInvalidate('pagos_expenses');
         loadExpenses();
         
         setTimeout(() => {
@@ -293,12 +347,12 @@ async function deletePayment(paymentId) {
             .eq('id', paymentId);
         
         if (error) throw error;
-        
+        if (window.queryCacheInvalidate) window.queryCacheInvalidate('pagos_payments');
         loadPayments();
         
     } catch (error) {
         console.error('Error deleting payment:', error);
-        alert('Error al eliminar el pago');
+        if (window.Toast) Toast.show('Error al eliminar el pago', 'error'); else alert('Error al eliminar el pago');
     }
 }
 
@@ -314,12 +368,12 @@ async function deleteExpense(expenseId) {
             .eq('id', expenseId);
         
         if (error) throw error;
-        
+        if (window.queryCacheInvalidate) window.queryCacheInvalidate('pagos_expenses');
         loadExpenses();
         
     } catch (error) {
         console.error('Error deleting expense:', error);
-        alert('Error al eliminar el gasto');
+        if (window.Toast) Toast.show('Error al eliminar el gasto', 'error'); else alert('Error al eliminar el gasto');
     }
 }
 

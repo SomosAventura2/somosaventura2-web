@@ -1,4 +1,4 @@
-const CACHE_NAME = 'airport-manager-v1';
+const CACHE_NAME = 'airport-manager-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -24,21 +24,40 @@ self.addEventListener('install', event => {
         console.log('Cache opened');
         return cache.addAll(urlsToCache);
       })
+      .then(() => self.skipWaiting())
   );
 });
 
-// Fetch event
+// Fetch: network-first con fallback a caché para misma origen (modo offline)
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
+  const { request } = event;
+  const url = new URL(request.url);
+  const sameOrigin = url.origin === self.location.origin;
+  const isNav = request.mode === 'navigate';
+  const isStatic = /\.(html|css|js|json|ico)$/i.test(url.pathname) || url.pathname === '/';
+
+  if (!sameOrigin) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  if (isNav || isStatic) {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          if (response && response.status === 200 && response.type === 'basic') {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+          }
           return response;
-        }
-        return fetch(event.request);
-      }
-    )
+        })
+        .catch(() => caches.match(request).then(cached => cached || caches.match('/index.html')))
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(request).then(cached => cached || fetch(request))
   );
 });
 

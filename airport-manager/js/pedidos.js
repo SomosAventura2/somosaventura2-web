@@ -8,6 +8,9 @@ let productCategories = [
     'Tote Bag',
     'Otro'
 ];
+let customerSearchTimer = null;
+const VIP_MIN_ORDERS = 3;
+const VIP_MIN_SPENT = 150;
 
 async function init() {
     session = await checkAuth();
@@ -15,11 +18,227 @@ async function init() {
     
     loadOrders();
     loadCategories();
+    initCustomerSearch();
+
+    const searchFilter = document.getElementById('searchCustomer');
+    let searchDebounce;
+    if (searchFilter) {
+        searchFilter.addEventListener('input', () => {
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(() => loadOrders(), 300);
+        });
+    }
+    document.getElementById('filterStatus').addEventListener('change', () => loadOrders());
 
     document.getElementById('paymentCurrency').addEventListener('change', updatePaymentMethodVisibility);
 
+    let draftSaveTimer;
+    const orderForm = document.getElementById('orderForm');
+    if (orderForm) {
+        orderForm.addEventListener('input', () => {
+            clearTimeout(draftSaveTimer);
+            draftSaveTimer = setTimeout(() => {
+                if (!document.getElementById('orderId').value) saveOrderDraft();
+            }, 2000);
+        });
+        orderForm.addEventListener('change', () => {
+            clearTimeout(draftSaveTimer);
+            draftSaveTimer = setTimeout(() => {
+                if (!document.getElementById('orderId').value) saveOrderDraft();
+            }, 2000);
+        });
+    }
+
+    window.pullToRefreshCallback = function () { return loadOrders(); };
+    window.addEventListener('offlineQueueFlush', function () {
+        loadOrders();
+        if (window.Toast) window.Toast.show('Conexión restaurada. Lista actualizada.', 'success', 2000);
+    });
+    if (window.subscribeRealtimeTable) {
+        window.subscribeRealtimeTable('orders', function () {
+            window.queryCacheInvalidate('orders_');
+            loadOrders();
+        });
+    }
+
     document.addEventListener('click', () => document.querySelectorAll('.status-dropdown.open').forEach(d => d.classList.remove('open')));
+
+    const params = new URLSearchParams(window.location.search);
+    const customerIdParam = params.get('customer_id');
+    if (customerIdParam) {
+        try {
+            const { data } = await supabase.from('customers').select('*').eq('id', customerIdParam).single();
+            if (data) {
+                openNewOrderModal();
+                selectCustomer(data);
+            }
+        } catch (e) { /* ignore */ }
+    }
 }
+
+function initCustomerSearch() {
+    const input = document.getElementById('customerSearch');
+    const suggestions = document.getElementById('customerSuggestions');
+    if (!input || !suggestions) return;
+    input.addEventListener('input', () => {
+        clearTimeout(customerSearchTimer);
+        const term = (input.value || '').trim();
+        if (term.length < 2) {
+            suggestions.classList.add('hidden');
+            suggestions.innerHTML = '';
+            return;
+        }
+        customerSearchTimer = setTimeout(() => fetchCustomerSuggestions(term), 250);
+    });
+    input.addEventListener('focus', () => {
+        const term = (input.value || '').trim();
+        if (term.length >= 2 && suggestions.innerHTML) suggestions.classList.remove('hidden');
+    });
+    document.addEventListener('click', (e) => {
+        if (!suggestions.contains(e.target) && e.target !== input) suggestions.classList.add('hidden');
+    });
+}
+
+async function fetchCustomerSuggestions(term) {
+    const suggestions = document.getElementById('customerSuggestions');
+    if (!suggestions) return;
+    try {
+        const { data: list, error } = await supabase
+            .from('customers')
+            .select('id, first_name, last_name, phone, email, total_orders, total_spent_eur')
+            .eq('is_active', true)
+            .or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%,phone.ilike.%${term}%,email.ilike.%${term}%`)
+            .limit(8);
+        if (error) throw error;
+        const customers = list || [];
+        const fullName = `${(term || '').trim()}`;
+        let html = customers.map(c => {
+            const name = `${c.first_name || ''} ${c.last_name || ''}`.trim();
+            const isVip = (c.total_orders >= VIP_MIN_ORDERS || parseFloat(c.total_spent_eur || 0) >= VIP_MIN_SPENT);
+            return `<div class="customer-suggestion-item" data-id="${c.id}" data-json="${escapeJson(JSON.stringify(c))}">
+                <strong>${name}</strong>
+                <small>${c.total_orders || 0} pedidos · €${parseFloat(c.total_spent_eur || 0).toFixed(0)}${isVip ? ' · ⭐ VIP' : ''}</small>
+            </div>`;
+        }).join('');
+        html += `<div class="customer-suggestion-create" data-name="${escapeHtml(fullName)}">+ Crear "${fullName}" como nuevo cliente</div>`;
+        suggestions.innerHTML = html;
+        suggestions.classList.remove('hidden');
+        suggestions.querySelectorAll('.customer-suggestion-item').forEach(el => {
+            el.addEventListener('click', () => {
+                const c = JSON.parse(unescapeJson(el.dataset.json));
+                selectCustomer(c);
+                suggestions.classList.add('hidden');
+            });
+        });
+        const createEl = suggestions.querySelector('.customer-suggestion-create');
+        if (createEl) createEl.addEventListener('click', () => openNewCustomerModal(createEl.dataset.name || input.value));
+    } catch (e) {
+        suggestions.innerHTML = '<div class="customer-suggestion-item">Error al buscar</div>';
+        suggestions.classList.remove('hidden');
+    }
+}
+
+function escapeJson(s) {
+    return s.replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+function unescapeJson(s) {
+    return (s || '').replace(/&quot;/g, '"').replace(/&lt;/g, '<');
+}
+function escapeHtml(s) {
+    const div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
+}
+
+function selectCustomer(c) {
+    const idEl = document.getElementById('customerId');
+    const searchEl = document.getElementById('customerSearch');
+    const card = document.getElementById('selectedCustomerCard');
+    const nameEl = document.getElementById('selectedCustomerName');
+    const metaEl = document.getElementById('selectedCustomerMeta');
+    const statsEl = document.getElementById('selectedCustomerStats');
+    const badgeEl = document.getElementById('selectedCustomerBadge');
+    if (!idEl || !searchEl || !card) return;
+    const name = `${c.first_name || ''} ${c.last_name || ''}`.trim();
+    idEl.value = c.id || '';
+    searchEl.value = name;
+    searchEl.setAttribute('readonly', 'readonly');
+    nameEl.textContent = name;
+    metaEl.textContent = [c.phone, c.email].filter(Boolean).join(' · ') || '—';
+    statsEl.textContent = `${c.total_orders || 0} pedidos · Último: ${c.last_order_date ? formatDate(c.last_order_date) : '—'}`;
+    const isVip = (c.total_orders >= VIP_MIN_ORDERS || parseFloat(c.total_spent_eur || 0) >= VIP_MIN_SPENT);
+    if (badgeEl) {
+        badgeEl.textContent = isVip ? '⭐ VIP' : '';
+        badgeEl.classList.toggle('hidden', !isVip);
+    }
+    card.classList.remove('hidden');
+}
+
+function clearSelectedCustomer() {
+    const idEl = document.getElementById('customerId');
+    const searchEl = document.getElementById('customerSearch');
+    const card = document.getElementById('selectedCustomerCard');
+    if (idEl) idEl.value = '';
+    if (searchEl) { searchEl.value = ''; searchEl.removeAttribute('readonly'); }
+    if (card) card.classList.add('hidden');
+}
+
+function openNewCustomerModal(prefillName) {
+    document.getElementById('customerSuggestions').classList.add('hidden');
+    const first = document.getElementById('newCustomerFirstName');
+    const last = document.getElementById('newCustomerLastName');
+    const parts = (prefillName || '').trim().split(/\s+/);
+    if (parts.length >= 2) {
+        first.value = parts[0];
+        last.value = parts.slice(1).join(' ');
+    } else if (parts.length === 1) {
+        first.value = parts[0];
+        last.value = '';
+    } else {
+        first.value = '';
+        last.value = '';
+    }
+    document.getElementById('newCustomerPhone').value = '';
+    document.getElementById('newCustomerEmail').value = '';
+    document.getElementById('newCustomerMessage').innerHTML = '';
+    document.getElementById('newCustomerModal').classList.add('active');
+}
+
+function closeNewCustomerModal() {
+    document.getElementById('newCustomerModal').classList.remove('active');
+}
+
+document.getElementById('newCustomerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const phone = (document.getElementById('newCustomerPhone').value || '').trim();
+    const email = (document.getElementById('newCustomerEmail').value || '').trim();
+    if (!phone && !email) {
+        document.getElementById('newCustomerMessage').innerHTML = '<div class="alert alert-error">Indica al menos teléfono o email.</div>';
+        return;
+    }
+    const msgEl = document.getElementById('newCustomerMessage');
+    msgEl.innerHTML = '';
+    try {
+        const { data: created, error } = await supabase
+            .from('customers')
+            .insert({
+                first_name: document.getElementById('newCustomerFirstName').value.trim(),
+                last_name: document.getElementById('newCustomerLastName').value.trim(),
+                phone: phone || null,
+                email: email || null,
+                total_orders: 0,
+                total_spent_eur: 0,
+                avg_order_value: 0
+            })
+            .select('id, first_name, last_name, phone, email, total_orders, total_spent_eur, last_order_date')
+            .single();
+        if (error) throw error;
+        selectCustomer(created);
+        closeNewCustomerModal();
+    } catch (err) {
+        msgEl.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+    }
+});
 
 async function loadCategories() {
     try {
@@ -37,27 +256,42 @@ async function loadCategories() {
     }
 }
 
+function showOrdersSkeleton() {
+    const container = document.getElementById('ordersList');
+    if (!container) return;
+    container.innerHTML = '<ul class="pedidos-item-list">' + Array(4).fill(0).map(() => `
+        <li class="pedidos-item skeleton-item">
+            <div class="skeleton-line" style="width:60px;height:1.2rem;margin-bottom:0.5rem"></div>
+            <div class="skeleton-line" style="width:85%;height:1rem;margin-bottom:0.35rem"></div>
+            <div class="skeleton-line" style="width:70%;height:0.9rem;margin-bottom:0.5rem"></div>
+            <div class="skeleton-line" style="width:40%;height:0.85rem"></div>
+        </li>
+    `).join('') + '</ul>';
+}
+
 async function loadOrders() {
+    const statusFilter = document.getElementById('filterStatus').value;
+    const searchTerm = (document.getElementById('searchCustomer') && document.getElementById('searchCustomer').value) || '';
+    const cacheKey = 'orders_' + statusFilter + '_' + searchTerm;
+    const cached = window.queryCacheGet && window.queryCacheGet(cacheKey);
+    if (cached) {
+        displayOrders(cached);
+        return;
+    }
+    showOrdersSkeleton();
     try {
         let query = supabase
             .from('orders')
             .select('*')
             .order('created_at', { ascending: false });
 
-        const statusFilter = document.getElementById('filterStatus').value;
-        const searchTerm = document.getElementById('searchCustomer').value;
-
-        if (statusFilter) {
-            query = query.eq('status', statusFilter);
-        }
-
-        if (searchTerm) {
-            query = query.ilike('customer_name', `%${searchTerm}%`);
-        }
+        if (statusFilter) query = query.eq('status', statusFilter);
+        if (searchTerm) query = query.ilike('customer_name', `%${searchTerm}%`);
 
         const { data, error } = await query;
 
         if (error) throw error;
+        if (window.queryCacheSet) window.queryCacheSet(cacheKey, data);
 
         displayOrders(data);
 
@@ -135,10 +369,11 @@ function bindStatusDropdowns(container) {
                 const newStatus = opt.dataset.status;
                 try {
                     await updateOrderStatus(orderId, newStatus);
+                    if (window.queryCacheInvalidate) window.queryCacheInvalidate('orders_');
                     loadOrders();
                 } catch (err) {
                     console.error(err);
-                    alert('Error al actualizar estado');
+                    if (window.Toast) Toast.show('Error al actualizar estado', 'error'); else alert('Error al actualizar estado');
                 }
                 drop.classList.remove('open');
             });
@@ -175,15 +410,99 @@ function getPaymentMethodFromForm() {
     return 'pago_movil';
 }
 
+const ORDER_DRAFT_KEY = 'airport_order_draft';
+
+function saveOrderDraft() {
+    try {
+        const customerName = (document.getElementById('customerSearch') && document.getElementById('customerSearch').value || '').trim();
+        const items = document.getElementById('itemsContainer') ? collectItems() : [];
+        if (!customerName && items.length === 0) return;
+        const draft = {
+            customerId: (document.getElementById('customerId') && document.getElementById('customerId').value) || '',
+            customerName: customerName,
+            items: items,
+            amountEuros: document.getElementById('amountEuros') && document.getElementById('amountEuros').value,
+            paymentPercentage: document.getElementById('paymentPercentage') && document.getElementById('paymentPercentage').value,
+            paymentAmount: document.getElementById('paymentAmount') && document.getElementById('paymentAmount').value,
+            paymentCurrency: document.getElementById('paymentCurrency') && document.getElementById('paymentCurrency').value,
+            paymentMethodDollars: document.getElementById('paymentMethodDollars') && document.getElementById('paymentMethodDollars').value,
+            pagoMovilReference: document.getElementById('pagoMovilReference') && document.getElementById('pagoMovilReference').value,
+            status: document.getElementById('status') && document.getElementById('status').value,
+            deliveryDate: document.getElementById('deliveryDate') && document.getElementById('deliveryDate').value
+        };
+        localStorage.setItem(ORDER_DRAFT_KEY, JSON.stringify(draft));
+    } catch (e) { /* ignore */ }
+}
+
+function restoreOrderDraft() {
+    const raw = localStorage.getItem(ORDER_DRAFT_KEY);
+    if (!raw) return false;
+    try {
+        const draft = JSON.parse(raw);
+        if (!draft) return false;
+        document.getElementById('customerId').value = draft.customerId || '';
+        document.getElementById('customerSearch').value = draft.customerName || '';
+        document.getElementById('customerSearch').removeAttribute('readonly');
+        document.getElementById('selectedCustomerCard').classList.add('hidden');
+        if (draft.amountEuros) document.getElementById('amountEuros').value = draft.amountEuros;
+        if (draft.paymentPercentage) document.getElementById('paymentPercentage').value = draft.paymentPercentage;
+        if (draft.paymentAmount) document.getElementById('paymentAmount').value = draft.paymentAmount;
+        if (draft.paymentCurrency) document.getElementById('paymentCurrency').value = draft.paymentCurrency;
+        updatePaymentMethodVisibility();
+        if (draft.paymentMethodDollars) document.getElementById('paymentMethodDollars').value = draft.paymentMethodDollars;
+        if (draft.pagoMovilReference) document.getElementById('pagoMovilReference').value = draft.pagoMovilReference;
+        if (draft.status) document.getElementById('status').value = draft.status;
+        if (draft.deliveryDate) document.getElementById('deliveryDate').value = draft.deliveryDate;
+        document.getElementById('itemsContainer').innerHTML = '';
+        (draft.items && draft.items.length ? draft.items : [{ producto: productCategories[0], cantidad: 1, talla: 'M', genero: 'Unisex', color: '' }]).forEach(function (item) {
+            addItem();
+            const lastCard = document.querySelector('#itemsContainer .card:last-child');
+            if (!lastCard) return;
+            const setSelect = function (sel, val) {
+                if (!sel) return;
+                sel.value = val;
+                if (typeof sel.dispatchEvent === 'function') sel.dispatchEvent(new Event('change', { bubbles: true }));
+            };
+            var prodSel = lastCard.querySelector('.item-producto');
+            if (prodSel) setSelect(prodSel, item.producto || productCategories[0]);
+            var cant = lastCard.querySelector('.item-cantidad');
+            if (cant) cant.value = item.cantidad || 1;
+            setSelect(lastCard.querySelector('.item-talla'), item.talla || 'M');
+            setSelect(lastCard.querySelector('.item-genero'), item.genero || 'Unisex');
+            var colorInp = lastCard.querySelector('.item-color');
+            if (colorInp) colorInp.value = item.color || '';
+        });
+        if (window.initCustomSelects) window.initCustomSelects(document.getElementById('itemsContainer'));
+        if (draft.customerId) {
+            supabase.from('customers').select('*').eq('id', draft.customerId).single().then(function (_a) {
+                var data = _a.data;
+                if (data) selectCustomer(data);
+            });
+        }
+        localStorage.removeItem(ORDER_DRAFT_KEY);
+        if (window.Toast) Toast.show('Borrador restaurado', 'info', 2000);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
 function openNewOrderModal() {
     currentOrderId = null;
     document.getElementById('modalTitle').textContent = 'Nuevo Pedido';
     document.getElementById('orderForm').reset();
     document.getElementById('orderId').value = '';
+    document.getElementById('customerId').value = '';
+    document.getElementById('customerSearch').value = '';
+    document.getElementById('customerSearch').removeAttribute('readonly');
+    document.getElementById('selectedCustomerCard').classList.add('hidden');
     document.getElementById('itemsContainer').innerHTML = '';
-    addItem(); // Agregar un item por defecto
+    addItem();
     updatePaymentMethodVisibility();
     document.getElementById('orderModal').classList.add('active');
+    if (localStorage.getItem(ORDER_DRAFT_KEY) && confirm('¿Restaurar el último borrador?')) {
+        restoreOrderDraft();
+    }
 }
 
 function closeOrderModal() {
@@ -285,8 +604,17 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
             throw new Error('Debes agregar al menos un producto');
         }
         
+        const customerName = (document.getElementById('customerSearch').value || '').trim();
+        if (!customerName) {
+            messageDiv.innerHTML = '<div class="alert alert-error">Indica el cliente (busca o crea uno nuevo).</div>';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Guardar Pedido';
+            return;
+        }
+        const customerIdVal = (document.getElementById('customerId').value || '').trim() || null;
         const orderData = {
-            customer_name: document.getElementById('customerName').value,
+            customer_id: customerIdVal,
+            customer_name: customerName,
             items: JSON.stringify(items),
             amount_euros: parseFloat(document.getElementById('amountEuros').value),
             first_payment_percentage: parseInt(document.getElementById('paymentPercentage').value),
@@ -311,6 +639,7 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
             if (error) throw error;
             
             messageDiv.innerHTML = '<div class="alert alert-success">Pedido actualizado exitosamente</div>';
+            if (window.Toast) Toast.show('Pedido actualizado', 'success');
         } else {
             // Crear nuevo pedido
             const { data: newOrder, error: orderError } = await supabase
@@ -336,8 +665,10 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
             }
             
             messageDiv.innerHTML = '<div class="alert alert-success">Pedido creado exitosamente</div>';
+            if (window.Toast) Toast.show('Pedido creado', 'success');
         }
-        
+        try { localStorage.removeItem(ORDER_DRAFT_KEY); } catch (e) {}
+        if (window.queryCacheInvalidate) window.queryCacheInvalidate('orders_');
         setTimeout(() => {
             closeOrderModal();
             loadOrders();
@@ -364,7 +695,19 @@ async function editOrder(orderId) {
         currentOrderId = orderId;
         document.getElementById('modalTitle').textContent = 'Editar Pedido';
         document.getElementById('orderId').value = orderId;
-        document.getElementById('customerName').value = data.customer_name;
+        document.getElementById('customerId').value = data.customer_id || '';
+        document.getElementById('customerSearch').value = data.customer_name || '';
+        document.getElementById('customerSearch').removeAttribute('readonly');
+        const card = document.getElementById('selectedCustomerCard');
+        if (data.customer_id) {
+            try {
+                const { data: cust } = await supabase.from('customers').select('*').eq('id', data.customer_id).single();
+                if (cust) selectCustomer(cust);
+                else card.classList.add('hidden');
+            } catch (_) { card.classList.add('hidden'); }
+        } else {
+            card.classList.add('hidden');
+        }
         document.getElementById('amountEuros').value = data.amount_euros;
         document.getElementById('paymentPercentage').value = data.first_payment_percentage;
         document.getElementById('paymentAmount').value = data.payment_amount;
@@ -404,7 +747,7 @@ async function editOrder(orderId) {
         
     } catch (error) {
         console.error('Error loading order:', error);
-        alert('Error al cargar el pedido');
+        if (window.Toast) Toast.show('Error al cargar el pedido', 'error'); else alert('Error al cargar el pedido');
     }
 }
 
@@ -420,12 +763,12 @@ async function deleteOrder(orderId) {
             .eq('id', orderId);
         
         if (error) throw error;
-        
+        if (window.queryCacheInvalidate) window.queryCacheInvalidate('orders_');
         loadOrders();
         
     } catch (error) {
         console.error('Error deleting order:', error);
-        alert('Error al eliminar el pedido');
+        if (window.Toast) Toast.show('Error al eliminar el pedido', 'error'); else alert('Error al eliminar el pedido');
     }
 }
 
@@ -511,7 +854,7 @@ async function viewOrderDetails(orderId) {
         
     } catch (error) {
         console.error('Error loading order details:', error);
-        alert('Error al cargar los detalles del pedido');
+        if (window.Toast) Toast.show('Error al cargar los detalles del pedido', 'error'); else alert('Error al cargar los detalles del pedido');
     }
 }
 

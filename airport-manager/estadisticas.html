@@ -31,81 +31,147 @@
     </header>
 
     <main class="container main-content stats-page">
-        <h1 class="stats-title">Stats</h1>
+        <h1 class="stats-title">Estadísticas</h1>
 
-        <!-- Filtro de Período -->
-        <div class="stats-period">
-            <button class="stats-period-btn active" id="btnSemanal" onclick="changePeriod('semanal')">Semanal</button>
-            <button class="stats-period-btn" id="btnMensual" onclick="changePeriod('mensual')">Mensual</button>
-            <button class="stats-period-btn" id="btnTrimestral" onclick="changePeriod('trimestral')">Trimestral</button>
+        <!-- Tabs principales -->
+        <div class="stats-tabs">
+            <button type="button" class="stats-tab-btn active" data-tab="contabilidad">Contabilidad</button>
+            <button type="button" class="stats-tab-btn" data-tab="clientes">Clientes</button>
+            <button type="button" class="stats-tab-btn" data-tab="productos">Productos</button>
         </div>
 
-        <!-- Resumen Financiero compacto -->
-        <section class="stats-section">
-            <h2 class="stats-section-title"><span id="periodTitle">Esta Semana</span></h2>
-            <div class="stats-finance">
-                <div class="stats-finance-row">
-                    <div class="stats-finance-item stats-income">
-                        <span class="stats-finance-label">Ingresos Bs</span>
-                        <span class="stats-finance-value" id="ingresoBS">Bs. 0</span>
-                    </div>
-                    <div class="stats-finance-item stats-income">
-                        <span class="stats-finance-label">Ingresos $</span>
-                        <span class="stats-finance-value" id="ingresoUSD">$0</span>
-                    </div>
-                </div>
-                <div class="stats-finance-row">
-                    <span class="stats-finance-label">Ref. €</span>
-                    <span class="stats-finance-value stats-eur" id="ingresoEUR">€0</span>
-                </div>
-                <div class="stats-finance-divider"></div>
-                <div class="stats-finance-row">
-                    <div class="stats-finance-item stats-expense">
-                        <span class="stats-finance-label">Gastos Bs</span>
-                        <span class="stats-finance-value" id="gastoBS">Bs. 0</span>
-                    </div>
-                    <div class="stats-finance-item stats-expense">
-                        <span class="stats-finance-label">Gastos $</span>
-                        <span class="stats-finance-value" id="gastoUSD">$0</span>
-                    </div>
-                </div>
-                <div class="stats-finance-divider"></div>
-                <div class="stats-finance-row">
-                    <div class="stats-finance-item">
-                        <span class="stats-finance-label">Balance Bs</span>
-                        <span class="stats-finance-value" id="balanceBS">Bs. 0</span>
-                    </div>
-                    <div class="stats-finance-item">
-                        <span class="stats-finance-label">Balance $</span>
-                        <span class="stats-finance-value" id="balanceUSD">$0</span>
-                    </div>
-                </div>
+        <!-- TAB CONTABILIDAD -->
+        <div id="tabContabilidad" class="stats-tab-panel">
+            <div class="stats-period">
+                <button class="stats-period-btn active" id="btnSemanal" onclick="changePeriod('semanal')">Semanal</button>
+                <button class="stats-period-btn" id="btnMensual" onclick="changePeriod('mensual')">Mensual</button>
+                <button class="stats-period-btn" id="btnTrimestral" onclick="changePeriod('trimestral')">Trimestral</button>
             </div>
-        </section>
+            <section class="stats-section">
+                <h2 class="stats-section-title"><span id="periodTitle">Esta Semana</span></h2>
+                <div class="stats-finance">
+                    <div class="stats-finance-row">
+                        <div class="stats-finance-item stats-income">
+                            <span class="stats-finance-label">Ingresos Bs</span>
+                            <span class="stats-finance-value" id="ingresoBS">Bs. 0</span>
+                        </div>
+                        <div class="stats-finance-item stats-income">
+                            <span class="stats-finance-label">Ingresos $</span>
+                            <span class="stats-finance-value" id="ingresoUSD">$0</span>
+                        </div>
+                    </div>
+                    <div class="stats-finance-row">
+                        <span class="stats-finance-label">Ref. €</span>
+                        <span class="stats-finance-value stats-eur" id="ingresoEUR">€0</span>
+                    </div>
+                    <div class="stats-finance-divider"></div>
+                    <div class="stats-finance-row">
+                        <div class="stats-finance-item stats-expense">
+                            <span class="stats-finance-label">Gastos Bs</span>
+                            <span class="stats-finance-value" id="gastoBS">Bs. 0</span>
+                        </div>
+                        <div class="stats-finance-item stats-expense">
+                            <span class="stats-finance-label">Gastos $</span>
+                            <span class="stats-finance-value" id="gastoUSD">$0</span>
+                        </div>
+                    </div>
+                    <div class="stats-finance-divider"></div>
+                    <div class="stats-finance-row">
+                        <div class="stats-finance-item">
+                            <span class="stats-finance-label">Balance Bs</span>
+                            <span class="stats-finance-value" id="balanceBS">Bs. 0</span>
+                        </div>
+                        <div class="stats-finance-item">
+                            <span class="stats-finance-label">Balance $</span>
+                            <span class="stats-finance-value" id="balanceUSD">$0</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section class="stats-section stats-chart-section">
+                <h2 class="stats-section-title">Pedidos por Estado</h2>
+                <div class="stats-chart-wrap">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </section>
+            <section class="stats-section">
+                <h2 class="stats-section-title">Métricas</h2>
+                <div id="periodMetrics" class="stats-metrics">
+                    <div class="stats-loading"><span class="loading"></span></div>
+                </div>
+            </section>
+        </div>
 
-        <!-- Pedidos por Estado + Métricas -->
-        <section class="stats-section stats-chart-section">
-            <h2 class="stats-section-title">Pedidos por Estado</h2>
-            <div class="stats-chart-wrap">
-                <canvas id="statusChart"></canvas>
-            </div>
-        </section>
+        <!-- TAB CLIENTES -->
+        <div id="tabClientes" class="stats-tab-panel hidden">
+            <section class="stats-section">
+                <h2 class="stats-section-title">Stats generales</h2>
+                <div class="stats-clientes-metrics" id="clientesMetrics">
+                    <div class="stats-loading"><span class="loading"></span></div>
+                </div>
+            </section>
+            <section class="stats-section">
+                <div class="stats-section-header">
+                    <h2 class="stats-section-title">Top clientes</h2>
+                    <div class="stats-clientes-actions">
+                        <select id="clientesSort" class="stats-select">
+                            <option value="ventas">Ventas</option>
+                            <option value="pedidos">Pedidos</option>
+                            <option value="reciente">Reciente</option>
+                            <option value="nombre">Nombre</option>
+                        </select>
+                        <select id="clientesFilter" class="stats-select">
+                            <option value="todos">Todos</option>
+                            <option value="vip">VIP</option>
+                            <option value="inactivos">Inactivos</option>
+                            <option value="nuevos">Nuevos</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="clientesTableWrap" class="stats-table-wrap">
+                    <div class="stats-loading"><span class="loading"></span></div>
+                </div>
+            </section>
+            <section class="stats-section">
+                <h2 class="stats-section-title">Segmentación</h2>
+                <div class="stats-segment-cards" id="clientesSegmentos">
+                    <div class="stats-loading"><span class="loading"></span></div>
+                </div>
+            </section>
+            <section class="stats-section">
+                <div class="stats-quick-actions">
+                    <button type="button" class="btn btn-outline btn-sm" id="btnExportClientes">Exportar lista CSV</button>
+                </div>
+            </section>
+        </div>
 
-        <section class="stats-section">
-            <h2 class="stats-section-title">Métricas</h2>
-            <div id="periodMetrics" class="stats-metrics">
-                <div class="stats-loading"><span class="loading"></span></div>
-            </div>
-        </section>
-
-        <!-- Productos Más Vendidos -->
-        <section class="stats-section">
-            <h2 class="stats-section-title">Top Productos</h2>
-            <div id="topProducts" class="stats-top-products">
-                <div class="stats-loading"><span class="loading"></span></div>
-            </div>
-        </section>
+        <!-- TAB PRODUCTOS -->
+        <div id="tabProductos" class="stats-tab-panel hidden">
+            <section class="stats-section">
+                <div class="stats-period">
+                    <button class="stats-period-btn active" id="btnProdSemanal" onclick="changeProductosPeriod('semanal')">Semanal</button>
+                    <button class="stats-period-btn" id="btnProdMensual" onclick="changeProductosPeriod('mensual')">Mensual</button>
+                    <button class="stats-period-btn" id="btnProdTrimestral" onclick="changeProductosPeriod('trimestral')">Trimestral</button>
+                </div>
+            </section>
+            <section class="stats-section">
+                <h2 class="stats-section-title">Top Productos</h2>
+                <div id="topProducts" class="stats-top-products">
+                    <div class="stats-loading"><span class="loading"></span></div>
+                </div>
+            </section>
+        </div>
     </main>
+
+    <!-- Modal Historial del Cliente -->
+    <div id="customerHistoryModal" class="modal">
+        <div class="modal-content modal-content-wide">
+            <button class="modal-close" onclick="closeCustomerHistoryModal()">&times;</button>
+            <div id="customerHistoryContent">
+                <div class="stats-loading"><span class="loading"></span></div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

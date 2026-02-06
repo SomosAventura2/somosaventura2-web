@@ -37,7 +37,7 @@
         </div>
 
         <section class="pedidos-section pedidos-filters">
-            <select id="filterStatus" class="pedidos-filter-select" onchange="loadOrders()">
+            <select id="filterStatus" class="pedidos-filter-select">
                 <option value="">Todos</option>
                 <option value="agendado">Agendado</option>
                 <option value="en_produccion">En Producción</option>
@@ -45,7 +45,7 @@
                 <option value="entregado">Entregado</option>
                 <option value="cancelado">Cancelado</option>
             </select>
-            <input type="text" id="searchCustomer" class="pedidos-filter-search" placeholder="Buscar cliente..." oninput="loadOrders()">
+            <input type="text" id="searchCustomer" class="pedidos-filter-search" placeholder="Buscar cliente...">
         </section>
 
         <div id="ordersList" class="pedidos-list">
@@ -60,10 +60,21 @@
             <h2 id="modalTitle" class="mb-4">Nuevo Pedido</h2>
             <form id="orderForm">
                 <input type="hidden" id="orderId">
+                <input type="hidden" id="customerId">
                 
-                <div class="form-group">
-                    <label class="form-label" for="customerName">Nombre del Cliente*</label>
-                    <input type="text" id="customerName" class="form-input" required>
+                <div class="form-group customer-search-wrap">
+                    <label class="form-label" for="customerSearch">Cliente*</label>
+                    <input type="text" id="customerSearch" class="form-input" placeholder="Buscar o crear cliente..." autocomplete="off">
+                    <div id="customerSuggestions" class="customer-suggestions hidden"></div>
+                    <div id="selectedCustomerCard" class="customer-card hidden">
+                        <div class="customer-card-header">
+                            <strong id="selectedCustomerName"></strong>
+                            <span id="selectedCustomerBadge" class="badge-vip hidden"></span>
+                        </div>
+                        <div class="customer-card-meta" id="selectedCustomerMeta"></div>
+                        <div class="customer-card-stats" id="selectedCustomerStats"></div>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="clearSelectedCustomer()">Cambiar cliente</button>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -149,6 +160,38 @@
         <div class="modal-content">
             <button class="modal-close" onclick="closeDetailsModal()">&times;</button>
             <div id="orderDetails"></div>
+        </div>
+    </div>
+
+    <!-- Modal Nuevo Cliente -->
+    <div id="newCustomerModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeNewCustomerModal()">&times;</button>
+            <h2 class="mb-3">Nuevo Cliente</h2>
+            <form id="newCustomerForm">
+                <div class="form-group">
+                    <label class="form-label" for="newCustomerFirstName">Nombre*</label>
+                    <input type="text" id="newCustomerFirstName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newCustomerLastName">Apellido*</label>
+                    <input type="text" id="newCustomerLastName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newCustomerPhone">Teléfono*</label>
+                    <input type="tel" id="newCustomerPhone" class="form-input" placeholder="0424-1234567">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newCustomerEmail">Email (opcional)</label>
+                    <input type="email" id="newCustomerEmail" class="form-input" placeholder="cliente@email.com">
+                </div>
+                <p class="form-hint">Al menos teléfono o email es obligatorio.</p>
+                <div id="newCustomerMessage" class="form-message"></div>
+                <div class="flex flex-gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="button" class="btn btn-outline" onclick="closeNewCustomerModal()">Cancelar</button>
+                </div>
+            </form>
         </div>
     </div>
 

@@ -10,6 +10,60 @@ window.supabase = _lib && _lib.createClient
     ? _lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
     : null;
 
+// Caché simple para queries (TTL en ms)
+var _queryCache = {};
+var _queryCacheTTL = 30 * 1000;
+function queryCacheGet(key) {
+    var ent = _queryCache[key];
+    if (!ent || Date.now() > ent.exp) return null;
+    return ent.data;
+}
+function queryCacheSet(key, data) {
+    _queryCache[key] = { data: data, exp: Date.now() + _queryCacheTTL };
+}
+function queryCacheInvalidate(prefix) {
+    if (!prefix) { _queryCache = {}; return; }
+    Object.keys(_queryCache).forEach(function (k) {
+        if (k.indexOf(prefix) === 0) delete _queryCache[k];
+    });
+}
+window.queryCacheGet = queryCacheGet;
+window.queryCacheSet = queryCacheSet;
+window.queryCacheInvalidate = queryCacheInvalidate;
+
+// Cola offline: guardar mutaciones fallidas y disparar flush al volver online
+var _offlineQueue = [];
+function addToOfflineQueue(type, data) {
+    _offlineQueue.push({ type: type, data: data });
+    try { localStorage.setItem('offlineQueue', JSON.stringify(_offlineQueue)); } catch (e) {}
+}
+function getOfflineQueue() { return _offlineQueue.slice(); }
+function clearOfflineQueue() {
+    _offlineQueue = [];
+    try { localStorage.removeItem('offlineQueue'); } catch (e) {}
+}
+window.addToOfflineQueue = addToOfflineQueue;
+window.getOfflineQueue = getOfflineQueue;
+window.clearOfflineQueue = clearOfflineQueue;
+
+// Toast notifications (reemplazo de alert para éxito/error)
+function Toast() {}
+Toast.show = function (message, type, durationMs) {
+    if (typeof message !== 'string') message = String(message);
+    var duration = durationMs == null ? 3000 : durationMs;
+    var existing = document.querySelectorAll('.toast-msg');
+    existing.forEach(function (t) { t.remove(); });
+    var toast = document.createElement('div');
+    toast.className = 'toast-msg toast-' + (type || 'success');
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(function () {
+        toast.classList.add('toast-out');
+        setTimeout(function () { toast.remove(); }, 300);
+    }, duration);
+};
+window.Toast = Toast;
+
 // Verificar autenticación en cada página
 async function checkAuth() {
     if (!window.supabase) return null;
@@ -231,10 +285,81 @@ function initCustomSelects(container) {
 }
 window.initCustomSelects = initCustomSelects;
 
+function initPullToRefresh() {
+    var startY = 0;
+    var pulling = false;
+    var indicator = null;
+    function getIndicator() {
+        if (indicator) return indicator;
+        indicator = document.createElement('div');
+        indicator.className = 'pull-to-refresh-indicator';
+        indicator.textContent = 'Suelta para actualizar';
+        document.body.appendChild(indicator);
+        return indicator;
+    }
+    function hideIndicator() {
+        if (indicator) indicator.classList.remove('visible');
+    }
+    document.addEventListener('touchstart', function (e) {
+        if (window.scrollY <= 10) {
+            startY = e.touches[0].clientY;
+            pulling = true;
+        }
+    }, { passive: true });
+    document.addEventListener('touchmove', function (e) {
+        if (!pulling) return;
+        var y = e.touches[0].clientY;
+        if (y - startY > 60) getIndicator().classList.add('visible');
+    }, { passive: true });
+    document.addEventListener('touchend', function (e) {
+        if (!pulling) return;
+        var y = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientY : 0;
+        if (y - startY > 60 && typeof window.pullToRefreshCallback === 'function') {
+            var cb = window.pullToRefreshCallback();
+            Promise.resolve(cb).then(function () {
+                hideIndicator();
+                if (window.Toast) window.Toast.show('Actualizado', 'success', 1500);
+            }).catch(function () { hideIndicator(); });
+        } else {
+            hideIndicator();
+        }
+        pulling = false;
+    }, { passive: true });
+}
+window.initPullToRefresh = initPullToRefresh;
+
+// Realtime: suscripción a cambios en una tabla (INSERT/UPDATE/DELETE)
+function subscribeRealtimeTable(tableName, onChange) {
+    if (!window.supabase || typeof onChange !== 'function') return function () {};
+    var channel = window.supabase
+        .channel('realtime-' + tableName)
+        .on('postgres_changes', { event: '*', schema: 'public', table: tableName }, function (payload) {
+            onChange(payload);
+        })
+        .subscribe();
+    return function () {
+        try { window.supabase.removeChannel(channel); } catch (e) {}
+    };
+}
+window.subscribeRealtimeTable = subscribeRealtimeTable;
+
 if (typeof document !== 'undefined') {
     function onReady() {
         initNavScroll();
         initCustomSelects();
+        initPullToRefresh();
+        try {
+            var saved = localStorage.getItem('offlineQueue');
+            if (saved) _offlineQueue = JSON.parse(saved);
+        } catch (e) {}
+        window.addEventListener('online', function () {
+            queryCacheInvalidate();
+            var queue = getOfflineQueue();
+            if (queue.length) {
+                window.dispatchEvent(new CustomEvent('offlineQueueFlush', { detail: { queue: queue } }));
+                clearOfflineQueue();
+            }
+        });
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', onReady);

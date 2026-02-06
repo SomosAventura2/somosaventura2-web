@@ -88,7 +88,9 @@
         async function init() {
             session = await checkAuth();
             if (!session) return;
-            
+            window.pullToRefreshCallback = async function () {
+                await Promise.all([loadStats(), loadRecentOrders(), loadTodayDeliveries()]);
+            };
             loadStats();
             loadRecentOrders();
             loadTodayDeliveries();
