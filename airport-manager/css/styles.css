@@ -21,8 +21,8 @@
     --safe-right: env(safe-area-inset-right, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-left: env(safe-area-inset-left, 0px);
-    /* Altura del header fijo (para padding-top del contenido) */
-    --header-height: 6rem;
+    /* Altura del header fijo (para padding-top del contenido; en iPhone con safe area + nav en 2 filas) */
+    --header-height: 8.5rem;
 }
 
 * {
@@ -84,10 +84,10 @@ h4 { font-size: 1.25rem; }
 }
 
 main.container.main-content {
-    padding: 2rem 1rem;
-    padding-left: calc(1rem + var(--safe-left));
+    padding-top: 1.25rem;
     padding-right: calc(1rem + var(--safe-right));
     padding-bottom: calc(1rem + var(--safe-bottom));
+    padding-left: calc(1rem + var(--safe-left));
 }
 
 /* Header fijo (sticky) y safe area para notch en iPhone */
@@ -742,7 +742,7 @@ main.container.main-content {
     }
     
     main.container.main-content {
-        padding: 0.75rem 0.5rem;
+        padding-top: 1.25rem;
         padding-left: calc(0.5rem + var(--safe-left));
         padding-right: calc(0.5rem + var(--safe-right));
         padding-bottom: calc(0.5rem + var(--safe-bottom));
