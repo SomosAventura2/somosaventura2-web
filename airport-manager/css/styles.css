@@ -700,6 +700,12 @@ main.container.main-content > h1,
     
     .nav {
         gap: 0.35rem;
+        min-width: 0;
+    }
+    
+    .nav-logout {
+        padding-left: 0.5rem;
+        padding-right: max(0.5rem, var(--safe-right));
     }
     
     .nav-scroll .nav-item {
@@ -948,6 +954,7 @@ main.container.main-content > h1,
     background: var(--white);
     border: 1px solid var(--black);
     padding: 0.75rem 0.875rem;
+    padding-right: max(0.875rem, calc(0.875rem + var(--safe-right)));
     margin-bottom: 0.75rem;
 }
 .stats-section-title {
@@ -1117,20 +1124,27 @@ main.container.main-content > h1,
     align-items: center;
     gap: 0.5rem;
     margin-bottom: 0.5rem;
+    padding-right: var(--safe-right);
 }
-.stats-section-header .stats-section-title { margin-bottom: 0; }
+.stats-section-header .stats-section-title { margin-bottom: 0; flex-shrink: 0; }
 .stats-clientes-actions {
     display: flex;
     gap: 0.35rem;
+    flex-shrink: 1;
+    min-width: 0;
 }
 .stats-clientes-actions .custom-select-wrap {
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
+    max-width: 50%;
 }
 .stats-clientes-actions .custom-select-trigger {
     min-height: 36px;
     font-size: 0.75rem;
     padding: 0.35rem 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .stats-select {
     padding: 0.35rem 0.5rem;
@@ -1142,6 +1156,7 @@ main.container.main-content > h1,
 .stats-table-wrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    padding-right: var(--safe-right);
 }
 .stats-clientes-table {
     width: 100%;
@@ -1154,6 +1169,11 @@ main.container.main-content > h1,
     text-align: left;
     border-bottom: 1px solid var(--gray-200);
 }
+.stats-clientes-table th:last-child,
+.stats-clientes-table td:last-child {
+    padding-right: max(0.5rem, var(--safe-right));
+    white-space: nowrap;
+}
 .stats-clientes-table th {
     font-weight: 700;
     text-transform: uppercase;
@@ -1162,6 +1182,7 @@ main.container.main-content > h1,
 }
 .stats-clientes-table .cliente-nombre { font-weight: 600; }
 .stats-clientes-table .cliente-contacto { font-size: 0.75rem; color: var(--gray-600); }
+.stats-clientes-table .btn.btn-sm { flex-shrink: 0; }
 .badge-vip, .badge-inactivo, .badge-nuevo, .badge-frecuente {
     display: inline-block;
     font-size: 0.65rem;
@@ -1254,6 +1275,22 @@ main.container.main-content > h1,
 @media (max-width: 480px) {
     .stats-clientes-metrics { grid-template-columns: 1fr; }
     .stats-segment-cards { grid-template-columns: 1fr; }
+    /* Top clientes: filtros en columna si hace falta y VER siempre visible en iOS */
+    .stats-section-header { padding-right: var(--safe-right); }
+    .stats-clientes-actions {
+        flex-wrap: wrap;
+    }
+    .stats-clientes-actions .custom-select-wrap {
+        max-width: 100%;
+        min-width: 120px;
+    }
+    .stats-table-wrap {
+        padding-right: max(0.5rem, var(--safe-right));
+    }
+    .stats-clientes-table th:last-child,
+    .stats-clientes-table td:last-child {
+        padding-right: max(0.75rem, var(--safe-right));
+    }
 }
 
 /* ========== PAGOS PAGE (compacto, iPhone friendly) ========== */
@@ -2015,7 +2052,7 @@ body.login-page {
     left: 0;
     right: 0;
     margin: 2px 0 0;
-    max-height: 220px;
+    max-height: min(220px, 50vh);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     background: var(--white);
@@ -2027,6 +2064,11 @@ body.login-page {
 }
 .custom-select-wrap.open .custom-select-panel {
     display: block;
+}
+/* En Stats (Top clientes): panel no se corte en iOS y opciones con texto completo */
+#tabClientes .custom-select-panel {
+    max-height: min(200px, 45vh);
+    padding-bottom: var(--safe-bottom);
 }
 .custom-select-option {
     display: block;
@@ -2040,6 +2082,9 @@ body.login-page {
     color: var(--black);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+    min-width: 0;
+    box-sizing: border-box;
 }
 .custom-select-option:hover,
 .custom-select-option:focus {

@@ -103,7 +103,7 @@
                     <div class="grid grid-2">
                         <div class="form-group">
                             <label class="form-label" for="paymentAmount">Monto del Pago*</label>
-                            <input type="number" inputmode="decimal" id="paymentAmount" class="form-input" step="0.01" value="0">
+                            <input type="number" inputmode="decimal" id="paymentAmount" class="form-input" step="0.01" placeholder="0.00">
                         </div>
 
                         <div class="form-group">
@@ -125,8 +125,8 @@
                     </div>
 
                     <div class="form-group" id="pagoMovilRefGroup">
-                        <label class="form-label" for="pagoMovilReference">Referencia Pago Móvil</label>
-                        <input type="text" id="pagoMovilReference" class="form-input" placeholder="Ej: 0102 12345678901 (opcional)">
+                        <label class="form-label" for="pagoMovilReference">REF.</label>
+                        <input type="tel" inputmode="numeric" pattern="[0-9]*" id="pagoMovilReference" class="form-input" placeholder="Solo números (opcional)">
                     </div>
                 </div>
 

@@ -13,6 +13,9 @@ let customerSearchTimer = null;
 const VIP_MIN_ORDERS = 3;
 const VIP_MIN_SPENT = 150;
 
+// Flag para saber si el último pedido se guardó correctamente
+let lastOrderSavedSuccessfully = false;
+
 async function init() {
     session = await checkAuth();
     if (!session) return;
@@ -157,6 +160,30 @@ function escapeHtml(s) {
     const div = document.createElement('div');
     div.textContent = s;
     return div.innerHTML;
+}
+
+/**
+ * Limpia el formulario de pedido y fuerza el estado inicial del botón submit.
+ * Se ejecuta CADA VEZ que se abre el modal (nuevo o editar) para evitar que el botón quede en "Guardando...".
+ */
+function resetOrderForm() {
+    const form = document.getElementById('orderForm');
+    if (!form) return;
+
+    form.reset();
+
+    var submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        var originalText = submitBtn.dataset.originalText || 'Guardar Pedido';
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+        submitBtn.innerHTML = originalText;
+    }
+
+    if (form.dataset) {
+        delete form.dataset.submitting;
+        delete form.dataset.mode;
+    }
 }
 
 function selectCustomer(c) {
@@ -427,7 +454,10 @@ function updatePaymentInitialVisibility() {
         if (currencySelect) currencySelect.removeAttribute('required');
     } else {
         wrap.classList.remove('hidden');
-        if (amountInput) amountInput.setAttribute('required', 'required');
+        if (amountInput) {
+            amountInput.setAttribute('required', 'required');
+            amountInput.value = '';
+        }
         if (currencySelect) currencySelect.setAttribute('required', 'required');
         updatePaymentMethodVisibility();
     }
@@ -551,9 +581,23 @@ function openNewOrderModal() {
     document.getElementById('itemsContainer').innerHTML = '';
     addItem();
     updatePaymentInitialVisibility();
-    document.getElementById('orderModal').classList.add('active');
-    if (localStorage.getItem(ORDER_DRAFT_KEY) && confirm('¿Restaurar el último borrador?')) {
-        restoreOrderDraft();
+    const hasDraft = localStorage.getItem(ORDER_DRAFT_KEY);
+    if (hasDraft) {
+        // Si el último pedido se guardó bien, limpiamos el borrador silenciosamente
+        if (lastOrderSavedSuccessfully) {
+            try { localStorage.removeItem(ORDER_DRAFT_KEY); } catch (e) {}
+        } else if (confirm('¿Restaurar el último borrador?')) {
+            restoreOrderDraft();
+        }
+    }
+    // Nuevo ciclo: asumimos no guardado hasta que el submit tenga éxito
+    lastOrderSavedSuccessfully = false;
+    resetOrderForm();
+    const modal = document.getElementById('orderModal');
+    if (modal) {
+        modal.classList.add('active');
+        const content = modal.querySelector('.modal-content');
+        if (content) content.scrollTop = 0;
     }
 }
 
@@ -694,12 +738,16 @@ function collectItems() {
 document.getElementById('orderForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
     const messageDiv = document.getElementById('formMessage');
+    var originalSubmitText = (submitBtn && (submitBtn.dataset.originalText || submitBtn.textContent)) || 'Guardar Pedido';
+    if (submitBtn && !submitBtn.dataset.originalText) submitBtn.dataset.originalText = originalSubmitText;
     
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<div class="spinner-container spinner-container--inline"><div class="spinner"></div></div> Guardando...';
     messageDiv.innerHTML = '';
+    if (form.dataset) form.dataset.submitting = 'true';
     
     try {
         const items = collectItems();
@@ -711,8 +759,6 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
         const customerName = (document.getElementById('customerSearch').value || '').trim();
         if (!customerName) {
             messageDiv.innerHTML = '<div class="alert alert-error">Indica el cliente (busca o crea uno nuevo).</div>';
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Guardar Pedido';
             return;
         }
         const customerIdVal = (document.getElementById('customerId').value || '').trim() || null;
@@ -734,7 +780,6 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
         const orderId = document.getElementById('orderId').value;
         
         if (orderId) {
-            // Actualizar
             const { error } = await supabase
                 .from('orders')
                 .update(orderData)
@@ -745,7 +790,6 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
             messageDiv.innerHTML = '<div class="alert alert-success">Pedido actualizado exitosamente</div>';
             if (window.Toast) Toast.show('Pedido actualizado', 'success');
         } else {
-            // Crear nuevo pedido
             const { data: newOrder, error: orderError } = await supabase
                 .from('orders')
                 .insert(orderData)
@@ -754,7 +798,6 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
             
             if (orderError) throw orderError;
             
-            // Registrar el pago inicial en payments para que sume en ingresos (Bs/USD) de Stats
             if (newOrder && parseFloat(orderData.payment_amount) > 0) {
                 await supabase
                     .from('payments')
@@ -771,22 +814,26 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
             messageDiv.innerHTML = '<div class="alert alert-success">Pedido creado exitosamente</div>';
             if (window.Toast) Toast.show('Pedido creado', 'success');
         }
-        try { localStorage.removeItem(ORDER_DRAFT_KEY); } catch (e) {}
+        // Marcamos que este ciclo terminó con guardado correcto y limpiamos borrador
+        lastOrderSavedSuccessfully = true;
+        try { localStorage.removeItem(ORDER_DRAFT_KEY); } catch (err) {}
         if (window.queryCacheInvalidate) window.queryCacheInvalidate('orders_');
-        // Limpiar el mensaje de éxito antes de cerrar
-        setTimeout(() => {
-            messageDiv.innerHTML = '';
-        }, 300);
-        setTimeout(() => {
+        setTimeout(function () { messageDiv.innerHTML = ''; }, 300);
+        setTimeout(function () {
             closeOrderModal();
             loadOrders();
-        }, 500); // Reducido de 1500ms a 500ms
+        }, 500);
         
     } catch (error) {
         console.error('Error saving order:', error);
-        messageDiv.innerHTML = `<div class="alert alert-error">${error.message}</div>`;
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Guardar Pedido';
+        messageDiv.innerHTML = '<div class="alert alert-error">' + error.message + '</div>';
+    } finally {
+        if (form.dataset) delete form.dataset.submitting;
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalSubmitText;
+            submitBtn.innerHTML = originalSubmitText;
+        }
     }
 });
 
@@ -851,7 +898,13 @@ async function editOrder(orderId) {
             });
         }
         
-        document.getElementById('orderModal').classList.add('active');
+        resetOrderForm();
+        const modal = document.getElementById('orderModal');
+        if (modal) {
+            modal.classList.add('active');
+            const content = modal.querySelector('.modal-content');
+            if (content) content.scrollTop = 0;
+        }
         
     } catch (error) {
         console.error('Error loading order:', error);
@@ -949,7 +1002,7 @@ async function viewOrderDetails(orderId) {
             </div>
             ${data.payment_method === 'pago_movil' && data.pago_movil_reference ? `
             <div class="mb-3">
-                <div style="font-size: 0.85rem; color: var(--gray-500); text-transform: uppercase;">Referencia Pago Móvil</div>
+                <div style="font-size: 0.85rem; color: var(--gray-500); text-transform: uppercase;">REF.</div>
                 <div style="font-weight: 600;">${data.pago_movil_reference}</div>
             </div>
             ` : ''}
