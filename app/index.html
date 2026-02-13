@@ -3864,9 +3864,8 @@ async function loadUsuarios() {
                 return;
             }
 
-    // 🔪 MODIFICACIÓN QUIRÚRGICA: generar número automático
+    // 🔪 Número automático: secuencia global (activas + archivadas)
     const ultimaRuta = data.rutas
-        .filter(r => !r.archivada)
         .sort((a, b) => (b.numero || 0) - (a.numero || 0))[0];
 
     const nuevoNumero = (ultimaRuta?.numero || 0) + 1;
