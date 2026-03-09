@@ -1938,6 +1938,10 @@
             <div id="btnAnadirRutaPasadaWrap" style="margin-top: 12px; text-align: center;">
                 <button type="button" class="btn btn-outline" style="width: 100%;" onclick="abrirModalAnadirRutaPasadaDesdeHistorial()">➕ Añadir ruta pasada</button>
             </div>
+            <div id="btnSubirFotoRankingWrap" style="margin-top: 12px; text-align: center;">
+                <input type="file" id="inputFotoAventureroRanking" accept="image/jpeg,image/png,image/webp" style="display: none;" onchange="subirFotoAventureroRanking(this);">
+                <button type="button" class="btn btn-outline" style="width: 100%;" onclick="document.getElementById('inputFotoAventureroRanking').click()">📷 Subir foto</button>
+            </div>
             <div style="margin-top: 16px; text-align: center;">
                 <button type="button" class="btn btn-primary" style="width: 100%; max-width: 100%;" onclick="cerrarModalHistorialRecurrente()">Cerrar</button>
             </div>
@@ -3614,7 +3618,7 @@ async function loadUsuarios() {
                 if (b.porcentajeAsistencia !== a.porcentajeAsistencia) return b.porcentajeAsistencia - a.porcentajeAsistencia;
                 return (a.nombre || '').localeCompare(b.nombre || '', 'es');
             });
-            return ranking.slice(0, 50);
+            return ranking;
         }
 
         function calcularTotalRecaudado(rutaId) {
@@ -7117,20 +7121,23 @@ async function marcarTodosPresentes() {
                 container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">No hay aventurados aún</div>';
                 return;
             }
+            const badgeBase = '../badges/';
             container.innerHTML = `<div class="person-list-compact">${top10.map((aventurero, index) => {
                 const medalla = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
                 const nombreEscAttr = escapeAttr(aventurero.nombre || '');
                 const nombreEscHtml = escapeHtml(aventurero.nombre);
-                return `<div class="person-item-compact" onclick="verDetalleAventurero('${nombreEscAttr}')" style="cursor: pointer; border-left: 4px solid ${aventurero.rango.color}; background: ${index < 3 ? 'rgba(118, 200, 147, 0.05)' : 'transparent'};">
-                    <div style="display: flex; align-items: center; gap: 12px;">
+                const r = aventurero.rango;
+                const badgeSrc = badgeBase + (r.nombre || '').toLowerCase() + '.png';
+                const badgeFallback = `<span class="ranking-badge-fallback" style="display:none">${r.emoji} ${escapeHtml(r.nombre)}</span>`;
+                const badgeHtml = `<span style="background:${r.color}20;color:${r.color};padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;gap:4px;"><img src="${badgeSrc}" alt="${escapeHtml(r.nombre)}" style="height:22px;width:auto;max-width:36px;object-fit:contain;display:block" onerror="this.style.display='none';var n=this.nextElementSibling;if(n)n.style.display='inline'">${badgeFallback}</span>`;
+                return `<div class="person-item-compact" onclick="verDetalleAventurero('${nombreEscAttr}')" style="cursor: pointer; border-left: 4px solid ${r.color}; background: ${index < 3 ? 'rgba(118, 200, 147, 0.05)' : 'transparent'};">
+                    <div style="display: flex; align-items: center; gap: 12px; width: 100%; min-width: 0;">
                         <div style="width: 32px; height: 32px; background: ${index < 3 ? 'rgba(118, 200, 147, 0.2)' : 'rgba(255,255,255,0.05)'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: ${index < 3 ? '16px' : '14px'}; color: ${index < 3 ? 'var(--accent)' : 'var(--text-secondary)'}; flex-shrink: 0; border: 2px solid ${index < 3 ? 'var(--accent)' : 'transparent'};">${medalla}</div>
-                        <div style="flex: 1;">
-                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                                <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">${nombreEscHtml}</div>
-                                <span style="background: ${aventurero.rango.color}20; color: ${aventurero.rango.color}; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700;">${aventurero.rango.emoji} ${aventurero.rango.nombre}</span>
-                            </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary); margin-bottom: 4px;">${nombreEscHtml}</div>
                             <div style="font-size: 12px; color: var(--text-secondary); display: flex; gap: 12px;"><span>🏔️ ${aventurero.rutasAsistidas} rutas</span><span>📊 ${aventurero.porcentajeAsistencia}% asistencia</span></div>
                         </div>
+                        <div style="flex-shrink: 0; margin-left: auto;">${badgeHtml}</div>
                     </div>
                 </div>`;
             }).join('')}</div>`;
@@ -7143,20 +7150,25 @@ async function marcarTodosPresentes() {
                 container.innerHTML = '<div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);"><div style="font-size: 32px; margin-bottom: 8px;">🔍</div><p>No hay aventurados que coincidan</p></div>';
                 return;
             }
+            const badgeBase = '../badges/';
             container.innerHTML = `<div class="person-list-compact">${ranking.map(aventurero => {
                 const nombreEscAttr = escapeAttr(aventurero.nombre || '');
                 const nombreEscHtml = escapeHtml(aventurero.nombre);
+                const r = aventurero.rango;
+                const badgeSrc = badgeBase + (r.nombre || '').toLowerCase() + '.png';
+                const badgeFallback = `<span class="ranking-badge-fallback" style="display:none">${r.emoji} ${escapeHtml(r.nombre)}</span>`;
+                const badgeHtml = `<span style="background:${r.color}20;color:${r.color};padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;gap:4px;"><img src="${badgeSrc}" alt="${escapeHtml(r.nombre)}" style="height:22px;width:auto;max-width:36px;object-fit:contain;display:block" onerror="this.style.display='none';var n=this.nextElementSibling;if(n)n.style.display='inline'">${badgeFallback}</span>`;
                 const progPct = aventurero.totalParaSiguiente > 0 ? Math.min(100, (aventurero.progreso / aventurero.totalParaSiguiente) * 100) : 0;
-                return `<div class="person-item-compact" onclick="verDetalleAventurero('${nombreEscAttr}')" style="cursor: pointer; border-left: 4px solid ${aventurero.rango.color};">
-                    <div style="flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">${nombreEscHtml}</div>
-                            <span style="background: ${aventurero.rango.color}20; color: ${aventurero.rango.color}; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">${aventurero.rango.emoji} ${aventurero.rango.nombre}</span>
+                return `<div class="person-item-compact" onclick="verDetalleAventurero('${nombreEscAttr}')" style="cursor: pointer; border-left: 4px solid ${r.color};">
+                    <div style="display: flex; align-items: center; gap: 12px; width: 100%; min-width: 0;">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary); margin-bottom: 6px;">${nombreEscHtml}</div>
+                            <div style="font-size: 12px; color: var(--text-secondary); display: flex; gap: 12px; margin-bottom: 8px;">
+                                <span>🏔️ ${aventurero.rutasAsistidas} rutas</span><span>✅ ${aventurero.totalAsistidas}/${aventurero.totalParticipaciones}</span><span>📊 ${aventurero.porcentajeAsistencia}%</span>
+                            </div>
+                            ${aventurero.siguienteRango ? `<div style="margin-top: 8px;"><div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-secondary); margin-bottom: 4px;"><span>Progreso a ${aventurero.siguienteRango.emoji} ${aventurero.siguienteRango.nombre}:</span><span>${aventurero.progreso}/${aventurero.totalParaSiguiente}</span></div><div style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;"><div style="height: 100%; width: ${progPct}%; background: ${aventurero.siguienteRango.color}; border-radius: 2px;"></div></div></div>` : ''}
                         </div>
-                        <div style="font-size: 12px; color: var(--text-secondary); display: flex; gap: 12px; margin-bottom: 8px;">
-                            <span>🏔️ ${aventurero.rutasAsistidas} rutas</span><span>✅ ${aventurero.totalAsistidas}/${aventurero.totalParticipaciones}</span><span>📊 ${aventurero.porcentajeAsistencia}%</span>
-                        </div>
-                        ${aventurero.siguienteRango ? `<div style="margin-top: 8px;"><div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-secondary); margin-bottom: 4px;"><span>Progreso a ${aventurero.siguienteRango.emoji} ${aventurero.siguienteRango.nombre}:</span><span>${aventurero.progreso}/${aventurero.totalParaSiguiente}</span></div><div style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;"><div style="height: 100%; width: ${progPct}%; background: ${aventurero.siguienteRango.color}; border-radius: 2px;"></div></div></div>` : ''}
+                        <div style="flex-shrink: 0; margin-left: auto;">${badgeHtml}</div>
                     </div>
                 </div>`;
             }).join('')}</div>`;
@@ -7264,6 +7276,59 @@ async function marcarTodosPresentes() {
             renderListaRanking(rankingFiltrado);
         }
 
+        /** Sube la foto del aventurero para mostrarla en el top 3 de la landing. Guarda en Storage (ranking-avatars) y tabla avatares_ranking. */
+        async function subirFotoAventureroRanking(inputEl) {
+            const file = inputEl && inputEl.files && inputEl.files[0];
+            if (!file) return;
+            const nombre = (window._nombrePersonaHistorialActual || '').trim();
+            if (!nombre) {
+                showToast('Abre el detalle de un aventurero antes de subir la foto.', 'warning');
+                inputEl.value = '';
+                return;
+            }
+            try {
+                showToast('Subiendo foto...', 'info');
+                const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/jpeg/, 'jpg');
+                const slug = nombre.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 50) || 'avatar';
+                const path = slug + '.' + (ext === 'png' || ext === 'webp' ? ext : 'jpg');
+
+                const { error: errUpload } = await db.storage
+                    .from('ranking-avatars')
+                    .upload(path, file, { cacheControl: '3600', upsert: true });
+
+                if (errUpload) {
+                    console.error('Error subiendo foto ranking:', errUpload);
+                    showToast('No se pudo subir la foto. ¿Existe el bucket "ranking-avatars" en Supabase?', 'error');
+                    inputEl.value = '';
+                    return;
+                }
+
+                const { data: publicData } = db.storage.from('ranking-avatars').getPublicUrl(path);
+                const avatarUrl = publicData?.publicUrl || null;
+                if (!avatarUrl) {
+                    showToast('Error al obtener la URL de la foto.', 'error');
+                    inputEl.value = '';
+                    return;
+                }
+
+                const { error: errRow } = await db.from('avatares_ranking').upsert(
+                    { nombre: nombre, avatar_url: avatarUrl },
+                    { onConflict: 'nombre' }
+                );
+
+                if (errRow) {
+                    console.error('Error guardando avatar_url:', errRow);
+                    showToast('Foto subida pero no se pudo guardar el enlace. Crea la tabla avatares_ranking (nombre text primary key, avatar_url text).', 'error');
+                } else {
+                    showToast('Foto guardada. Se verá en el top 3 de la landing.', 'success');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Error inesperado al subir la foto.', 'error');
+            }
+            inputEl.value = '';
+        }
+
         function verDetalleAventurero(nombre) {
             window._nombrePersonaHistorialActual = nombre || '';
             const historial = calcularRutasPorPersona(nombre);
@@ -7282,7 +7347,10 @@ async function marcarTodosPresentes() {
                 }).join('')}${historial.rutasAsistidas.length > 8 ? `<span style="background: rgba(118, 200, 147, 0.05); padding: 6px 10px; border-radius: 8px; font-size: 12px; color: var(--text-secondary); border: 1px dashed var(--border);">+${historial.rutasAsistidas.length - 8} más</span>` : ''}</div></div>`
                 : '';
             const siguienteHtml = historial.siguienteRango ? `<div style="margin-bottom: 20px; padding: 16px; background: rgba(118, 200, 147, 0.1); border-radius: 12px;"><div style="font-size: 14px; font-weight: 700; margin-bottom: 8px; color: ${historial.siguienteRango.color}">${historial.siguienteRango.emoji} Próximo rango: ${historial.siguienteRango.nombre}</div><div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Necesitas ${faltanAsistencias} asistencia${faltanAsistencias !== 1 ? 's' : ''} más</div><div class="progress-bar" style="height: 8px; background: rgba(255,255,255,0.1); margin-bottom: 4px;"><div style="height: 100%; width: ${progPct}%; background: ${historial.siguienteRango.color}; border-radius: 4px;"></div></div><div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary);"><span>${historial.progresoHaciaSiguiente}/${historial.totalParaSiguiente}</span><span>${progPct.toFixed(0)}%</span></div></div>` : '';
-            const html = `<div style="text-align: center; margin-bottom: 20px;"><div style="font-size: 48px; margin-bottom: 8px;">${historial.rango.emoji}</div><div style="font-size: 20px; font-weight: 800; color: ${historial.rango.color}; margin-bottom: 4px;">${historial.rango.nombre}</div><div style="font-size: 14px; color: var(--text-secondary);">${nombreEsc}</div></div><div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;"><div class="stat"><span class="stat-value" style="color: ${historial.rango.color};">${historial.totalRutas}</span><span class="stat-label">Rutas asistidas</span></div><div class="stat"><span class="stat-value">${historial.totalParticipaciones}</span><span class="stat-label">Participaciones</span></div><div class="stat"><span class="stat-value" style="color: var(--success);">${historial.totalAsistidas}</span><span class="stat-label">✅ Asistencias</span></div><div class="stat"><span class="stat-value" style="color: var(--danger);">${historial.totalNoAsistidas}</span><span class="stat-label">❌ Ausencias</span></div></div><div style="margin-bottom: 20px;"><div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">📊 Tasa de asistencia</div><div class="progress-bar" style="height: 12px; margin-bottom: 8px;"><div class="progress-fill" style="width: ${historial.porcentajeAsistencia}%;"></div></div><div style="display: flex; justify-content: space-between; font-size: 12px;"><span>${historial.porcentajeAsistencia}%</span><span>${historial.totalAsistidas}/${historial.totalParticipaciones}</span></div></div>${siguienteHtml}${rutasHtml}`;
+            const r = historial.rango;
+            const modalBadgeSrc = '../badges/' + (r.nombre || '').toLowerCase() + '.png';
+            const modalBadgeHtml = `<div style="text-align: center; margin-bottom: 20px;"><div style="display: flex; justify-content: center; align-items: center; margin-bottom: 8px;"><img src="${modalBadgeSrc}" alt="${escapeHtml(r.nombre)}" style="height:64px;width:auto;max-width:80px;object-fit:contain;display:block" onerror="this.style.display='none';var n=this.nextElementSibling;if(n)n.style.display='block'"><span style="display:none;font-size:48px;line-height:1">${r.emoji}</span></div><div style="font-size: 20px; font-weight: 800; color: ${r.color}; margin-bottom: 4px;">${r.nombre}</div><div style="font-size: 14px; color: var(--text-secondary);">${nombreEsc}</div></div>`;
+            const html = `${modalBadgeHtml}<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;"><div class="stat"><span class="stat-value" style="color: ${historial.rango.color};">${historial.totalRutas}</span><span class="stat-label">Rutas asistidas</span></div><div class="stat"><span class="stat-value">${historial.totalParticipaciones}</span><span class="stat-label">Participaciones</span></div><div class="stat"><span class="stat-value" style="color: var(--success);">${historial.totalAsistidas}</span><span class="stat-label">✅ Asistencias</span></div><div class="stat"><span class="stat-value" style="color: var(--danger);">${historial.totalNoAsistidas}</span><span class="stat-label">❌ Ausencias</span></div></div><div style="margin-bottom: 20px;"><div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">📊 Tasa de asistencia</div><div class="progress-bar" style="height: 12px; margin-bottom: 8px;"><div class="progress-fill" style="width: ${historial.porcentajeAsistencia}%;"></div></div><div style="display: flex; justify-content: space-between; font-size: 12px;"><span>${historial.porcentajeAsistencia}%</span><span>${historial.totalAsistidas}/${historial.totalParticipaciones}</span></div></div>${siguienteHtml}${rutasHtml}`;
             const tituloEl = document.getElementById('modalHistorialRecurrenteTitulo');
             const cuerpoEl = document.getElementById('modalHistorialRecurrenteCuerpo');
             if (tituloEl && cuerpoEl) {
