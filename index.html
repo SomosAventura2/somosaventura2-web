@@ -905,22 +905,23 @@
       min-width: 200px;
       max-width: 280px;
       margin: 20px auto 0;
-      padding: 14px 24px;
+      padding: 12px 28px;
       font-family: 'Poppins', sans-serif;
       font-size: 14px;
-      font-weight: 700;
-      color: var(--accent);
-      background: rgba(118, 200, 147, 0.15);
-      border: 2px solid rgba(118, 200, 147, 0.5);
+      font-weight: 600;
+      color: #A1EDC5;
+      background: #2F4F4F;
+      border: 1px solid #3F6B6B;
       border-radius: 50px;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
       text-align: center;
     }
     .ranking-btn-ver-completo:hover {
-      background: rgba(118, 200, 147, 0.25);
-      border-color: var(--accent);
-      transform: translateY(-2px);
+      background: #3a5f5f;
+      border-color: #4a7b7b;
+      color: #b8f5d4;
+      transform: translateY(-1px);
     }
     #rankingRestFull.ranking-rest {
       margin-top: 6px;
@@ -1511,11 +1512,68 @@
 
     /* Nota: Los títulos de sección usan el estilo global `.section-title` */
 
+    .routes-carousel-viewport {
+      overflow: hidden;
+      margin-top: 32px;
+      border-radius: 16px;
+      border: none;
+      outline: none;
+      box-shadow: none;
+      background: rgba(14, 47, 54, 0);
+      padding: 16px 24px 21px;
+      box-sizing: content-box;
+    }
+    .routes-carousel-track {
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform;
+      border: none;
+      outline: none;
+      box-shadow: none;
+      background: rgba(14, 47, 54, 0);
+    }
     .routes-grid {
       display: flex;
       flex-direction: column;
       gap: 20px;
-      margin-top: 32px;
+      margin-top: 0;
+      border: none;
+      outline: none;
+    }
+    #upcomingRoutes .routes-carousel-viewport .routes-grid {
+      margin-top: 0;
+    }
+    .routes-carousel-btns-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .routes-carousel-arrow-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 48px;
+      height: 42px;
+      padding: 0 20px;
+      color: var(--accent, #76c893);
+      background: rgba(26, 58, 40, 0.85);
+      border: 1px solid rgba(118, 200, 147, 0.3);
+      border-radius: 50px;
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .routes-carousel-arrow-btn:hover:not(:disabled) {
+      background: rgba(26, 58, 40, 0.95);
+      border-color: rgba(118, 200, 147, 0.45);
+      transform: translateY(-1px);
+      box-shadow: 0 0 12px rgba(118, 200, 147, 0.2);
+    }
+    .routes-carousel-arrow-btn:disabled {
+      color: rgba(255, 255, 255, 0.35);
+      background: rgba(60, 70, 68, 0.6);
+      border-color: rgba(255, 255, 255, 0.08);
+      cursor: not-allowed;
     }
 
     /* NUEVO DISEÑO DE TARJETA (COVER CARD) */
@@ -1524,11 +1582,24 @@
       border-radius: 16px;
       overflow: hidden;
       border: 1px solid rgba(118, 200, 147, 0.15);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       animation: slideInCard 0.5s ease-out;
       animation-fill-mode: both;
       background: transparent;
+    }
+    .route-card--reveal {
+      animation: slideUpReveal 0.45s ease-out forwards;
+    }
+    @keyframes slideUpReveal {
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* Parte superior: imagen de flyer */
@@ -1596,7 +1667,7 @@
 
     .route-card:hover {
       transform: translateY(-8px) scale(1.02);
-      box-shadow: 0 16px 40px rgba(118, 200, 147, 0.3);
+      box-shadow: 0 10px 22px rgba(118, 200, 147, 0.22);
       border-color: rgba(118, 200, 147, 0.4);
     }
 
@@ -2078,8 +2149,18 @@
     <!-- Sección Próximas Aventuras -->
     <section id="upcomingRoutes">
       <h2 class="section-title">⛰️ Próximas Aventuras</h2>
-      <div id="routesGrid" class="routes-grid">
-        <div class="routes-loading">Cargando próximas rutas...</div>
+      <div class="routes-carousel-viewport" id="routesCarouselViewport">
+        <div id="routesGrid" class="routes-grid routes-carousel-track">
+          <div class="routes-loading">Cargando próximas rutas...</div>
+        </div>
+      </div>
+      <div class="routes-carousel-btns-wrap" id="routesVerMasWrap" style="display: none;">
+        <button type="button" class="routes-carousel-arrow-btn routes-carousel-arrow-btn--down" id="routesCarouselBtnDown" aria-label="Siguiente">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button type="button" class="routes-carousel-arrow-btn routes-carousel-arrow-btn--up" id="routesCarouselBtnUp" aria-label="Anterior">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>
+        </button>
       </div>
     </section>
 
@@ -2500,6 +2581,9 @@
       
       let supabaseClient = null;
       let realtimeChannel = null;
+      let rutasProximasCompletas = [];
+      let rutasProximasCurrentPage = 0;
+      let rutasProximasPageTops = [];
       
       // Verificar que Supabase esté disponible antes de inicializar
       if (typeof supabase === 'undefined') {
@@ -2684,15 +2768,14 @@
           hoy.setHours(0, 0, 0, 0);
           const hoyISO = hoy.toISOString().split('T')[0];
 
-          // Consultar las 2 próximas rutas activas
-          // En Supabase, los errores se manejan a través de la variable 'error' de la desestructuración
+          // Consultar próximas rutas activas (más de 2 para "Ver más")
           const { data: rutas, error } = await supabaseClient
             .from('rutas')
             .select('*')
             .eq('archivada', false)
             .gte('fecha', hoyISO)
             .order('fecha', { ascending: true })
-            .limit(2);
+            .limit(12);
 
           // Verificar si hubo error en la consulta
           if (error) {
@@ -2718,10 +2801,36 @@
             })
           );
 
-          // Renderizar tarjetas
+          rutasProximasCompletas = rutasConCupos;
+          rutasProximasCurrentPage = 0;
+
+          // Renderizar todas las tarjetas (carrusel vertical)
           gridRutas.innerHTML = rutasConCupos
             .map(ruta => renderizarRuta(ruta, ruta.cuposOcupados))
             .join('');
+          gridRutas.style.transform = 'translateY(0)';
+
+          var viewport = document.getElementById('routesCarouselViewport');
+          var verMasWrap = document.getElementById('routesVerMasWrap');
+          if (rutasConCupos.length > 2 && viewport) {
+            // Calcular altura del viewport = altura de las 2 primeras cards
+            requestAnimationFrame(function () {
+              var cards = gridRutas.querySelectorAll('.route-card');
+              if (cards.length >= 2) {
+                var firstTwoHeight = cards[1].offsetTop + cards[1].offsetHeight;
+                viewport.style.height = firstTwoHeight + 'px';
+              }
+              rutasProximasPageTops = [];
+              for (var i = 0; i < cards.length; i += 2) {
+                rutasProximasPageTops.push(cards[i].offsetTop);
+              }
+              actualizarFlechaCarruselRutas();
+            });
+            if (verMasWrap) verMasWrap.style.display = 'flex';
+          } else {
+            if (viewport) viewport.style.height = '';
+            if (verMasWrap) verMasWrap.style.display = 'none';
+          }
 
           // Mostrar sección con animación
           seccionRutas.classList.add('active');
@@ -2767,9 +2876,50 @@
         }
       }
 
+      function actualizarFlechaCarruselRutas() {
+        var wrap = document.getElementById('routesVerMasWrap');
+        var btnUp = document.getElementById('routesCarouselBtnUp');
+        var btnDown = document.getElementById('routesCarouselBtnDown');
+        var totalPages = rutasProximasPageTops.length;
+        if (!wrap) return;
+        if (totalPages <= 1) {
+          wrap.style.display = 'none';
+          return;
+        }
+        wrap.style.display = 'flex';
+        if (btnUp) btnUp.disabled = rutasProximasCurrentPage <= 0;
+        if (btnDown) btnDown.disabled = rutasProximasCurrentPage >= totalPages - 1;
+      }
+      function initVerMasRutas() {
+        var gridRutas = document.getElementById('routesGrid');
+        var btnUp = document.getElementById('routesCarouselBtnUp');
+        var btnDown = document.getElementById('routesCarouselBtnDown');
+        if (!gridRutas) return;
+        if (btnUp) {
+          btnUp.addEventListener('click', function () {
+            if (this.disabled || rutasProximasCurrentPage <= 0) return;
+            rutasProximasCurrentPage--;
+            var y = rutasProximasPageTops[rutasProximasCurrentPage] || 0;
+            gridRutas.style.transform = 'translateY(-' + y + 'px)';
+            actualizarFlechaCarruselRutas();
+          });
+        }
+        if (btnDown) {
+          btnDown.addEventListener('click', function () {
+            var totalPages = rutasProximasPageTops.length;
+            if (this.disabled || rutasProximasCurrentPage >= totalPages - 1) return;
+            rutasProximasCurrentPage++;
+            var y = rutasProximasPageTops[rutasProximasCurrentPage] || 0;
+            gridRutas.style.transform = 'translateY(-' + y + 'px)';
+            actualizarFlechaCarruselRutas();
+          });
+        }
+      }
+
       // Cargar rutas y activar Realtime
       cargarRutasProximas();
       initRealtimeRutas();
+      initVerMasRutas();
 
       // =============================================
       // RANKING TOP 10 AVENTURADOS (desde participantes)
