@@ -1147,18 +1147,25 @@
             z-index: 10002 !important;
         }
         
-        /* Modales de confirmación/alerta SIEMPRE delante de cualquier otro modal */
-        #modalConfirm,
+        /* Modal historial (debajo de confirmaciones) */
         #modalHistorialRecurrente {
             z-index: 10100 !important;
         }
-        
-        #modalConfirm.modal.active,
         #modalHistorialRecurrente.modal.active {
             z-index: 10100 !important;
         }
         
-        .modal.active:not(#modalConfirm):not(#modalHistorialRecurrente):not(#modalNuevaReserva):not(#modalNuevoParticipante):not(#modalDetalleReserva):not(#modalNuevaRuta):not(#modalEditarReserva):not(#modalNuevoGasto):not(#modalAnadirRutaPasada):not(#modalAnadirAventuradoHistorial):not(#modalEstadisticasHistorial) {
+        /* Modales de confirmación SIEMPRE delante (incl. historial de movimientos) */
+        #modalConfirm,
+        #modalConfirmarEditarSaldo {
+            z-index: 10200 !important;
+        }
+        #modalConfirm.modal.active,
+        #modalConfirmarEditarSaldo.modal.active {
+            z-index: 10200 !important;
+        }
+        
+        .modal.active:not(#modalConfirm):not(#modalConfirmarEditarSaldo):not(#modalHistorialRecurrente):not(#modalNuevaReserva):not(#modalNuevoParticipante):not(#modalDetalleReserva):not(#modalNuevaRuta):not(#modalEditarReserva):not(#modalNuevoGasto):not(#modalAnadirRutaPasada):not(#modalAnadirAventuradoHistorial):not(#modalEstadisticasHistorial) {
             z-index: 1000;
         }
 
@@ -1912,7 +1919,7 @@
     </div>
 
     <!-- MODAL DE CONFIRMACIÓN GENÉRICO -->
-    <div id="modalConfirm" class="modal" onclick="closeModalOnBackdrop(event, 'modalConfirm')" style="z-index: 10100 !important;">
+    <div id="modalConfirm" class="modal" onclick="closeModalOnBackdrop(event, 'modalConfirm')" style="z-index: 10200 !important;">
         <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 400px; display: block !important; visibility: visible !important;">
             <div class="modal-header confirm-title">Confirmar acción</div>
             <div class="form-group" style="margin-bottom: 16px;">
@@ -1921,6 +1928,29 @@
             <div class="btn-group" style="margin-top: 16px; gap: 8px; display: flex !important; visibility: visible !important;">
                 <button class="btn btn-outline" style="flex: 1; display: block !important; visibility: visible !important;" onclick="if (confirmModalResolve) { confirmModalResolve(false); cerrarConfirmModal(); }">Cancelar</button>
                 <button id="confirmModalBtn" class="btn btn-primary" style="flex: 1; display: block !important; visibility: visible !important;" onclick="if (confirmModalResolve) { confirmModalResolve(true); cerrarConfirmModal(); }">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMAR EDITAR SALDO (abonados) -->
+    <div id="modalConfirmarEditarSaldo" class="modal" onclick="closeModalOnBackdrop(event, 'modalConfirmarEditarSaldo')" style="z-index: 10200 !important;">
+        <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 400px;">
+            <div class="modal-header confirm-title">✏️ Editar saldo</div>
+            <div class="form-group" style="margin-bottom: 12px;">
+                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Líder</div>
+                <div id="editarSaldoLiderTexto" style="font-size: 15px; font-weight: 700; color: var(--text-primary);"></div>
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Saldo actual</div>
+                <div id="editarSaldoActualTexto" style="font-size: 18px; font-weight: 800; color: var(--success);"></div>
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label class="form-label" for="editarSaldoNuevoInput">Nuevo saldo (€)</label>
+                <input type="number" id="editarSaldoNuevoInput" class="form-input" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+            </div>
+            <div class="btn-group" style="gap: 8px;">
+                <button type="button" class="btn btn-outline" style="flex: 1;" onclick="cerrarModalConfirmarEditarSaldo()">Cancelar</button>
+                <button type="button" class="btn btn-primary" style="flex: 1;" onclick="confirmarEditarSaldoAbonado()">Confirmar</button>
             </div>
         </div>
     </div>
@@ -2122,6 +2152,7 @@
                     </select>
                 </div>
             </div>
+            <div id="asistenciaResumenSeleccion" style="font-size: 12px; color: var(--text-secondary); margin: 8px 2px 12px 2px; display: none;"></div>
             <div id="listaAsistencia"></div>
         </div>
 
@@ -2251,29 +2282,41 @@
     <div id="modalNuevaReserva" class="modal" onclick="closeModalOnBackdrop(event, 'modalNuevaReserva')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">👥 Nueva Reserva</div>
-            <div class="form-group">
-                <label class="form-label">Nombre del Líder</label>
-                <input type="text" id="reservaLider" class="form-input" placeholder="Ej: Valeria">
+
+            <!-- BLOQUE 1: Ruta -->
+            <div style="margin-bottom: 12px;">
+                <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px;">📍 Ruta y fecha</div>
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label class="form-label">Ruta</label>
+                    <select id="reservaRuta" class="form-input" onchange="actualizarPersonasEnReserva()">
+                        <option value="">Selecciona una ruta</option>
+                    </select>
+                </div>
+                <div id="infoRutaSeleccionada" style="font-size: 11px; color: var(--text-secondary); display: none;"></div>
             </div>
-            <div class="form-group">
-                <label class="form-label">Ruta</label>
-                <select id="reservaRuta" class="form-input" onchange="actualizarPersonasEnReserva()">
-                    <option value="">Selecciona una ruta</option>
-                </select>
+
+            <!-- BLOQUE 2: Líder y cupos -->
+            <div style="margin-bottom: 12px;">
+                <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px;">👤 Líder y cupos</div>
+                <div class="form-group">
+                    <label class="form-label">Nombre del Líder</label>
+                    <input type="text" id="reservaLider" class="form-input" placeholder="Ej: Valeria">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Cupos Reservados</label>
+                        <input type="number" id="reservaCantidad" class="form-input" placeholder="5" min="0" step="1" inputmode="numeric" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();" onchange="actualizarPersonasEnReserva()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monto Inicial</label>
+                        <input type="number" id="reservaMontoPagado" class="form-input" placeholder="17500" step="0.01" min="0" inputmode="decimal" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
+                    </div>
+                </div>
             </div>
+
             <div id="infoPrecioRuta" style="display: none; background: rgba(118, 200, 147, 0.1); padding: 14px; border-radius: 14px; margin-bottom: 16px; border: 1px solid var(--border);">
                 <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Precio Referencial</div>
                 <div style="font-size: 20px; font-weight: 800; color: var(--accent);" id="precioReferencialRuta"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Cupos Reservados</label>
-                    <input type="number" id="reservaCantidad" class="form-input" placeholder="5" min="0" step="1" inputmode="numeric" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();" onchange="actualizarPersonasEnReserva()">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Monto Inicial</label>
-                    <input type="number" id="reservaMontoPagado" class="form-input" placeholder="17500" step="0.01" min="0" inputmode="decimal" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
-                </div>
             </div>
             <div class="form-group" id="reservaCuposMontoInicialGroup">
                 <label class="form-label">Cupos pagados con este monto</label>
@@ -2300,7 +2343,7 @@
                 </div>
             </div>
             
-            <!-- SECCIÓN DE PERSONAS -->
+            <!-- BLOQUE 3: Personas -->
             <div class="personas-section">
                 <div class="personas-header">
                     <label class="form-label" style="margin: 0;">👥 Agregar Personas</label>
@@ -2317,7 +2360,13 @@
                 <div id="personasTemporalesList" class="personas-list"></div>
                 <div id="personasInfo" class="personas-info"></div>
             </div>
-            
+
+            <!-- RESUMEN -->
+            <div id="resumenNuevaReserva" style="margin-top: 12px; padding: 10px 12px; background: rgba(0,0,0,0.25); border-radius: 10px; font-size: 12px; color: var(--text-secondary);">
+                <div id="resumenNuevaReservaLinea1">🎫 Cupos: 0 • 👥 Personas: 0</div>
+                <div id="resumenNuevaReservaLinea2">💶 Total esperado: €0.00 • Pagado ahora: €0.00</div>
+            </div>
+
             <div class="btn-group">
                 <button class="btn btn-outline" onclick="closeModal('modalNuevaReserva')">Cancelar</button>
                 <button class="btn btn-primary" onclick="agregarReserva()">Guardar</button>
@@ -2364,25 +2413,38 @@
                 </div>
             </div>
             <div style="margin-top: 16px; padding: 12px; background: rgba(118, 200, 147, 0.05); border-radius: 8px; border: 1px dashed var(--border);">
-                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">💰 Pago Opcional</div>
-                <div class="form-group" style="margin-bottom: 12px;">
-                    <label class="form-label" style="font-size: 12px;">Monto</label>
-                    <input type="number" id="participanteMonto" class="form-input" placeholder="0.00" step="0.01" min="0" inputmode="decimal" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
+                <button type="button"
+                        onclick="togglePagoOpcionalNuevoParticipante()"
+                        style="width: 100%; display: flex; justify-content: space-between; align-items: center; background: transparent; border: none; color: var(--text-secondary); font-size: 12px; font-weight: 600; padding: 0; cursor: pointer;">
+                    <span>💰 Pago Opcional</span>
+                    <span id="pagoOpcionalToggleIcon" style="font-size: 12px;">▼</span>
+                </button>
+                <div id="pagoOpcionalContenidoNuevoParticipante" style="margin-top: 10px;">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label" style="font-size: 12px;">Monto</label>
+                        <input type="number" id="participanteMonto" class="form-input" placeholder="0.00" step="0.01" min="0" inputmode="decimal" onkeydown="if(['e','E','+','-'].includes(event.key)) event.preventDefault();">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label" style="font-size: 12px;">Cupos pagados con este monto</label>
+                        <input type="number" id="participanteCuposPagados" class="form-input" placeholder="1" min="0" step="1" value="1" title="Cantidad de cupos que cubre este pago (se refleja en el resumen de la reserva)">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px;">
+                            <input type="checkbox" id="participanteEnDolares" style="width: 18px; height: 18px; cursor: pointer;">
+                            <span>💵 Pagar en dólares efectivo</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 12px;">Referencia de Pago</label>
+                        <input type="text" id="participanteReferencia" class="form-input" placeholder="Ej: 12345" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    </div>
                 </div>
-                <div class="form-group" style="margin-bottom: 12px;">
-                    <label class="form-label" style="font-size: 12px;">Cupos pagados con este monto</label>
-                    <input type="number" id="participanteCuposPagados" class="form-input" placeholder="1" min="0" step="1" value="1" title="Cantidad de cupos que cubre este pago (se refleja en el resumen de la reserva)">
+            </div>
+            <div id="previewParticipantesReserva" style="margin-top: 16px; padding: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; border: 1px solid var(--border); display: none;">
+                <div style="font-size: 12px; color: var(--text-secondary); font-weight: 600; margin-bottom: 6px;">
+                    👥 Participantes actuales de esta reserva
                 </div>
-                <div class="form-group" style="margin-bottom: 12px;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px;">
-                        <input type="checkbox" id="participanteEnDolares" style="width: 18px; height: 18px; cursor: pointer;">
-                        <span>💵 Pagar en dólares efectivo</span>
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" style="font-size: 12px;">Referencia de Pago</label>
-                    <input type="text" id="participanteReferencia" class="form-input" placeholder="Ej: 12345" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                </div>
+                <div id="previewParticipantesReservaLista" style="font-size: 12px; color: var(--text-secondary); max-height: 140px; overflow-y: auto;"></div>
             </div>
             <div class="btn-group">
                 <button class="btn btn-outline" onclick="closeModal('modalNuevoParticipante')">Cancelar</button>
@@ -2684,9 +2746,9 @@ async function loadUsuarios() {
                 // Estilos por tipo (solo clases, colores manejados en CSS inline)
                 modal.setAttribute('data-tipo', tipo);
 
-                // Asegurar que el modal esté visible y por encima de cualquier otro modal
+                // Asegurar que el modal esté visible y por encima de cualquier otro modal (incl. historial movimientos)
                 modal.style.display = 'flex';
-                modal.style.zIndex = '10100';
+                modal.style.zIndex = '10200';
                 modal.style.visibility = 'visible';
                 modal.style.opacity = '1';
                 modal.style.pointerEvents = 'auto';
@@ -3375,6 +3437,48 @@ async function loadUsuarios() {
             return disponibles;
         }
 
+        function actualizarResumenNuevaReserva() {
+            const rutaSelect = document.getElementById('reservaRuta');
+            const lider = (document.getElementById('reservaLider')?.value || '').trim();
+            const cantidad = parseInt(document.getElementById('reservaCantidad')?.value || '0', 10) || 0;
+            const montoInicial = parseFloat(document.getElementById('reservaMontoPagado')?.value || '0') || 0;
+            const personasCount = (window.personasTemporales || []).length;
+            const resumen1 = document.getElementById('resumenNuevaReservaLinea1');
+            const resumen2 = document.getElementById('resumenNuevaReservaLinea2');
+
+            let precio = 0;
+            let rutaNombre = '';
+            if (rutaSelect && rutaSelect.value) {
+                const ruta = (data.rutas || []).find(r => r.id === rutaSelect.value);
+                if (ruta) {
+                    rutaNombre = ruta.nombre || '';
+                    precio = parseFloat(ruta.precioEuros || 0) || 0;
+                }
+            }
+            const totalEsperado = precio * cantidad;
+            if (resumen1) {
+                resumen1.textContent = `🎫 Cupos: ${cantidad} • 👥 Personas: ${personasCount}${lider ? ` • Líder: ${lider}` : ''}`;
+            }
+            if (resumen2) {
+                resumen2.textContent = `💶 Total esperado: €${totalEsperado.toFixed(2)} • Pagado ahora: €${montoInicial.toFixed(2)}`;
+            }
+
+            // Info ruta seleccionada bajo el select
+            const infoRutaSel = document.getElementById('infoRutaSeleccionada');
+            if (infoRutaSel) {
+                if (!rutaNombre) {
+                    infoRutaSel.style.display = 'none';
+                    infoRutaSel.textContent = '';
+                } else {
+                    const ruta = (data.rutas || []).find(r => r.id === rutaSelect.value);
+                    const fechaTxt = ruta && ruta.fecha ? formatearFechaCorta(ruta.fecha) : '';
+                    const cupos = ruta && ruta.cupos != null ? ruta.cupos : '';
+                    infoRutaSel.style.display = 'block';
+                    infoRutaSel.textContent = `${rutaNombre}${fechaTxt ? ` • ${fechaTxt}` : ''}${cupos ? ` • Cupos ruta: ${cupos}` : ''}`;
+                }
+            }
+        }
+
         /**
          * Cuenta el total de participantes de un líder (todas sus rutas)
          * @param {string} lider - Nombre del líder
@@ -3829,6 +3933,7 @@ async function loadUsuarios() {
             mostrarPrecioRuta();
             renderPersonasTemporales();
             actualizarSaldoLiderNuevaReserva();
+            actualizarResumenNuevaReserva();
         }
 
         /**
@@ -5191,7 +5296,7 @@ async function agregarPersonaRapida(lider, ruta) {
         }
 
         // AGREGAR función para abrir modal de agregar persona desde un card de reserva
-function abrirAgregarPersonaAReserva(lider, nombreRuta) {
+        function abrirAgregarPersonaAReserva(lider, nombreRuta) {
     closeModal('modalDetalleReserva');
     
     // Verificar que la reserva existe
@@ -5211,6 +5316,36 @@ function abrirAgregarPersonaAReserva(lider, nombreRuta) {
     document.getElementById('participanteReferencia').value = '';
     const participanteEnDolaresInput = document.getElementById('participanteEnDolares');
     if (participanteEnDolaresInput) participanteEnDolaresInput.checked = false;
+
+    // Reset pago opcional (mostrar contenido y flecha hacia abajo)
+    const pagoContenido = document.getElementById('pagoOpcionalContenidoNuevoParticipante');
+    const pagoIcon = document.getElementById('pagoOpcionalToggleIcon');
+    if (pagoContenido) pagoContenido.style.display = 'none';
+    if (pagoIcon) pagoIcon.textContent = '▼';
+
+    // Vista previa de participantes actuales de la reserva
+    const preview = document.getElementById('previewParticipantesReserva');
+    const previewLista = document.getElementById('previewParticipantesReservaLista');
+    if (preview && previewLista) {
+        const participantes = obtenerParticipantesReserva(lider, nombreRuta);
+        if (!participantes || participantes.length === 0) {
+            preview.style.display = 'none';
+            previewLista.innerHTML = '';
+        } else {
+            const liderNombre = (lider || '').trim();
+            const liderEnLista = participantes.find(p => (p.nombre || '').trim() === liderNombre);
+            const otros = participantes.filter(p => (p.nombre || '').trim() !== liderNombre);
+            const items = [];
+            if (liderEnLista || liderNombre) {
+                items.push(`<div style="margin-bottom: 4px;">• ${escapeHtml(liderNombre)} (Líder)</div>`);
+            }
+            items.push(...otros.map(p =>
+                `<div style="margin-bottom: 4px;">• ${escapeHtml(p.nombre || '')}</div>`
+            ));
+            preview.style.display = 'block';
+            previewLista.innerHTML = items.join('');
+        }
+    }
     
     // Abrir el modal de nueva persona en reserva y enfocar el nombre
     openModal('modalNuevoParticipante');
@@ -5712,6 +5847,27 @@ function formatearFechaCorta(fechaString) {
             if (filtroRuta) {
                 filtered = filtered.filter(r => r.rutaId === filtroRuta);
             }
+            
+            // Ordenar por estado de cupos pagados: verdes primero, amarillas en medio, rojas al final
+            filtered = filtered.slice().sort((a, b) => {
+                const totalesA = calcularTotalesPorMoneda(a) || {};
+                const totalesB = calcularTotalesPorMoneda(b) || {};
+                const cuposPagadosA = totalesA.cuposPagados || 0;
+                const cuposPagadosB = totalesB.cuposPagados || 0;
+                const totalA = getCuposReserva(a);
+                const totalB = getCuposReserva(b);
+                const colorA = getColorCompletitud(cuposPagadosA, totalA).color;
+                const colorB = getColorCompletitud(cuposPagadosB, totalB).color;
+                const rank = (color) => {
+                    if (color === 'var(--danger)') return 2;      // rojo (último)
+                    if (color === '#f59e0b') return 1;            // amarillo (medio)
+                    return 0;                                     // verde u otros (primero)
+                };
+                const diff = rank(colorA) - rank(colorB);
+                if (diff !== 0) return diff;
+                // Desempate: más cupos pagados primero
+                return cuposPagadosB - cuposPagadosA;
+            });
             
             const html = filtered.length === 0 ?
                 `<div class="empty-state">
@@ -6424,8 +6580,8 @@ function formatearFechaCorta(fechaString) {
                 const rutaFecha = formatearFechaCorta(ruta.fecha);
                 const participantes = obtenerParticipantesReserva(lider, reserva.rutaId);
                 const presentes = participantes.filter(p => p.asiste).length;
-                const total = participantes.length || 1;
-                const porcentaje = Math.round((presentes / total) * 100);
+                const total = participantes.length;
+                const porcentaje = total > 0 ? Math.round((presentes / total) * 100) : 0;
                 const liderEsc = escapeAttr(lider || '');
                 const rutaIdEsc = escapeAttr(reserva.rutaId || '');
                 return `
@@ -6511,6 +6667,27 @@ function formatearFechaCorta(fechaString) {
         function renderAsistencia() {
             const container = document.getElementById('listaAsistencia');
             if (!container) return;
+            // Resumen superior según filtros
+            const liderFiltro = document.getElementById('filtroLiderAsistencia')?.value || '';
+            const rutaFiltro = document.getElementById('filtroRutaAsistencia')?.value || '';
+            const resumenEl = document.getElementById('asistenciaResumenSeleccion');
+            if (resumenEl) {
+                if (!liderFiltro && !rutaFiltro) {
+                    resumenEl.style.display = 'none';
+                    resumenEl.textContent = '';
+                } else {
+                    const ruta = (data.rutas || []).find(r => r.id === rutaFiltro);
+                    const rutaNombre = ruta ? ruta.nombre : (rutaFiltro ? 'Ruta seleccionada' : '');
+                    const reservas = getReservasActivasAsistencia();
+                    const totalReservas = reservas.length;
+                    const totalPersonas = reservas.reduce((sum, r) => sum + obtenerParticipantesReserva(r.lider, r.rutaId).length, 0);
+                    resumenEl.style.display = 'block';
+                    resumenEl.textContent =
+                        `${rutaNombre ? `📍 ${rutaNombre}` : ''}${rutaNombre && liderFiltro ? ' • ' : ''}` +
+                        `${liderFiltro ? `👤 ${liderFiltro}` : ''}` +
+                        `${(rutaNombre || liderFiltro) ? ' • ' : ''}🎫 Reservas: ${totalReservas} • 👥 Personas: ${totalPersonas}`;
+                }
+            }
             if (container.children.length === 0 || container.querySelector('.empty-state')) {
                 crearEstructuraInicialAsistencia(container);
                 return;
@@ -6579,6 +6756,112 @@ function formatearFechaCorta(fechaString) {
             } finally {
                 hideLoader();
             }
+        }
+
+        function openModalConfirmarEditarSaldo(abonadoId, lider, saldoActual) {
+            window._editarSaldoAbonadoData = { abonadoId, lider, saldoActual };
+            document.getElementById('editarSaldoLiderTexto').textContent = lider;
+            document.getElementById('editarSaldoActualTexto').textContent = '€' + (typeof saldoActual === 'number' ? saldoActual.toFixed(2) : saldoActual);
+            const input = document.getElementById('editarSaldoNuevoInput');
+            if (input) {
+                input.value = typeof saldoActual === 'number' ? saldoActual.toFixed(2) : saldoActual;
+                input.focus();
+            }
+            document.getElementById('modalConfirmarEditarSaldo').classList.add('active');
+        }
+
+        function cerrarModalConfirmarEditarSaldo() {
+            document.getElementById('modalConfirmarEditarSaldo').classList.remove('active');
+            window._editarSaldoAbonadoData = null;
+        }
+
+        async function confirmarEditarSaldoAbonado() {
+            const data = window._editarSaldoAbonadoData;
+            if (!data) return;
+            const input = document.getElementById('editarSaldoNuevoInput');
+            const nuevoSaldoStr = (input && input.value || '').trim().replace(',', '.');
+            const nuevoSaldo = parseFloat(nuevoSaldoStr);
+            if (isNaN(nuevoSaldo)) {
+                showToast('Ingresa un número válido para el nuevo saldo', 'warning', 'Validación');
+                return;
+            }
+            if (nuevoSaldo < 0) {
+                showToast('El saldo no puede ser negativo', 'warning', 'Validación');
+                return;
+            }
+            try {
+                const { data: abonado, error } = await db.from('abonados').select('*').eq('id', data.abonadoId).single();
+                if (error || !abonado) {
+                    showToast('Abonado no encontrado', 'error');
+                    cerrarModalConfirmarEditarSaldo();
+                    return;
+                }
+                const saldoAntes = parseFloat(abonado.saldo_euros || 0);
+                const diff = nuevoSaldo - saldoAntes;
+
+                await db.from('abonados')
+                    .update({ saldo_euros: nuevoSaldo, ultima_actualizacion: new Date().toISOString() })
+                    .eq('id', data.abonadoId);
+
+                if (diff !== 0) {
+                    await db.from('movimientos_abonos').insert({
+                        abonado_id: data.abonadoId,
+                        tipo: 'ajuste',
+                        monto_euros: Math.abs(diff),
+                        saldo_antes: saldoAntes,
+                        saldo_despues: nuevoSaldo,
+                        descripcion: 'Ajuste manual de saldo',
+                        referencia: 'AJUSTE',
+                        fecha: new Date().toISOString(),
+                        usuario: 'admin'
+                    });
+                }
+
+                cerrarModalConfirmarEditarSaldo();
+                await renderAbonados();
+                await verMovimientosAbonado(data.abonadoId, data.lider);
+                showToast('Saldo actualizado correctamente', 'success', 'Éxito');
+            } catch (err) {
+                console.error('Error editando saldo abonado:', err);
+                showToast('Error al editar el saldo', 'error', 'Error');
+            }
+        }
+
+        async function editarSaldoAbonado(abonadoId, lider, saldoActual) {
+            openModalConfirmarEditarSaldo(abonadoId, lider, saldoActual);
+        }
+
+        async function eliminarAbonado(abonadoId, lider) {
+            try {
+                const ok = await confirmarAccion(
+                    `¿Eliminar completamente el abono de ${lider}?\n\n` +
+                    `Se borrarán su saldo y todos los movimientos asociados.`,
+                    'peligro'
+                );
+                if (!ok) return;
+
+                await db.from('movimientos_abonos').delete().eq('abonado_id', abonadoId);
+                await db.from('abonados').delete().eq('id', abonadoId);
+
+                if (typeof renderAbonados === 'function') {
+                    await renderAbonados();
+                }
+
+                cerrarModalHistorialRecurrente();
+                showToast('Abono eliminado correctamente', 'success', 'Éxito');
+            } catch (err) {
+                console.error('Error eliminando abonado:', err);
+                showToast('Error al eliminar el abono', 'error', 'Error');
+            }
+        }
+
+        function togglePagoOpcionalNuevoParticipante() {
+            const contenido = document.getElementById('pagoOpcionalContenidoNuevoParticipante');
+            const icon = document.getElementById('pagoOpcionalToggleIcon');
+            if (!contenido) return;
+            const visible = contenido.style.display === '' || contenido.style.display === 'block';
+            contenido.style.display = visible ? 'none' : 'block';
+            if (icon) icon.textContent = visible ? '▼' : '▲';
         }
 
         async function eliminarGasto(id) {
@@ -7224,25 +7507,37 @@ async function marcarTodosPresentes() {
                 if (errAbonado || !abonado) { showToast('Abonado no encontrado', 'error'); return; }
                 if (errMov) throw errMov;
 
-                const saldoActual = parseFloat(abonado.saldo_euros || 0).toFixed(2);
-                let html = `<div style="margin-bottom: 20px;"><div style="font-size: 24px; font-weight: 800; color: var(--accent); margin-bottom: 4px;">${escapeHtml(lider)}</div><div style="font-size: 18px; font-weight: 700; color: var(--success);">Saldo actual: €${saldoActual}</div>${abonado.notas ? `<div style="margin-top: 8px; font-size: 14px; color: var(--text-secondary);">📝 ${escapeHtml(abonado.notas)}</div>` : ''}</div>`;
+                const saldoActualNum = parseFloat(abonado.saldo_euros || 0);
+                const saldoActual = saldoActualNum.toFixed(2);
+                const liderAttr = escapeAttr(lider);
+                let html = `<div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 18px; font-weight: 800; color: var(--accent);">${escapeHtml(lider)}</div>
+                        <div style="font-size: 22px; font-weight: 800; color: var(--success);">€${saldoActual}</div>
+                        ${abonado.notas ? `<div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">📝 ${escapeHtml(abonado.notas)}</div>` : ''}
+                    </div>
+                    <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                        <button type="button" class="btn btn-primary btn-small" title="Editar saldo" onclick="editarSaldoAbonado('${abonado.id}', '${liderAttr}', ${saldoActualNum})">✏️</button>
+                        <button type="button" class="btn btn-danger btn-small" title="Eliminar abono" onclick="eliminarAbonado('${abonado.id}', '${liderAttr}')">🗑️</button>
+                    </div>
+                </div>`;
 
                 if (movimientos && movimientos.length > 0) {
-                    html += `<div style="margin-bottom: 16px;"><div style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">📋 Historial de Movimientos</div><div style="max-height: 400px; overflow-y: auto; padding-right: 8px;">`;
+                    html += `<div style="font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--text-primary);">📋 Movimientos</div><div style="max-height: 50vh; overflow-y: auto; padding-right: 4px;">`;
                     movimientos.forEach(mov => {
                         const esCarga = mov.tipo === 'carga';
                         const color = esCarga ? 'var(--success)' : 'var(--danger)';
                         const signo = esCarga ? '+' : '-';
-                        const fecha = new Date(mov.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                        const fecha = new Date(mov.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
                         const rutaObj = data.rutas && mov.ruta_id ? data.rutas.find(r => r.id === mov.ruta_id) : null;
                         const rutaIdTexto = rutaObj ? (rutaObj.numero != null && rutaObj.numero !== '' ? ('#' + String(rutaObj.numero).padStart(4, '0')) : (rutaObj.nombre || '')) : '';
                         const saldoAntes = parseFloat(mov.saldo_antes || 0).toFixed(2);
                         const saldoDespues = parseFloat(mov.saldo_despues || 0).toFixed(2);
-                        html += `<div style="padding: 12px; background: rgba(118, 200, 147, 0.05); border-radius: 8px; margin-bottom: 8px; border-left: 4px solid ${color};"><div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;"><div style="font-weight: 700; font-size: 14px; color: ${color};">${signo}€${parseFloat(mov.monto_euros || 0).toFixed(2)} (${mov.tipo})</div><div style="font-size: 12px; color: var(--text-secondary);">${fecha}</div></div>${mov.descripcion ? `<div style="font-size: 13px; margin-bottom: 4px;">${escapeHtml(mov.descripcion)}</div>` : ''}${rutaIdTexto ? `<div style="font-size: 11px; color: var(--text-secondary);">Ruta: ${escapeHtml(rutaIdTexto)}</div>` : ''}<div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Saldo: €${saldoAntes} → €${saldoDespues}</div></div>`;
+                        html += `<div style="padding: 8px 10px; background: rgba(118, 200, 147, 0.06); border-radius: 6px; margin-bottom: 6px; border-left: 3px solid ${color}; font-size: 12px;"><div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;"><span style="font-weight: 700; color: ${color};">${signo}€${parseFloat(mov.monto_euros || 0).toFixed(2)} ${mov.tipo}</span><span style="color: var(--text-secondary); white-space: nowrap;">${fecha}</span></div>${mov.descripcion ? `<div style="margin-top: 2px; color: var(--text-secondary);">${escapeHtml(mov.descripcion)}</div>` : ''}${rutaIdTexto ? `<div style="font-size: 11px; color: var(--text-secondary);">${escapeHtml(rutaIdTexto)}</div>` : ''}<div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">€${saldoAntes} → €${saldoDespues}</div></div>`;
                     });
-                    html += '</div></div>';
+                    html += '</div>';
                 } else {
-                    html += '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">No hay movimientos registrados</div>';
+                    html += '<div style="text-align: center; padding: 16px; font-size: 13px; color: var(--text-secondary);">No hay movimientos</div>';
                 }
 
                 const tituloEl = document.getElementById('modalHistorialRecurrenteTitulo');
@@ -7255,6 +7550,8 @@ async function marcarTodosPresentes() {
                     if (btnWrap) btnWrap.style.display = 'none';
                     const btnAnadirWrap = document.getElementById('btnAnadirRutaPasadaWrap');
                     if (btnAnadirWrap) btnAnadirWrap.style.display = 'none';
+                    const btnFotoWrap = document.getElementById('btnSubirFotoRankingWrap');
+                    if (btnFotoWrap) btnFotoWrap.style.display = 'none';
                     const modal = document.getElementById('modalHistorialRecurrente');
                     if (modal) modal.classList.add('active');
                 }
