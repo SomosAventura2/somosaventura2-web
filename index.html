@@ -1522,6 +1522,7 @@
       background: rgba(14, 47, 54, 0);
       padding: 16px 24px 21px;
       box-sizing: content-box;
+      transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .routes-carousel-track {
       transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2125,14 +2126,14 @@
           <div class="card-icon">🔥</div>
           <div class="card-content">
             <h3>Comunidad de Aventurados</h3>
-            <p>Únete a más de 900 aventurados que comparten la pasión por explorar la naturaleza.</p>
+            <p>Únete a más de 1000 aventurados que comparten la pasión por explorar la naturaleza.</p>
           </div>
         </div>
       </div>
 
       <div class="stats-grid">
         <div class="stat-card">
-          <span class="stat-number">+900</span>
+          <span class="stat-number">+1K</span>
           <span class="stat-label">Aventurados</span>
         </div>
         <div class="stat-card">
@@ -2284,7 +2285,7 @@
       <h2 class="section-title">Equípate para la Aventura</h2>
       <div class="products-grid">
         <div class="product-card">
-          <img src="chaqueta.png" alt="Cortavientos personalizados" class="product-image" loading="lazy" width="240" height="160">
+          <img src="chaqueta.jpg" alt="Cortavientos personalizados" class="product-image" loading="lazy" width="240" height="160">
           <div class="product-info">
             <h4>Chaquetas Cortavientos</h4>
             <p>Diseños exclusivos</p>
@@ -2584,6 +2585,7 @@
       let rutasProximasCompletas = [];
       let rutasProximasCurrentPage = 0;
       let rutasProximasPageTops = [];
+      let rutasProximasPageHeights = [];
       
       // Verificar que Supabase esté disponible antes de inicializar
       if (typeof supabase === 'undefined') {
@@ -2813,17 +2815,24 @@
           var viewport = document.getElementById('routesCarouselViewport');
           var verMasWrap = document.getElementById('routesVerMasWrap');
           if (rutasConCupos.length > 2 && viewport) {
-            // Calcular altura del viewport = altura de las 2 primeras cards
+            // Calcular por cada "página" el top (relativo a la primera card) y la altura del viewport
+            // para que siempre se vea completa la primera card de cada página sin cortes ni huecos.
             requestAnimationFrame(function () {
               var cards = gridRutas.querySelectorAll('.route-card');
-              if (cards.length >= 2) {
-                var firstTwoHeight = cards[1].offsetTop + cards[1].offsetHeight;
-                viewport.style.height = firstTwoHeight + 'px';
-              }
+              if (cards.length < 2) return;
+              var baseTop = cards[0].offsetTop;
               rutasProximasPageTops = [];
+              rutasProximasPageHeights = [];
               for (var i = 0; i < cards.length; i += 2) {
-                rutasProximasPageTops.push(cards[i].offsetTop);
+                // Top relativo a la primera card para alinear bien la parte superior
+                var pageTop = cards[i].offsetTop - baseTop;
+                rutasProximasPageTops.push(pageTop);
+                var lastCardIdx = Math.min(i + 1, cards.length - 1);
+                var top = cards[i].offsetTop;
+                var bottom = cards[lastCardIdx].offsetTop + cards[lastCardIdx].offsetHeight;
+                rutasProximasPageHeights.push(bottom - top);
               }
+              viewport.style.height = (rutasProximasPageHeights[0] || 0) + 'px';
               actualizarFlechaCarruselRutas();
             });
             if (verMasWrap) verMasWrap.style.display = 'flex';
@@ -2890,18 +2899,51 @@
         if (btnUp) btnUp.disabled = rutasProximasCurrentPage <= 0;
         if (btnDown) btnDown.disabled = rutasProximasCurrentPage >= totalPages - 1;
       }
+      function scrollRutasWrapAlFondo() {
+        var wrap = document.getElementById('routesVerMasWrap');
+        if (!wrap) return;
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            var rect = wrap.getBoundingClientRect();
+            var targetBottom = window.innerHeight - 90;
+            var delta = rect.bottom - targetBottom;
+            if (Math.abs(delta) < 5) return;
+            var doc = document.documentElement || document.body;
+            var maxScroll = (doc.scrollHeight - window.innerHeight) || 0;
+            var newTop = Math.max(0, Math.min(window.scrollY + delta, maxScroll));
+            window.scrollTo({ top: newTop, behavior: 'smooth', left: 0 });
+          });
+        });
+      }
+      function programarScrollRutasDespuesDeAnimacion(viewport) {
+        if (!viewport) return;
+        // Lanzar scroll inmediatamente para que la animación del carrusel
+        // y el desplazamiento de la vista ocurran en paralelo.
+        scrollRutasWrapAlFondo();
+        var onTransitionEnd = function (e) {
+          if (e.target !== viewport || e.propertyName !== 'height') return;
+          viewport.removeEventListener('transitionend', onTransitionEnd);
+          // Ajuste fino al finalizar la transición de altura.
+          scrollRutasWrapAlFondo();
+        };
+        viewport.addEventListener('transitionend', onTransitionEnd);
+      }
       function initVerMasRutas() {
         var gridRutas = document.getElementById('routesGrid');
         var btnUp = document.getElementById('routesCarouselBtnUp');
         var btnDown = document.getElementById('routesCarouselBtnDown');
+        var viewport = document.getElementById('routesCarouselViewport');
         if (!gridRutas) return;
         if (btnUp) {
           btnUp.addEventListener('click', function () {
             if (this.disabled || rutasProximasCurrentPage <= 0) return;
             rutasProximasCurrentPage--;
             var y = rutasProximasPageTops[rutasProximasCurrentPage] || 0;
+            var h = rutasProximasPageHeights[rutasProximasCurrentPage];
+            if (viewport && h != null) viewport.style.height = h + 'px';
             gridRutas.style.transform = 'translateY(-' + y + 'px)';
             actualizarFlechaCarruselRutas();
+            programarScrollRutasDespuesDeAnimacion(viewport);
           });
         }
         if (btnDown) {
@@ -2910,8 +2952,11 @@
             if (this.disabled || rutasProximasCurrentPage >= totalPages - 1) return;
             rutasProximasCurrentPage++;
             var y = rutasProximasPageTops[rutasProximasCurrentPage] || 0;
+            var h = rutasProximasPageHeights[rutasProximasCurrentPage];
+            if (viewport && h != null) viewport.style.height = h + 'px';
             gridRutas.style.transform = 'translateY(-' + y + 'px)';
             actualizarFlechaCarruselRutas();
+            programarScrollRutasDespuesDeAnimacion(viewport);
           });
         }
       }
