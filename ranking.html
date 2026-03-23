@@ -1,236 +1,729 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ranking | SomosAventura2</title>
-  <link rel="icon" type="image/png" href="/favicon.png?v=99" sizes="32x32">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=99">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ranking | Somos Aventura</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <style>
     :root {
-      --whatsapp: #25D366;
-      --green-primary: #4CAF50;
-      --green-mountain: #2d5a3d;
-      --green-dark: #1a3a28;
-      --bg-dark: #0e2f36;
-      --bg-card: #1a3d47;
-      --text-primary: #ffffff;
-      --text-secondary: #b8c5be;
-      --accent: #76c893;
-      --accent-orange: #ff8c42;
-      --shadow: rgba(0, 0, 0, 0.5);
-      --border: rgba(118, 200, 147, 0.18);
+      --bg: #08120f;
+      --bg-soft: #0d1714;
+      --card: rgba(255, 255, 255, 0.06);
+      --card-strong: rgba(255, 255, 255, 0.08);
+      --text: #ffffff;
+      --muted: rgba(255, 255, 255, 0.72);
+      --muted-2: rgba(255, 255, 255, 0.5);
+      --line: rgba(255, 255, 255, 0.1);
+      --green: #4ade80;
+      --green-dark: #062217;
+      --gold: #f5d76e;
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      --radius: 24px;
+      --radius-sm: 16px;
+      --container: 1120px;
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
 
     body {
-      font-family: 'Poppins', sans-serif;
-      background: var(--bg-dark);
-      color: var(--text-primary);
-      line-height: 1.6;
-      overflow-x: hidden;
+      margin: 0;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      background:
+        linear-gradient(180deg, rgba(8, 18, 15, 0.84) 0%, rgba(8, 18, 15, 0.88) 100%),
+        url("fondo3.jpg") center/cover fixed no-repeat;
+      color: var(--text);
+      line-height: 1.45;
     }
 
-    body.lightbox-open { overflow: hidden; }
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
 
     .container {
-      max-width: 480px; /* mobile first */
+      width: min(100% - 32px, var(--container));
       margin: 0 auto;
-      background: linear-gradient(180deg, rgba(14, 47, 54, 0.95) 0%, rgba(18, 56, 64, 0.97) 100%),
-                  url('fondo2.jpg') center/cover fixed;
-      min-height: 100vh;
+    }
+
+    .section {
+      padding: 28px 0;
+    }
+
+    .hero {
       position: relative;
-      padding: 18px 14px 60px;
+      overflow: hidden;
+      border-bottom: 1px solid var(--line);
+      background:
+        radial-gradient(circle at top, rgba(74, 222, 128, 0.16), transparent 40%),
+        linear-gradient(180deg, #0d1f19 0%, #08120f 100%);
     }
 
-    .topbar {
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url("fondo3.jpg");
+      background-size: cover;
+      background-position: center;
+      opacity: 0.22;
+      transform: scale(1.03);
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.44);
+    }
+
+    .hero-inner {
+      position: relative;
+      padding: 12px 0 36px;
+      display: grid;
+      gap: 22px;
+    }
+
+    .badge {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .topbar h1 {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: 0.2px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .back-link {
-      appearance: none;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.05);
-      color: var(--text-primary);
-      padding: 10px 12px;
-      border-radius: 12px;
-      cursor: pointer;
+      gap: 8px;
+      width: fit-content;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(74, 222, 128, 0.22);
+      background: rgba(74, 222, 128, 0.1);
+      color: #d7ffe6;
+      font-size: 11px;
       font-weight: 700;
-      text-decoration: none;
-      white-space: nowrap;
-      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: -8px;
     }
 
-    /* ===== Ranking (mobile list) ===== */
-    .ranking-section { padding: 12px 0 0; }
-    .ranking-intro {
-      text-align: left;
-      color: var(--text-secondary);
-      font-size: 13px;
-      margin: 6px 0 14px;
+    .hero-logo {
+      width: 280px;
+      height: auto;
+      margin: 0 auto 0;
     }
 
-    .ranking-loading {
-      text-align: center;
-      padding: 32px 16px;
-      color: var(--text-secondary);
-    }
-
-    .ranking-loading::after {
-      content: '⛰️';
+    .hero-logo-global {
+      position: relative;
+      z-index: 3;
       display: block;
-      font-size: 40px;
-      margin-top: 12px;
-      animation: ranking-pulse 1.2s ease-in-out infinite;
     }
 
-    @keyframes ranking-pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.1); opacity: 0.8; }
+    .hero-badge-global {
+      position: relative;
+      z-index: 3;
+      margin-top: 0;
+      margin-bottom: 14px;
     }
 
-    .ranking-grid-actions {
-      margin-top: 18px;
+    .hero-left {
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero-left .hero-actions,
+    .hero-left .stats {
+      margin-top: 0;
+    }
+
+    .hero h1 {
+      margin: 14px 0 0;
+      font-size: 34px;
+      line-height: 0.98;
+      font-weight: 900;
+      letter-spacing: -0.03em;
       text-align: center;
     }
 
-    .btn-load-more {
-      appearance: none;
-      border: 1px solid var(--border);
-      background: rgba(118, 200, 147, 0.12);
-      color: var(--text-primary);
-      padding: 12px 16px;
-      border-radius: 14px;
-      font-weight: 800;
-      cursor: pointer;
+    .hero h1 .accent {
+      display: block;
+      margin-top: 6px;
+      color: var(--green);
     }
 
-    .btn-load-more:disabled { opacity: 0.55; cursor: not-allowed; }
+    .hero p {
+      margin: 16px 0 0;
+      max-width: 620px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.65;
+    }
 
-    .ranking-list {
-      display: flex;
-      flex-direction: column;
+    .hero-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 13px 18px;
+      border-radius: 16px;
+      font-weight: 800;
+      font-size: 14px;
+      transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+      cursor: pointer;
+      border: 0;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: var(--green-dark);
+      box-shadow: 0 14px 28px rgba(74, 222, 128, 0.2);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+    }
+
+    .stats {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
       gap: 10px;
     }
 
-    /* Top 3: estilo y animaciones de la landing (mobile first) */
-    .ranking-podio {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 20px;
-      max-width: 100%;
+    .stat {
+      padding: 14px 10px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--line);
+      text-align: center;
+      backdrop-filter: blur(10px);
     }
 
-    .ranking-podio .ranking-card {
-      margin-bottom: 0;
+    .stat-value {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--green);
+    }
+
+    .stat-label {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--muted-2);
+    }
+
+    .top3 {
+      border: 1px solid rgba(245, 215, 110, 0.18);
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 26px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .top3-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .top3-kicker {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      color: var(--muted-2);
+    }
+
+    .top3-title {
+      margin-top: 4px;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .chip {
+      white-space: nowrap;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(245, 215, 110, 0.18);
+      background: rgba(245, 215, 110, 0.1);
+      color: #fff1b3;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .podium {
+      display: grid;
+      gap: 10px;
+    }
+
+    .podium-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(0, 0, 0, 0.24);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
       position: relative;
       overflow: hidden;
     }
 
-    /* Orden visual: 2º, 1º, 3º (1º al centro visualmente) */
-    .ranking-podio .ranking-card:nth-child(1) { order: 2; }
-    .ranking-podio .ranking-card:nth-child(2) { order: 1; }
-    .ranking-podio .ranking-card:nth-child(3) { order: 3; }
-
-    /* Sin animaciones hasta que entre a viewport */
-    .ranking-section:not(.in-view) .ranking-podio .ranking-card,
-    .ranking-section:not(.in-view) .ranking-rest .ranking-card {
-      opacity: 0;
-      animation: none;
+    .podium-item.is-first {
+      background: rgba(245, 215, 110, 0.1);
+      border-color: rgba(245, 215, 110, 0.2);
     }
 
-    .ranking-section.in-view .ranking-list .ranking-card {
-      animation: ranking-appear 0.4s ease-out backwards;
+    .podium-item.podium-rank-2 {
+      background: rgba(192, 192, 192, 0.1);
+      border-color: rgba(192, 192, 192, 0.42);
     }
 
-    .ranking-section.in-view .ranking-podio .ranking-card.rank-1 {
-      background: linear-gradient(145deg, rgba(255, 215, 0, 0.22), var(--bg-card));
-      border-color: rgba(255, 215, 0, 0.55);
-      animation: podio-entrance-1 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) backwards, podio-glow-gold 2.8s ease-in-out 0.8s infinite;
+    .podium-item.podium-rank-3 {
+      background: rgba(205, 127, 50, 0.1);
+      border-color: rgba(205, 127, 50, 0.42);
     }
 
-    .ranking-section.in-view .ranking-podio .ranking-card.rank-1::before {
-      content: '';
+    .podium-item.podium-rank-1::before,
+    .podium-item.podium-rank-2::before,
+    .podium-item.podium-rank-3::before,
+    .rank-card.rank-1::before,
+    .rank-card.rank-2::before,
+    .rank-card.rank-3::before {
+      content: "";
       position: absolute;
       top: -50%;
       left: -80%;
+      height: 200%;
+      transform: rotate(24deg);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .podium-item.podium-rank-1::before,
+    .rank-card.rank-1::before {
       width: 28%;
-      height: 200%;
       background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
-      transform: rotate(28deg);
-      animation: podio-shine 3.2s ease-in-out 1.1s infinite;
-      pointer-events: none;
+      animation: podium-shine 3.2s ease-in-out 1.1s infinite;
     }
 
-    .ranking-section.in-view .ranking-podio .ranking-card.rank-2 {
-      background: linear-gradient(145deg, rgba(192, 192, 192, 0.18), var(--bg-card));
-      border-color: rgba(192, 192, 192, 0.5);
-      animation: podio-entrance-2 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards, podio-glow-silver 3.2s ease-in-out 0.6s infinite;
-    }
-
-    .ranking-section.in-view .ranking-podio .ranking-card.rank-2::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -80%;
+    .podium-item.podium-rank-2::before,
+    .rank-card.rank-2::before {
       width: 22%;
-      height: 200%;
       background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-      transform: rotate(25deg);
-      animation: podio-shine 3.2s ease-in-out 1.68s infinite;
-      pointer-events: none;
+      animation: podium-shine 3.2s ease-in-out 1.68s infinite;
     }
 
-    .ranking-section.in-view .ranking-podio .ranking-card.rank-3 {
-      background: linear-gradient(145deg, rgba(205, 127, 50, 0.2), var(--bg-card));
-      border-color: rgba(205, 127, 50, 0.5);
-      animation: podio-entrance-3 0.5s ease-out backwards, podio-glow-bronze 3.8s ease-in-out 0.5s infinite;
-    }
-
-    .ranking-section.in-view .ranking-podio .ranking-card.rank-3::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -80%;
+    .podium-item.podium-rank-3::before,
+    .rank-card.rank-3::before {
       width: 18%;
-      height: 200%;
       background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
-      transform: rotate(22deg);
-      animation: podio-shine 3.2s ease-in-out 2.26s infinite;
-      pointer-events: none;
+      animation: podium-shine 3.2s ease-in-out 2.26s infinite;
     }
 
-    @keyframes ranking-appear {
-      from {
-        opacity: 0;
-        transform: translateY(12px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .podium-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     }
 
-    @keyframes podio-entrance-1 {
+    .podium-emoji {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .podium-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .podium-name {
+      font-size: 16px;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .podium-pill {
+      margin-top: 6px;
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid;
+      background: rgba(0, 0, 0, 0.35);
+      width: fit-content;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .podium-score {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 10px;
+    }
+
+    .podium-badge {
+      display: block;
+      height: 52px;
+      width: auto;
+      max-width: 68px;
+      object-fit: contain;
+    }
+
+    .podium-badge-fallback {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      display: none;
+    }
+
+    .user-position {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(74, 222, 128, 0.14);
+      background: rgba(74, 222, 128, 0.08);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .user-position strong {
+      color: var(--green);
+    }
+
+    .intro {
+      margin-bottom: 20px;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: rgba(74, 222, 128, 0.8);
+    }
+
+    .section-title {
+      margin: 10px 0 0;
+      font-size: 28px;
+      line-height: 1.05;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .section-copy {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.65;
+      max-width: 780px;
+    }
+
+    .toolbar {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .toolbar-btn {
+      min-height: 46px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .toolbar-control {
+      min-height: 46px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 13px;
+      padding: 0 14px;
+      width: 100%;
+    }
+
+    .toolbar-control::placeholder {
+      color: var(--muted-2);
+    }
+
+    .toolbar-control[type="search"]::-webkit-search-cancel-button {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background:
+        linear-gradient(45deg, transparent 43%, #ffffff 43%, #ffffff 57%, transparent 57%),
+        linear-gradient(-45deg, transparent 43%, #ffffff 43%, #ffffff 57%, transparent 57%);
+      opacity: 0.95;
+      cursor: pointer;
+    }
+
+    .content-grid {
+      display: grid;
+      gap: 20px;
+    }
+
+    .ranking-mobile {
+      display: grid;
+      gap: 12px;
+    }
+
+    .rank-card {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 16px;
+      background: rgba(32, 52, 46, 0.78);
+      border-radius: 12px;
+      padding: 12px 16px;
+      border: 1px solid rgba(118, 200, 147, 0.5);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+      min-width: 0;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .rank-card:hover {
+      transform: translateY(-4px);
+      border-color: #76c893;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(118, 200, 147, 0.2);
+    }
+
+    .rank-pos {
+      flex-shrink: 0;
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1;
+      background: linear-gradient(135deg, #e8e8e8 0%, #a0a0a0 50%, #707070 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      min-width: 28px;
+      text-align: center;
+    }
+
+    .rank-avatar-placeholder {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 2px solid rgba(118, 200, 147, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.4);
+      overflow: hidden;
+    }
+
+    .rank-avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .rank-user-details {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .rank-name {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rank-stats-pill {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid;
+      background: rgba(0, 0, 0, 0.35);
+      width: fit-content;
+      white-space: nowrap;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rank-badge-container {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 10px;
+    }
+
+    .rank-badge-container img,
+    .rank-badge-fallback {
+      display: block;
+      height: 32px;
+      width: auto;
+      max-width: 44px;
+      object-fit: contain;
+    }
+
+    .rank-badge-fallback {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      height: auto;
+    }
+
+    .rank-card.rank-1 {
+      background: linear-gradient(145deg, rgba(255, 215, 0, 0.22), rgba(32, 52, 46, 0.82));
+      border-color: rgba(255, 215, 0, 0.55);
+      animation: rank-podium-entrance-1 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) backwards, rank-podium-glow-gold 2.8s ease-in-out 0.8s infinite;
+    }
+
+    .rank-card.rank-2 {
+      background: linear-gradient(145deg, rgba(192, 192, 192, 0.18), rgba(32, 52, 46, 0.82));
+      border-color: rgba(192, 192, 192, 0.5);
+      animation: rank-podium-entrance-2 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards, rank-podium-glow-silver 3.2s ease-in-out 0.6s infinite;
+    }
+
+    .rank-card.rank-3 {
+      background: linear-gradient(145deg, rgba(205, 127, 50, 0.2), rgba(32, 52, 46, 0.82));
+      border-color: rgba(205, 127, 50, 0.5);
+      animation: rank-podium-entrance-3 0.5s ease-out backwards, rank-podium-glow-bronze 3.8s ease-in-out 0.5s infinite;
+    }
+
+    .rank-card.rank-1 .rank-avatar-placeholder {
+      border-color: #FFD700;
+      box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .rank-card.rank-2 .rank-avatar-placeholder {
+      border-color: #C0C0C0;
+      box-shadow: 0 0 0 1px rgba(192, 192, 192, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .rank-card.rank-3 .rank-avatar-placeholder {
+      border-color: #CD7F32;
+      box-shadow: 0 0 0 1px rgba(205, 127, 50, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .rank-card.rank-1 .rank-pos {
+      background: linear-gradient(135deg, #fff9e6 0%, #FFD700 30%, #FFA500 70%, #cc7700 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 32px;
+    }
+
+    .rank-card.rank-2 .rank-pos {
+      background: linear-gradient(135deg, #f5f5f5 0%, #C0C0C0 40%, #909090 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 30px;
+    }
+
+    .rank-card.rank-3 .rank-pos {
+      background: linear-gradient(135deg, #e8d5c4 0%, #CD7F32 40%, #8B4513 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 30px;
+    }
+
+    .rank-card.rank-1 .rank-badge-container {
+      padding: 8px;
+    }
+
+    .rank-card.rank-1 .rank-badge-container img,
+    .rank-card.rank-1 .rank-badge-container .rank-badge-fallback {
+      height: 48px;
+      max-width: 64px;
+    }
+
+    .rank-card.rank-2 .rank-badge-container,
+    .rank-card.rank-3 .rank-badge-container {
+      padding: 7px;
+    }
+
+    .rank-card.rank-2 .rank-badge-container img,
+    .rank-card.rank-2 .rank-badge-container .rank-badge-fallback,
+    .rank-card.rank-3 .rank-badge-container img,
+    .rank-card.rank-3 .rank-badge-container .rank-badge-fallback {
+      height: 44px;
+      max-width: 58px;
+    }
+
+    .rank-card.rank-4 .rank-pos,
+    .rank-card.rank-5 .rank-pos,
+    .rank-card.rank-6 .rank-pos,
+    .rank-card.rank-7 .rank-pos,
+    .rank-card.rank-8 .rank-pos,
+    .rank-card.rank-9 .rank-pos,
+    .rank-card.rank-10 .rank-pos {
+      font-size: 24px;
+      background: linear-gradient(135deg, #dffaf0 0%, #76c893 55%, #4aa37f 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 4px rgba(118, 200, 147, 0.18));
+    }
+
+    @keyframes rank-podium-entrance-1 {
       0% {
         opacity: 0;
         transform: translateY(32px) scale(0.88);
@@ -248,7 +741,7 @@
       }
     }
 
-    @keyframes podio-entrance-2 {
+    @keyframes rank-podium-entrance-2 {
       0% {
         opacity: 0;
         transform: translateY(20px);
@@ -265,7 +758,7 @@
       }
     }
 
-    @keyframes podio-entrance-3 {
+    @keyframes rank-podium-entrance-3 {
       0% {
         opacity: 0;
         transform: translateY(14px);
@@ -276,231 +769,291 @@
       }
     }
 
-    @keyframes podio-shine {
+    @keyframes rank-podium-glow-gold {
+      0%, 100% { box-shadow: 0 6px 24px rgba(255, 215, 0, 0.35), 0 0 30px rgba(255, 215, 0, 0.1); }
+      50% { box-shadow: 0 8px 32px rgba(255, 215, 0, 0.5), 0 0 50px rgba(255, 215, 0, 0.2); }
+    }
+
+    @keyframes rank-podium-glow-silver {
+      0%, 100% { box-shadow: 0 4px 18px rgba(192, 192, 192, 0.2); }
+      50% { box-shadow: 0 6px 24px rgba(192, 192, 192, 0.35), 0 0 35px rgba(192, 192, 192, 0.08); }
+    }
+
+    @keyframes rank-podium-glow-bronze {
+      0%, 100% { box-shadow: 0 4px 16px rgba(205, 127, 50, 0.2); }
+      50% { box-shadow: 0 5px 20px rgba(205, 127, 50, 0.3); }
+    }
+
+    @keyframes podium-shine {
       0% { left: -80%; }
       18% { left: 110%; }
       100% { left: 110%; }
     }
 
-    @keyframes podio-glow-gold {
-      0%, 100% { box-shadow: 0 6px 24px rgba(255, 215, 0, 0.35), 0 0 30px rgba(255, 215, 0, 0.1); }
-      50% { box-shadow: 0 8px 32px rgba(255, 215, 0, 0.5), 0 0 50px rgba(255, 215, 0, 0.2); }
+    .ranking-desktop {
+      display: none;
+      gap: 12px;
     }
 
-    @keyframes podio-glow-silver {
-      0%, 100% { box-shadow: 0 4px 18px rgba(192, 192, 192, 0.2); }
-      50% { box-shadow: 0 6px 24px rgba(192, 192, 192, 0.35), 0 0 35px rgba(192, 192, 192, 0.08); }
+    #ranking-desktop {
+      display: grid;
+      gap: 12px;
     }
 
-    @keyframes podio-glow-bronze {
-      0%, 100% { box-shadow: 0 4px 16px rgba(205, 127, 50, 0.2); }
-      50% { box-shadow: 0 5px 20px rgba(205, 127, 50, 0.3); }
-    }
-
-    .ranking-podio .ranking-card:nth-child(1) { animation-delay: 0.08s; }
-    .ranking-podio .ranking-card:nth-child(2) { animation-delay: 0.22s; }
-    .ranking-podio .ranking-card:nth-child(3) { animation-delay: 0.15s; }
-
-    .ranking-rest .ranking-card:nth-child(1) { animation-delay: 0.25s; }
-    .ranking-rest .ranking-card:nth-child(2) { animation-delay: 0.3s; }
-    .ranking-rest .ranking-card:nth-child(3) { animation-delay: 0.35s; }
-    .ranking-rest .ranking-card:nth-child(4) { animation-delay: 0.4s; }
-    .ranking-rest .ranking-card:nth-child(5) { animation-delay: 0.45s; }
-    .ranking-rest .ranking-card:nth-child(6) { animation-delay: 0.5s; }
-    .ranking-rest .ranking-card:nth-child(7) { animation-delay: 0.55s; }
-
-    /* El bloque resto */
-    .ranking-rest {
+    .ranking-actions {
+      margin-top: 16px;
       display: flex;
-      flex-direction: column;
-      gap: 8px;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
-    /* Rank card base (igual que landing) */
-    .ranking-card {
-      display: flex;
-      flex-direction: row;
+    .btn-load-more {
+      display: none;
+      min-width: 220px;
+      min-height: 48px;
+      padding: 13px 18px;
       align-items: center;
-      gap: 16px;
-      background: #121212;
-      border-radius: 14px;
-      padding: 14px 18px;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
-      cursor: pointer;
-      min-width: 0;
-      user-select: none;
-    }
-
-    .ranking-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
-    }
-
-    .ranking-card .rank-pos {
-      flex-shrink: 0;
-      font-size: 28px;
+      justify-content: center;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      font-size: 14px;
       font-weight: 800;
-      line-height: 1;
-      background: linear-gradient(135deg, #e8e8e8 0%, #a0a0a0 50%, #707070 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-fill-color: transparent;
-      min-width: 36px;
+      color: #062217;
+      background: #4ade80;
+      border: 0;
+      border-radius: 16px;
+      box-shadow: 0 14px 28px rgba(74, 222, 128, 0.2);
+      cursor: pointer;
+      transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
       text-align: center;
+      line-height: 1;
     }
 
-    .ranking-card .rank-avatar-placeholder {
-      flex-shrink: 0;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: rgba(0, 0, 0, 0.4);
-      border: 3px solid;
+    .btn-load-more:hover {
+      background: #5ae38d;
+      transform: translateY(-1px);
+    }
+
+    .ranking-table-head,
+    .ranking-row {
+      display: grid;
+      grid-template-columns: 80px 1.8fr 1fr 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 16px 22px;
+    }
+
+    .ranking-table-head {
+      background: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid var(--line);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--muted-2);
+    }
+
+    .ranking-row {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .ranking-row:last-child {
+      border-bottom: 0;
+    }
+
+    .desktop-pos {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--green);
+    }
+
+    .desktop-name {
+      font-weight: 800;
+    }
+
+    .desktop-sub {
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--muted-2);
+    }
+
+    .sidebar {
+      display: grid;
+      gap: 16px;
+    }
+
+    .info-box,
+    .cta-box {
+      border-radius: 24px;
+      padding: 18px;
+      border: 1px solid var(--line);
+    }
+
+    .info-box {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .cta-box {
+      background: rgba(74, 222, 128, 0.1);
+      border-color: rgba(74, 222, 128, 0.14);
+    }
+
+    .box-title {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+
+    .box-copy {
+      margin: 12px 0 0;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .points-list {
+      margin-top: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .points-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(0, 0, 0, 0.18);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .points-item:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+    }
+
+    .points-item.rank-bronce {
+      border-color: rgba(205, 127, 50, 0.34);
+      background: linear-gradient(90deg, rgba(205, 127, 50, 0.12), rgba(0, 0, 0, 0.2));
+      box-shadow: inset 0 0 0 1px rgba(205, 127, 50, 0.08);
+    }
+
+    .points-item.rank-plata {
+      border-color: rgba(192, 192, 192, 0.34);
+      background: linear-gradient(90deg, rgba(192, 192, 192, 0.12), rgba(0, 0, 0, 0.2));
+      box-shadow: inset 0 0 0 1px rgba(192, 192, 192, 0.08);
+    }
+
+    .points-item.rank-oro {
+      border-color: rgba(255, 215, 0, 0.34);
+      background: linear-gradient(90deg, rgba(255, 215, 0, 0.12), rgba(0, 0, 0, 0.2));
+      box-shadow: inset 0 0 0 1px rgba(255, 215, 0, 0.08);
+    }
+
+    .points-item.rank-platino {
+      border-color: rgba(185, 242, 255, 0.34);
+      background: linear-gradient(90deg, rgba(185, 242, 255, 0.14), rgba(0, 0, 0, 0.2));
+      box-shadow: inset 0 0 0 1px rgba(185, 242, 255, 0.1);
+    }
+
+    .points-item.rank-diamante {
+      border-color: rgba(120, 170, 245, 0.32);
+      background: linear-gradient(90deg, rgba(120, 170, 245, 0.12), rgba(0, 0, 0, 0.2));
+      box-shadow: inset 0 0 0 1px rgba(120, 170, 245, 0.08);
+    }
+
+    .points-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .points-icon {
+      flex: 0 0 auto;
+      width: 52px;
+      height: 52px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
-      color: rgba(255, 255, 255, 0.35);
-      overflow: hidden;
-      -webkit-mask-image: -webkit-radial-gradient(white, black);
-      mask-image: radial-gradient(white, black);
+      padding: 7px;
+      border-radius: 10px;
+      background: rgba(9, 21, 27, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    .ranking-card .rank-avatar-placeholder .rank-avatar-img {
+    .points-icon img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .ranking-podio .ranking-card.rank-1 .rank-avatar-placeholder {
-      border-color: #FFD700;
-      box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    }
-
-    .ranking-podio .ranking-card.rank-2 .rank-avatar-placeholder {
-      border-color: #C0C0C0;
-      box-shadow: 0 0 0 1px rgba(192, 192, 192, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    }
-
-    .ranking-podio .ranking-card.rank-3 .rank-avatar-placeholder {
-      border-color: #CD7F32;
-      box-shadow: 0 0 0 1px rgba(205, 127, 50, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    }
-
-    .ranking-podio .ranking-card.rank-1 .rank-pos {
-      background: linear-gradient(135deg, #fff9e6 0%, #FFD700 30%, #FFA500 70%, #cc7700 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-size: 32px;
-    }
-
-    .ranking-podio .ranking-card.rank-2 .rank-pos {
-      background: linear-gradient(135deg, #f5f5f5 0%, #C0C0C0 40%, #909090 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-size: 30px;
-    }
-
-    .ranking-podio .ranking-card.rank-3 .rank-pos {
-      background: linear-gradient(135deg, #e8d5c4 0%, #CD7F32 40%, #8B4513 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-size: 30px;
-    }
-
-    .ranking-card .user-details {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      flex: 1;
-      min-width: 0;
-    }
-
-    .ranking-card .user-details h3 {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 700;
-      color: #ffffff;
-      line-height: 1.2;
-      letter-spacing: -0.02em;
-    }
-
-    .ranking-card .stats-pill {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      padding: 5px 12px;
-      border-radius: 8px;
-      border: 1px solid;
-      background: rgba(0, 0, 0, 0.35);
-      width: fit-content;
-    }
-
-    .ranking-card .badge-container {
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 6px;
-      border-radius: 10px;
-      transition: filter 0.25s ease;
-    }
-
-    .ranking-card .badge-container img,
-    .ranking-card .badge-container .rank-badge-fallback {
-      display: block;
-      height: 40px;
-      width: auto;
-      max-width: 52px;
       object-fit: contain;
+      display: block;
     }
 
-    .ranking-card .badge-container .rank-badge-fallback {
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      height: auto;
+    .points-item.rank-bronce .points-icon {
+      box-shadow: 0 0 16px rgba(205, 127, 50, 0.32), 0 0 28px rgba(205, 127, 50, 0.14);
     }
 
-    /* Resto (igual que landing) */
-    .ranking-rest .ranking-card {
-      padding: 12px 16px;
-      border-radius: 12px;
-      background: rgba(32, 52, 46, 0.78);
-      border: 1px solid rgba(118, 200, 147, 0.5);
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    .points-item.rank-plata .points-icon {
+      box-shadow: 0 0 16px rgba(192, 192, 192, 0.32), 0 0 28px rgba(192, 192, 192, 0.14);
     }
 
-    .ranking-rest .ranking-card:hover {
-      border-color: var(--accent);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(118, 200, 147, 0.2);
+    .points-item.rank-oro .points-icon {
+      box-shadow: 0 0 16px rgba(255, 215, 0, 0.34), 0 0 28px rgba(255, 215, 0, 0.15);
     }
 
-    .ranking-rest .ranking-card .rank-pos {
-      font-size: 22px;
-      min-width: 28px;
+    .points-item.rank-platino .points-icon {
+      box-shadow: 0 0 16px rgba(185, 242, 255, 0.34), 0 0 28px rgba(185, 242, 255, 0.15);
     }
 
-    .ranking-rest .ranking-card .user-details h3 { font-size: 14px; }
-    .ranking-rest .ranking-card .stats-pill { font-size: 10px; padding: 4px 10px; }
-
-    .ranking-rest .ranking-card .badge-container img,
-    .ranking-rest .ranking-card .badge-container .rank-badge-fallback {
-      height: 32px;
-      max-width: 44px;
+    .points-item.rank-diamante .points-icon {
+      box-shadow: 0 0 16px rgba(120, 170, 245, 0.34), 0 0 28px rgba(120, 170, 245, 0.15);
     }
 
-    /* ===== Modal detalle (igual que landing) ===== */
-    .ranking-modal {
+    .points-text {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .points-value {
+      font-size: 14px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .full-btn {
+      width: 100%;
+      margin-top: 16px;
+    }
+
+    .message {
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .empty-state {
+      color: var(--muted-2);
+      text-align: center;
+      padding: 16px 0 8px;
+    }
+
+    .desktop-clickable {
+      cursor: pointer;
+    }
+
+    .desktop-clickable:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .modal {
       display: none;
       position: fixed;
       top: 0;
@@ -515,11 +1068,10 @@
       box-sizing: border-box;
     }
 
-    .ranking-modal.active { display: flex; }
+    .modal.active { display: flex; }
 
-    .ranking-modal-content {
-      background-color: var(--bg-dark);
-      background-image: none;
+    .modal-card {
+      background-color: #0e2f36;
       background-repeat: no-repeat;
       background-size: cover;
       background-position: center;
@@ -532,180 +1084,13 @@
       overflow-y: auto;
       border: 1px solid rgba(118, 200, 147, 0.5);
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-      animation: rankingModalIn 0.3s ease-out;
     }
 
-    .ranking-modal-content.ranking-modal-content--gold {
-      border: 1px solid #FFD700;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.25);
-    }
+    .modal-card.modal-gold { border-color: #FFD700; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 20px rgba(255,215,0,0.25); }
+    .modal-card.modal-silver { border-color: #C0C0C0; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 20px rgba(192,192,192,0.25); }
+    .modal-card.modal-bronze { border-color: #CD7F32; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 20px rgba(205,127,50,0.25); }
 
-    .ranking-modal-content.ranking-modal-content--silver {
-      border: 1px solid #C0C0C0;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 20px rgba(192, 192, 192, 0.25);
-    }
-
-    .ranking-modal-content.ranking-modal-content--bronze {
-      border: 1px solid #CD7F32;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 20px rgba(205, 127, 50, 0.25);
-    }
-
-    .ranking-modal-content.ranking-modal-content--green {
-      border: 1px solid rgba(118, 200, 147, 0.5);
-    }
-
-    @keyframes rankingModalIn {
-      from { transform: scale(0.9); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-
-    .ranking-modal-avatar-wrap {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 16px;
-    }
-
-    .ranking-modal-avatar {
-      flex-shrink: 0;
-      width: 88px;
-      height: 88px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 3px solid rgba(118, 200, 147, 0.5);
-      background: rgba(0, 0, 0, 0.3);
-      -webkit-mask-image: -webkit-radial-gradient(white, black);
-      mask-image: radial-gradient(white, black);
-    }
-
-    .ranking-modal-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .ranking-modal-avatar .avatar-fallback {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-      font-size: 2.5rem;
-      color: rgba(255,255,255,0.9);
-    }
-
-    .ranking-modal-badge-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 16px 0;
-    }
-
-    .ranking-modal-content .badge-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 8px;
-      border-radius: 12px;
-    }
-
-    .ranking-modal-content .badge-container img,
-    .ranking-modal-content .badge-container .rank-badge-fallback {
-      display: block;
-      height: 96px;
-      width: auto;
-      max-width: 120px;
-      object-fit: contain;
-    }
-
-    .ranking-modal-content .badge-container .rank-badge-fallback {
-      font-size: 14px;
-      font-weight: 700;
-      text-transform: uppercase;
-      height: auto;
-    }
-
-    .ranking-modal-rank-pos {
-      font-size: 22px;
-      font-weight: 800;
-      text-align: center;
-      margin: 0 0 6px;
-      line-height: 1.2;
-      letter-spacing: -0.02em;
-    }
-
-    .ranking-modal-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #ffffff;
-      text-align: center;
-      margin: 0 0 8px;
-      line-height: 1.2;
-      letter-spacing: -0.02em;
-    }
-
-    .ranking-modal-stats-pill {
-      display: block;
-      width: fit-content;
-      margin: 0 auto 0;
-      text-align: center;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      padding: 5px 12px;
-      border-radius: 8px;
-      border: 1px solid;
-      background: rgba(0, 0, 0, 0.35);
-    }
-
-    .ranking-modal-rutas { margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(118, 200, 147, 0.2); }
-    .ranking-modal-rutas-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #ffffff; }
-    .ranking-modal-rutas-list { display: flex; flex-wrap: wrap; gap: 8px; }
-
-    .ranking-modal-ruta-tag {
-      background: rgba(26, 58, 40, 0.6);
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 12px;
-      border: 1px solid rgba(118, 200, 147, 0.2);
-      color: rgba(255, 255, 255, 0.9);
-    }
-
-    .ranking-modal-ruta-tag .ruta-veces {
-      background: var(--accent);
-      color: #121212;
-      padding: 2px 6px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      margin-left: 4px;
-    }
-
-    .ranking-modal-proximo {
-      margin-top: 16px;
-      padding: 16px;
-      background: rgba(26, 58, 40, 0.5);
-      border-radius: 12px;
-      border: 1px solid rgba(118, 200, 147, 0.2);
-    }
-
-    .ranking-modal-proximo-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
-    .ranking-modal-proximo-text { font-size: 12px; color: rgba(255, 255, 255, 0.65); margin-bottom: 8px; }
-
-    .ranking-modal-proximo-bar {
-      height: 8px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 4px;
-      margin-bottom: 4px;
-      overflow: hidden;
-    }
-
-    .ranking-modal-proximo-fill { height: 100%; border-radius: 4px; }
-
-    .ranking-modal-proximo-meta { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255, 255, 255, 0.5); }
-
-    .ranking-modal-close {
+    .modal-close {
       position: absolute;
       top: 16px;
       right: 16px;
@@ -721,16 +1106,12 @@
       align-items: center;
       justify-content: center;
       line-height: 1;
-      transition: background 0.2s;
     }
 
-    .ranking-modal-close:hover { background: rgba(255, 255, 255, 0.2); }
-
-    .ranking-modal-share {
+    .modal-share {
       position: absolute;
       top: 16px;
       left: 16px;
-      z-index: 100001;
       border: 1px solid rgba(118, 200, 147, 0.35);
       background: rgba(118, 200, 147, 0.12);
       color: #ffffff;
@@ -739,486 +1120,1254 @@
       font-weight: 800;
       font-size: 12px;
       cursor: pointer;
-      user-select: none;
     }
 
-    .ranking-modal-share:active {
-      transform: translateY(1px);
-    }
-
-    /* Export-only: aumentar legibilidad en captura sin alterar UI normal */
-    .ranking-modal-content.export-capture {
-      filter: saturate(1.02) contrast(1.06);
-      background-color: rgb(12, 24, 30) !important;
-    }
-
-    .ranking-modal-content.export-capture .ranking-modal-title,
-    .ranking-modal-content.export-capture .ranking-modal-rutas-title,
-    .ranking-modal-content.export-capture .ranking-modal-proximo-title,
-    .ranking-modal-content.export-capture .ranking-modal-rank-pos {
-      color: #ffffff !important;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
-    }
-
-    .ranking-modal-content.export-capture .ranking-modal-proximo-text,
-    .ranking-modal-content.export-capture .ranking-modal-proximo-meta {
-      color: rgba(255, 255, 255, 0.88) !important;
-    }
-
-    .ranking-modal-content.export-capture .ranking-modal-ruta-tag {
-      background: rgb(8, 30, 22) !important;
-      border-color: rgb(118, 200, 147) !important;
-      color: rgba(255, 255, 255, 1) !important;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-    }
-
-    .ranking-modal-content.export-capture .ranking-modal-stats-pill {
-      background: rgb(12, 12, 12) !important;
-      border-color: rgb(190, 190, 190) !important;
-      color: rgba(255, 255, 255, 1) !important;
-    }
-
-    .ranking-modal-content.export-capture .ranking-modal-proximo {
-      background: rgb(10, 35, 26) !important;
-      border-color: rgb(118, 200, 147) !important;
-    }
-
-    .ranking-modal-content.export-capture .ranking-modal-content-divider {
-      border-color: rgb(72, 72, 72) !important;
-    }
-
-    .ranking-modal-content.export-capture .ranking-modal-avatar {
-      border-color: rgb(190, 190, 190) !important;
-      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
-    }
-
-    .ranking-modal-content.export-capture .ranking-modal-badge-wrap .badge-container,
-    .ranking-modal-content.export-capture .ranking-modal-content .badge-container {
-      background: rgb(9, 21, 27) !important;
-      border: 1px solid rgb(90, 90, 90) !important;
-    }
-
-    .ranking-modal-content.export-capture .ranking-modal-badge img {
-      filter: brightness(1.12) contrast(1.12) saturate(1.08);
-      opacity: 1 !important;
-    }
-
-    .ranking-modal-content.export-capture .ranking-modal-progress-track {
-      background: rgb(80, 80, 80) !important;
-    }
-
-    .ranking-modal-content.export-capture .ranking-modal-progress-meta,
-    .ranking-modal-content.export-capture .ranking-modal-rutas-empty {
-      color: rgba(255, 255, 255, 0.92) !important;
-    }
-
-    .ranking-modal-content.export-capture * {
-      opacity: 1 !important;
-    }
-
-    /* ===== Story export (9:16) ===== */
-    .story-export {
-      position: fixed;
-      left: -100000px;
-      top: -100000px;
-      width: 1080px;
-      height: 1920px;
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-position: center;
-      display: flex;
-      align-items: stretch;
-      justify-content: center;
+    .modal-avatar-wrap { display: flex; justify-content: center; margin-bottom: 16px; }
+    .modal-avatar {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
       overflow: hidden;
-      border-radius: 0;
+      border: 3px solid rgba(118, 200, 147, 0.5);
+      background: rgba(0, 0, 0, 0.3);
     }
-
-    .story-export .story-overlay {
+    .modal-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .modal-avatar .avatar-fallback {
       width: 100%;
       height: 100%;
       display: flex;
-      flex-direction: column;
-      padding: 80px 70px 70px;
-      background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.85) 100%);
-      box-sizing: border-box;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.4rem;
+      color: rgba(255,255,255,0.9);
     }
 
-    .story-export .story-rank {
-      font-weight: 900;
-      font-size: 64px;
-      color: #ffffff;
-      text-align: left;
-      margin-bottom: 22px;
-      letter-spacing: -0.02em;
-    }
-
-    .story-export .story-name {
-      font-weight: 900;
-      font-size: 62px;
-      color: #ffffff;
-      line-height: 1.05;
-      margin-bottom: 18px;
-      word-break: break-word;
-    }
-
-    .story-export .story-pill {
-      display: inline-block;
-      padding: 18px 26px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(0,0,0,0.35);
-      color: #e9f3ec;
+    .modal-rank-pos {
+      font-size: 22px;
       font-weight: 800;
-      font-size: 30px;
-      margin-bottom: 18px;
+      text-align: center;
+      margin: 0 0 6px;
+      line-height: 1.2;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+      text-align: center;
+      margin: 0 0 8px;
+      line-height: 1.2;
+    }
+    .modal-pill {
+      display: block;
       width: fit-content;
-      max-width: 100%;
-      box-sizing: border-box;
+      margin: 0 auto;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 5px 12px;
+      border-radius: 8px;
+      border: 1px solid;
+      background: rgba(0, 0, 0, 0.35);
+    }
+    .modal-badge-wrap { display: flex; align-items: center; justify-content: center; margin: 16px 0; }
+    .modal-badge-wrap .rank-badge-container { padding: 8px; border-radius: 12px; }
+    .modal-badge-wrap img, .modal-badge-wrap .rank-badge-fallback {
+      display: block;
+      height: 126px;
+      width: auto;
+      max-width: 160px;
+      object-fit: contain;
+    }
+    .modal-routes-wrap { margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(118, 200, 147, 0.2); }
+    .modal-routes-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #ffffff; }
+    .modal-routes { display: flex; flex-wrap: wrap; gap: 8px; }
+    .modal-route-tag {
+      background: rgba(26, 58, 40, 0.6);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      border: 1px solid rgba(118, 200, 147, 0.2);
+      color: rgba(255, 255, 255, 0.9);
+    }
+    .modal-route-tag .ruta-veces {
+      background: #76c893;
+      color: #121212;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+    .modal-next {
+      margin-top: 16px;
+      padding: 16px;
+      background: rgba(26, 58, 40, 0.5);
+      border-radius: 12px;
+      border: 1px solid rgba(118, 200, 147, 0.2);
+    }
+    .modal-next-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+    .modal-next-text { font-size: 12px; color: rgba(255, 255, 255, 0.65); margin-bottom: 8px; }
+    .modal-next-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-bottom: 4px; overflow: hidden; }
+    .modal-next-fill { height: 100%; border-radius: 4px; }
+    .modal-next-meta { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,0.5); }
+
+    .rank-guide-modal-content {
+      margin-top: 14px;
+      display: grid;
+      gap: 14px;
     }
 
-    .story-export .story-badge-row {
+    .rank-guide-story {
+      --rank-accent: #76c893;
+      position: relative;
+      padding: 18px 18px 20px;
+      border-radius: 16px;
+      background:
+        linear-gradient(155deg, rgba(255, 255, 255, 0.06) 0%, transparent 42%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.28) 100%);
+      border: 1px solid color-mix(in srgb, var(--rank-accent) 38%, rgba(255, 255, 255, 0.12));
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+        0 16px 48px rgba(0, 0, 0, 0.35),
+        0 0 36px color-mix(in srgb, var(--rank-accent) 22%, transparent);
+      overflow: hidden;
+    }
+
+    .rank-guide-story::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      border-radius: 16px 16px 0 0;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in srgb, var(--rank-accent) 85%, transparent),
+        transparent
+      );
+      opacity: 0.95;
+    }
+
+    .rank-guide-story-kicker {
+      display: block;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: color-mix(in srgb, var(--rank-accent) 75%, rgba(255, 255, 255, 0.5));
+      margin-bottom: 10px;
+    }
+
+    .rank-guide-hook {
+      margin: 0 0 14px;
+      font-size: clamp(1.14rem, 4.6vw, 1.38rem);
+      font-weight: 800;
+      line-height: 1.3;
+      letter-spacing: -0.03em;
+      color: var(--rank-accent);
+      text-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.5),
+        0 0 36px color-mix(in srgb, var(--rank-accent) 50%, transparent);
+    }
+
+    .rank-guide-divider {
+      height: 1px;
+      margin: 0 0 14px;
+      border-radius: 1px;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in srgb, var(--rank-accent) 55%, transparent),
+        transparent
+      );
+      opacity: 0.9;
+    }
+
+    .rank-guide-body {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.68;
+      letter-spacing: 0.01em;
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .rank-guide-body strong {
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.98);
+    }
+
+    .rank-guide-recompensa {
+      padding: 14px;
+      border-radius: 12px;
+      background: rgba(26, 58, 40, 0.5);
+      border: 1px solid rgba(118, 200, 147, 0.2);
+    }
+
+    .rank-guide-recompensa-title {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(118, 200, 147, 0.95);
+      margin-bottom: 6px;
+    }
+
+    .rank-guide-recompensa-text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.92);
+    }
+
+    .rank-guide-recompensa-single {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.55;
+      color: rgba(255, 255, 255, 0.92);
+    }
+
+    .rank-guide-recompensa-list {
+      margin: 0;
+      padding-left: 1.15rem;
+      font-size: 13px;
+      line-height: 1.55;
+      color: rgba(255, 255, 255, 0.92);
+      list-style-type: disc;
+    }
+
+    .rank-guide-recompensa-list li {
+      margin-bottom: 0.45em;
+    }
+
+    .rank-guide-recompensa-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Modal guía de rangos: navegación tipo galería (flechas + swipe) */
+    .rank-guide-modal {
+      position: fixed;
+    }
+
+    .rank-guide-viewport {
+      position: relative;
+      max-width: 360px;
+      width: 100%;
+      overflow: hidden;
+      border-radius: 16px;
+      flex-shrink: 0;
+    }
+
+    .rank-guide-slide {
+      position: relative;
+      width: 100%;
+      transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      will-change: transform;
+    }
+
+    .rank-guide-slide.is-dragging {
+      transition: none;
+    }
+
+    .rank-guide-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10001;
+      background: rgba(255, 255, 255, 0.12);
+      border: none;
+      color: #fff;
+      font-size: 32px;
+      min-width: 48px;
+      min-height: 48px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: background 0.3s ease, transform 0.3s ease;
       display: flex;
       align-items: center;
-      gap: 28px;
-      margin-bottom: 26px;
+      justify-content: center;
+      line-height: 1;
+      padding: 0;
     }
 
-    .story-export .story-badge-row img {
-      width: 150px;
-      height: 150px;
-      object-fit: contain;
-      background: transparent;
+    .rank-guide-nav:hover {
+      background: rgba(255, 255, 255, 0.22);
+      transform: translateY(-50%) scale(1.1);
     }
 
-    .story-export .story-section-title {
-      font-size: 34px;
-      font-weight: 900;
-      color: rgba(255,255,255,0.9);
-      margin-top: 10px;
-      margin-bottom: 16px;
+    .rank-guide-nav:focus-visible {
+      outline: 2px solid #76c893;
+      outline-offset: 2px;
     }
 
-    .story-export .story-tags {
+    .rank-guide-nav--prev {
+      left: max(12px, env(safe-area-inset-left));
+    }
+
+    .rank-guide-nav--next {
+      right: max(12px, env(safe-area-inset-right));
+    }
+
+    @media (max-width: 480px) {
+      .rank-guide-nav {
+        font-size: 28px;
+        min-width: 44px;
+        min-height: 44px;
+        width: 44px;
+        height: 44px;
+      }
+
+      .rank-guide-nav--prev {
+        left: max(6px, env(safe-area-inset-left));
+      }
+
+      .rank-guide-nav--next {
+        right: max(6px, env(safe-area-inset-right));
+      }
+    }
+
+    @media (max-width: 767px) {
+      .hero-inner {
+        padding: 4px 0 18px;
+        gap: 10px;
+      }
+
+      .hero-logo {
+        width: 230px;
+      }
+
+      .hero-badge-global {
+        margin-bottom: 4px;
+      }
+
+      .hero h1 {
+        margin: 4px 0 0;
+      }
+
+      .hero-actions {
+        margin-top: 6px;
+      }
+
+      .stats {
+        margin-top: 8px;
+        gap: 6px;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .section {
+        padding: 42px 0;
+      }
+
+      .hero-inner {
+        padding: 38px 0 54px;
+      }
+
+      .hero h1 {
+        font-size: 56px;
+      }
+
+      .hero p {
+        font-size: 17px;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .btn {
+        min-width: 220px;
+      }
+
+      .stat {
+        padding: 18px 14px;
+      }
+
+      .stat-value {
+        font-size: 28px;
+      }
+
+      .stat-label {
+        font-size: 13px;
+      }
+
+      .section-title {
+        font-size: 40px;
+      }
+
+      .toolbar {
+        width: fit-content;
+        grid-template-columns: repeat(2, auto);
+      }
+
+      .toolbar-btn {
+        min-width: 160px;
+        padding: 0 18px;
+      }
+
+      .ranking-mobile {
+        display: none;
+      }
+
+      .ranking-desktop {
+        display: grid;
+        gap: 16px;
+      }
+
+      #ranking-desktop {
+        gap: 6px;
+      }
+
+      .ranking-table-head {
+        display: none;
+      }
+
+      .info-box,
+      .cta-box {
+        padding: 22px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .hero-logo {
+        width: 430px;
+      }
+
+      .hero-logo-global {
+        position: absolute;
+        top: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        margin: 0;
+        filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.45));
+      }
+
+      .hero-badge-global {
+        position: absolute;
+        top: 248px;
+        left: 50%;
+        transform: translateX(-50%);
+        margin: 0;
+      }
+
+      .hero-inner {
+        grid-template-columns: 1.05fr 0.95fr;
+        align-items: start;
+        gap: 38px;
+        padding: 300px 26px 34px;
+        border-radius: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(6, 18, 14, 0.42);
+        backdrop-filter: blur(4px);
+      }
+
+      .content-grid {
+        grid-template-columns: 1.2fr 0.8fr;
+        align-items: start;
+      }
+    }
+
+    /* Botón flotante de WhatsApp (igual que index.html) */
+    .whatsapp-fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #25d366;
+      color: white;
+      border: none;
+      box-shadow: 0 8px 24px rgba(37, 211, 102, 0.5);
+      cursor: pointer;
       display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      margin-bottom: 26px;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      z-index: 1000;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      text-decoration: none;
+      bottom: calc(24px + env(safe-area-inset-bottom));
+      right: calc(24px + env(safe-area-inset-right));
     }
 
-    .story-export .story-tag {
-      padding: 14px 22px;
-      border-radius: 999px;
-      border: 1px dashed rgba(118,200,147,0.35);
-      background: rgba(26,58,40,0.55);
-      color: rgba(255,255,255,0.95);
-      font-size: 28px;
-      font-weight: 800;
-      white-space: nowrap;
+    .whatsapp-fab:hover {
+      transform: scale(1.1) translateY(-4px);
+      box-shadow: 0 12px 32px rgba(37, 211, 102, 0.6);
     }
 
-    .story-export .story-next {
-      margin-top: auto;
-      padding: 26px 26px;
-      border-radius: 22px;
-      background: rgba(26,58,40,0.55);
-      border: 1px solid rgba(118,200,147,0.25);
-      box-sizing: border-box;
+    .whatsapp-fab:active {
+      transform: scale(0.95);
     }
 
-    .story-export .story-next-title {
-      font-size: 30px;
-      font-weight: 900;
-      color: #ffffff;
-      margin-bottom: 10px;
+    .whatsapp-fab svg {
+      width: 32px;
+      height: 32px;
     }
 
-    .story-export .story-next-text {
-      font-size: 26px;
-      font-weight: 800;
-      color: rgba(255,255,255,0.75);
-      margin-bottom: 14px;
+    @media (max-width: 480px) {
+      .whatsapp-fab {
+        width: 56px;
+        height: 56px;
+        font-size: 28px;
+        bottom: calc(20px + env(safe-area-inset-bottom));
+        right: calc(20px + env(safe-area-inset-right));
+      }
+
+      .whatsapp-fab svg {
+        width: 28px;
+        height: 28px;
+      }
     }
 
-    .story-export .story-progress {
-      height: 18px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.12);
-      overflow: hidden;
-      margin-bottom: 10px;
-    }
-
-    .story-export .story-progress > div {
-      height: 100%;
-      width: 0%;
-      background: var(--accent);
-      border-radius: 999px;
-    }
-
-    .story-export .story-next-meta {
-      display: flex;
-      justify-content: space-between;
-      font-size: 24px;
-      font-weight: 800;
-      color: rgba(255,255,255,0.6);
+    .btn svg {
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
+      flex-shrink: 0;
     }
   </style>
 </head>
-
 <body>
-  <div class="container">
-    <div class="topbar">
-      <h1>🏆 Ranking Completo</h1>
-      <a class="back-link" href="index.html" aria-label="Volver a la landing">Volver</a>
-    </div>
 
-    <section id="rankingSection" class="ranking-section">
-      <p class="ranking-intro">Los que más rutas han conquistado con nosotros</p>
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <img src="logo.png" alt="Logo SomosAventurados" class="hero-logo hero-logo-global">
+    <div class="badge hero-badge-global">Ranking oficial</div>
 
-      <div id="rankingContainer" class="ranking-container">
-        <div class="ranking-loading" id="rankingLoading">Cargando ranking...</div>
-        <div id="rankingList" class="ranking-list" style="display:none;" aria-live="polite">
-          <div id="rankingPodio" class="ranking-podio" aria-label="Podio"></div>
-          <div id="rankingRest" class="ranking-rest" aria-label="Ranking"></div>
+    <div class="container hero-inner">
+      <div class="hero-left">
+
+        <h1>
+          Cada ruta suma.
+          <span class="accent">Cada aventura te acerca a la cima.</span>
+        </h1>
+
+        <div class="hero-actions">
+          <a href="#ranking" class="btn btn-primary">Ver ranking completo</a>
+          <a href="#cta" class="btn btn-secondary">Quiero subir en el ranking</a>
         </div>
 
-        <div class="ranking-grid-actions">
-          <button id="btnLoadMore" class="btn-load-more" type="button" style="display:none;">Cargar más</button>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value" id="statActive">-</div>
+            <div class="stat-label">Aventurados activos</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="statRoutes">-</div>
+            <div class="stat-label">Rutas registradas</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="statTopScore">-</div>
+            <div class="stat-label">Top rutas</div>
+          </div>
         </div>
       </div>
-    </section>
-  </div>
 
-  <div class="ranking-modal" id="rankingModal" role="dialog" aria-modal="true" aria-label="Detalle del aventurero">
-    <div class="ranking-modal-content" id="rankingModalContent">
-      <button type="button" class="ranking-modal-close" id="rankingModalClose" aria-label="Cerrar">&times;</button>
-      <button type="button" class="ranking-modal-share" id="btnCompartirRanking" aria-label="Compartir ranking">Compartir</button>
-      <div class="ranking-modal-avatar-wrap">
-        <div class="ranking-modal-avatar" id="rankingModalAvatar" style="display:none;"></div>
+      <div class="top3">
+        <div class="top3-head">
+          <div>
+            <div class="top3-title">Los que dominan la cima</div>
+          </div>
+          <div class="chip">Actualizado hoy</div>
+        </div>
+
+        <div class="podium" id="top3Podium"></div>
+
       </div>
-      <div class="ranking-modal-rank-pos" id="rankingModalRankPos"></div>
-      <h3 class="ranking-modal-title" id="rankingModalNombre"></h3>
-      <div class="ranking-modal-stats-pill" id="rankingModalStatsPill"></div>
-      <div class="ranking-modal-badge-wrap" id="rankingModalBadge"></div>
-      <div class="ranking-modal-rutas" id="rankingModalRutas"></div>
-      <div class="ranking-modal-proximo" id="rankingModalProximo"></div>
+    </div>
+  </section>
+
+  <section class="section" id="ranking">
+    <div class="container">
+      <div class="intro">
+        <div class="eyebrow">Clasificación</div>
+        <h2 class="section-title">Un ranking que recompensa tu constancia</h2>
+        <p class="section-copy">
+          Aquí compiten los aventurados más fieles de la comunidad.
+          Sube de rango, gana recompensas y demuestra que tienes lo necesario
+          para entrar en el Top 3.
+        </p>
+
+        <div class="toolbar">
+          <input id="nameSearch" class="toolbar-control" type="search" placeholder="Buscar nombre..." aria-label="Buscar nombre" />
+        </div>
+      </div>
+
+      <div class="content-grid">
+        <div>
+          <div id="rankingMessage" class="message">Cargando ranking...</div>
+          <div class="ranking-mobile" id="ranking-mobile"></div>
+
+          <div class="ranking-desktop">
+            <div class="ranking-table-head">
+              <div>Pos.</div>
+              <div>Aventurero</div>
+              <div>Rutas</div>
+              <div>Puntos</div>
+            </div>
+            <div id="ranking-desktop"></div>
+          </div>
+          <div class="ranking-actions">
+            <button id="btnVerMas" class="btn-load-more" type="button">Ver más</button>
+            <button id="btnVerTodo" class="btn-load-more" type="button">Ver todo</button>
+          </div>
+        </div>
+
+        <aside class="sidebar">
+          <div class="info-box">
+            <div class="eyebrow">Cómo subir en el ranking</div>
+            <h3 class="box-title">Guía de rangos por rutas</h3>
+
+            <div class="points-list">
+              <div class="points-item rank-bronce" data-rank="bronce">
+                <div class="points-left">
+                  <div class="points-icon"><img src="badges/bronce.png" alt="Bronce"></div>
+                  <div class="points-text">Bronce</div>
+                </div>
+                <div class="points-value">2 rutas</div>
+              </div>
+
+              <div class="points-item rank-plata" data-rank="plata">
+                <div class="points-left">
+                  <div class="points-icon"><img src="badges/plata.png" alt="Plata"></div>
+                  <div class="points-text">Plata</div>
+                </div>
+                <div class="points-value">5 rutas</div>
+              </div>
+
+              <div class="points-item rank-oro" data-rank="oro">
+                <div class="points-left">
+                  <div class="points-icon"><img src="badges/oro.png" alt="Oro"></div>
+                  <div class="points-text">Oro</div>
+                </div>
+                <div class="points-value">10 rutas</div>
+              </div>
+
+              <div class="points-item rank-platino" data-rank="platino">
+                <div class="points-left">
+                  <div class="points-icon"><img src="badges/platino.png" alt="Platino"></div>
+                  <div class="points-text">Platino</div>
+                </div>
+                <div class="points-value">15 rutas</div>
+              </div>
+
+              <div class="points-item rank-diamante" data-rank="diamante">
+                <div class="points-left">
+                  <div class="points-icon"><img src="badges/diamante.png" alt="Diamante"></div>
+                  <div class="points-text">Diamante</div>
+                </div>
+                <div class="points-value">20 rutas</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cta-box" id="cta">
+            <h3 class="box-title">¿Listo para aparecer aquí?</h3>
+            <p class="box-copy">
+              Entre más rutas completes, más arriba subes.
+              Reserva tu próxima aventura y escala posiciones.
+            </p>
+
+            <a
+              href="https://whatsapp.com/channel/0029Vb6vCSj4yltO4CJQJL2L"
+              class="btn btn-primary full-btn"
+              target="_blank"
+              rel="noopener"
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+              </svg>
+              Sé un aventurado
+            </a>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <div class="modal" id="profileModal" aria-hidden="true">
+    <div class="modal-card" id="modalCard">
+      <button type="button" class="modal-close" id="modalClose" aria-label="Cerrar">&times;</button>
+      <button type="button" class="modal-share" id="btnCompartirRanking" aria-label="Compartir ranking">Compartir</button>
+      <div class="modal-avatar-wrap">
+        <div class="modal-avatar" id="modalAvatar" style="display:none;"></div>
+      </div>
+      <div class="modal-rank-pos" id="modalRankPos"></div>
+      <h3 class="modal-title" id="modalName">Aventurero</h3>
+      <div class="modal-pill" id="modalBadge">Rango</div>
+      <div class="modal-badge-wrap" id="modalBadgeWrap"></div>
+      <div class="modal-routes-wrap" id="modalRoutesWrap"></div>
+      <div class="modal-next" id="modalNext"></div>
     </div>
   </div>
 
-  <div id="storyExport" class="story-export" aria-hidden="true">
-    <div class="story-overlay">
-      <div class="story-rank" id="storyRankPos">#0</div>
-      <div class="story-name" id="storyNombre">—</div>
-      <div class="story-pill" id="storyStatsPill">—</div>
-      <div class="story-badge-row" id="storyBadgeRow"></div>
-      <div class="story-section-title">🏔️ Rutas asistidas</div>
-      <div class="story-tags" id="storyTags"></div>
-      <div class="story-next" id="storyNext" style="display:none;">
-        <div class="story-next-title" id="storyNextTitle">—</div>
-        <div class="story-next-text" id="storyNextText">—</div>
-        <div class="story-progress"><div id="storyNextProgressFill"></div></div>
-        <div class="story-next-meta"><span id="storyNextMetaLeft">0/0</span><span id="storyNextMetaRight">0%</span></div>
+  <div class="modal rank-guide-modal" id="rankGuideModal" role="dialog" aria-modal="true" aria-label="Guía de rangos" aria-hidden="true">
+    <button type="button" class="rank-guide-nav rank-guide-nav--prev" id="rankGuidePrev" aria-label="Rango anterior">‹</button>
+    <button type="button" class="rank-guide-nav rank-guide-nav--next" id="rankGuideNext" aria-label="Siguiente rango">›</button>
+    <div class="rank-guide-viewport" id="rankGuideViewport">
+      <div class="rank-guide-slide" id="rankGuideSlide">
+        <div class="modal-card" id="rankGuideCard">
+          <button type="button" class="modal-close" id="rankGuideClose" aria-label="Cerrar">&times;</button>
+          <h3 class="modal-title" id="rankGuideName">Rango</h3>
+          <div class="modal-badge-wrap" id="rankGuideBadgeWrap"></div>
+          <div class="modal-pill" id="rankGuideRequirement">0 rutas</div>
+          <div class="rank-guide-modal-content">
+            <div class="rank-guide-story" id="rankGuideStory" style="--rank-accent: #76c893;">
+              <span class="rank-guide-story-kicker" id="rankGuideKicker">Tu historia en la montaña</span>
+              <p class="rank-guide-hook" id="rankGuideHook"></p>
+              <div class="rank-guide-divider" id="rankGuideDivider" aria-hidden="true"></div>
+              <p class="rank-guide-body" id="rankGuideBody"></p>
+            </div>
+            <div class="rank-guide-recompensa">
+              <div class="rank-guide-recompensa-title">Recompensa</div>
+              <div class="rank-guide-recompensa-text" id="rankGuideRecompensa"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      const SUPABASE_URL = 'https://dgubxitmqegounjyeciw.supabase.co';
-      const SUPABASE_ANON_KEY = 'sb_publishable_EY4EoqiHn7om0Qf-HYpJZQ_HwDJXlan';
+    document.addEventListener("DOMContentLoaded", async () => {
+      const SUPABASE_URL = "https://dgubxitmqegounjyeciw.supabase.co";
+      const SUPABASE_ANON_KEY = "sb_publishable_EY4EoqiHn7om0Qf-HYpJZQ_HwDJXlan";
 
-      const loading = document.getElementById('rankingLoading');
-      const list = document.getElementById('rankingList');
-      const podioEl = document.getElementById('rankingPodio');
-      const restEl = document.getElementById('rankingRest');
-      const btnLoadMore = document.getElementById('btnLoadMore');
-      const rankingContainer = document.getElementById('rankingContainer');
-      const rankingModalContent = document.getElementById('rankingModalContent');
-      const btnCompartir = document.getElementById('btnCompartirRanking');
-      const storyExport = document.getElementById('storyExport');
+      const messageEl = document.getElementById("rankingMessage");
+      const top3Podium = document.getElementById("top3Podium");
+      const mobileContainer = document.getElementById("ranking-mobile");
+      const desktopContainer = document.getElementById("ranking-desktop");
+      const nameSearch = document.getElementById("nameSearch");
+      const btnVerMas = document.getElementById("btnVerMas");
+      const btnVerTodo = document.getElementById("btnVerTodo");
+      const statActive = document.getElementById("statActive");
+      const statRoutes = document.getElementById("statRoutes");
+      const statTopScore = document.getElementById("statTopScore");
+      const profileModal = document.getElementById("profileModal");
+      const rankGuideModal = document.getElementById("rankGuideModal");
+      const rankGuideSlide = document.getElementById("rankGuideSlide");
+      const rankGuideCard = document.getElementById("rankGuideCard");
+      const rankGuidePrev = document.getElementById("rankGuidePrev");
+      const rankGuideNext = document.getElementById("rankGuideNext");
+      const rankGuideClose = document.getElementById("rankGuideClose");
+      const rankGuideName = document.getElementById("rankGuideName");
+      const rankGuideBadgeWrap = document.getElementById("rankGuideBadgeWrap");
+      const rankGuideRequirement = document.getElementById("rankGuideRequirement");
+      const rankGuideStory = document.getElementById("rankGuideStory");
+      const rankGuideHook = document.getElementById("rankGuideHook");
+      const rankGuideBody = document.getElementById("rankGuideBody");
+      const rankGuideRecompensa = document.getElementById("rankGuideRecompensa");
+      const modalClose = document.getElementById("modalClose");
+      const btnCompartir = document.getElementById("btnCompartirRanking");
+      const modalCard = document.getElementById("modalCard");
+      const modalAvatar = document.getElementById("modalAvatar");
+      const modalRankPos = document.getElementById("modalRankPos");
+      const modalName = document.getElementById("modalName");
+      const modalBadge = document.getElementById("modalBadge");
+      const modalBadgeWrap = document.getElementById("modalBadgeWrap");
+      const modalRoutesWrap = document.getElementById("modalRoutesWrap");
+      const modalNext = document.getElementById("modalNext");
+      let avatarMap = new Map();
 
-      if (!loading || !list || !podioEl || !restEl || !btnLoadMore || !rankingContainer) return;
-
-      if (typeof supabase === 'undefined') {
-        await new Promise(resolve => setTimeout(resolve, 250));
-      }
-      if (typeof supabase === 'undefined') {
-        loading.textContent = 'Supabase no está disponible.';
-        return;
-      }
-
-      let db = null;
-      try {
-        db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      } catch (e) {
-        console.error(e);
-        loading.textContent = 'Error inicializando Supabase.';
-        return;
+      function escapeHtml(s) {
+        if (s == null) return "";
+        const div = document.createElement("div");
+        div.textContent = String(s);
+        return div.innerHTML;
       }
 
       function calcularRangoAventurado(rutasAsistidas) {
-        if (rutasAsistidas < 2) return { nombre: 'Novato', emoji: '🌱', color: '#22c55e', minRutas: 0 };
-        if (rutasAsistidas <= 4) return { nombre: 'Bronce', emoji: '🥉', color: '#CD7F32', minRutas: 2 };
-        if (rutasAsistidas <= 9) return { nombre: 'Plata', emoji: '🥈', color: '#C0C0C0', minRutas: 5 };
-        if (rutasAsistidas <= 14) return { nombre: 'Oro', emoji: '🥇', color: '#FFD700', minRutas: 10 };
-        if (rutasAsistidas <= 19) return { nombre: 'Platino', emoji: '💎', color: '#E5E4E2', minRutas: 15 };
-        return { nombre: 'Diamante', emoji: '✨', color: '#b9f2ff', minRutas: 20 };
+        if (rutasAsistidas < 2) return { nombre: "Novato", emoji: "🌱", color: "#22c55e", minRutas: 0 };
+        if (rutasAsistidas <= 4) return { nombre: "Bronce", emoji: "🥉", color: "#CD7F32", minRutas: 2 };
+        if (rutasAsistidas <= 9) return { nombre: "Plata", emoji: "🥈", color: "#C0C0C0", minRutas: 5 };
+        if (rutasAsistidas <= 14) return { nombre: "Oro", emoji: "🥇", color: "#FFD700", minRutas: 10 };
+        if (rutasAsistidas <= 19) return { nombre: "Platino", emoji: "💎", color: "#E5E4E2", minRutas: 15 };
+        return { nombre: "Diamante", emoji: "✨", color: "#b9f2ff", minRutas: 20 };
+      }
+
+      function getBadgeSrc(rangoNombre) {
+        return "badges/" + String(rangoNombre || "").toLowerCase() + ".png";
+      }
+
+      const rankGuideMap = {
+        bronce: {
+          nombre: "Bronce",
+          color: "#CD7F32",
+          minRutas: 2,
+          gancho: "El inicio de la adicción",
+          cuerpo:
+            "Dejaste el sofá y te fuiste al cerro. Te duelen hasta las pestañas, pero ya estás preguntando cuándo es la próxima ruta. Bienvenido a la verdadera resistencia.",
+          recompensa: "Cupón del 25% de descuento aplicable a una ruta local a tu elección."
+        },
+        plata: {
+          nombre: "Plata",
+          color: "#C0C0C0",
+          minRutas: 5,
+          gancho: "Ya no te mueres en la subida",
+          cuerpo:
+            "Ya no te falta el aire en la primera cuesta. Tus zapatos tienen kilómetros, tu cara tiene bronceado de montaña y ya no eres un turista; eres un aventurado.",
+          recompensa: "Cupón del 50% de descuento en una ruta local a tu elección."
+        },
+        oro: {
+          nombre: "Oro",
+          color: "#FFD700",
+          minRutas: 10,
+          gancho: "Esto es un estilo de vida",
+          cuerpo:
+            "La montaña es tu oficina. Con tu buff, marcas la pauta en el grupo. No importa si llueve o hay sol, tú siempre estás listo para la cumbre.",
+          recompensa: [
+            "Box edición Oro (merchandising exclusivo).",
+            "Buff para hiking.",
+            "Cupón para una ruta local sin costo."
+          ]
+        },
+        platino: {
+          nombre: "Platino",
+          color: "#b9f2ff",
+          minRutas: 15,
+          gancho: "Máquina total",
+          cuerpo:
+            "Te gustan las rutas técnicas y que el camino se ponga difícil. Eres la referencia de nuestra comunidad, el que nunca se queda atrás y el que todos siguen por instinto.",
+          recompensa: [
+            "Box edición Platino.",
+            "Franela táctica.",
+            "Cupón para una ruta premium.",
+            "25% de descuento permanente en todas las rutas locales."
+          ]
+        },
+        diamante: {
+          nombre: "Diamante",
+          color: "#78aaf5",
+          minRutas: 20,
+          gancho: "El dueño de la ruta",
+          cuerpo:
+            "El jefe final de la montaña. No buscas rutas, las inventas. Con tu chaqueta de Diamante, eres la leyenda viva de SomosAventurados. Respeto máximo, líder.",
+          recompensa: [
+            "Box edición Diamante.",
+            "Chaqueta cortavientos personalizada.",
+            "Cupón para una ruta privada.",
+            "50% de descuento permanente en todas las rutas locales."
+          ]
+        }
+      };
+
+      const rankGuideTintMap = {
+        bronce: "rgba(205, 127, 50, 0.26)",
+        plata: "rgba(192, 192, 192, 0.24)",
+        oro: "rgba(255, 215, 0, 0.24)",
+        platino: "rgba(185, 242, 255, 0.24)",
+        diamante: "rgba(120, 170, 245, 0.24)"
+      };
+
+      const RANK_GUIDE_KEYS = ["bronce", "plata", "oro", "platino", "diamante"];
+      const RANK_GUIDE_SWIPE_THRESHOLD = 60;
+      const RANK_GUIDE_SWIPE_DURATION = 350;
+      let rankGuideCurrentIndex = 0;
+      let rankGuideAnimating = false;
+
+      function rankGuideIndexFromKey(rankKey) {
+        const k = String(rankKey || "").toLowerCase();
+        const i = RANK_GUIDE_KEYS.indexOf(k);
+        return i >= 0 ? i : 0;
+      }
+
+      function setRankGuideBackground(rankKey) {
+        if (!rankGuideCard) return;
+        const tint = rankGuideTintMap[String(rankKey || "").toLowerCase()] || "rgba(118, 200, 147, 0.22)";
+        const foto = MODAL_FOTOS[Math.floor(Math.random() * MODAL_FOTOS.length)] || "fondo3.jpg";
+        rankGuideCard.style.backgroundImage =
+          "linear-gradient(180deg, " + tint + " 0%, rgba(0,0,0,0) 46%), " +
+          "linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.9) 100%), " +
+          "url('" + foto + "')";
+      }
+
+      function poblarModalRango(rankKey) {
+        const data = rankGuideMap[String(rankKey || "").toLowerCase()];
+        if (!data || !rankGuideCard) return false;
+        setRankGuideBackground(rankKey);
+
+        rankGuideCard.classList.remove("modal-gold", "modal-silver", "modal-bronze");
+        if (data.nombre === "Oro") rankGuideCard.classList.add("modal-gold");
+        else if (data.nombre === "Plata") rankGuideCard.classList.add("modal-silver");
+        else if (data.nombre === "Bronce") rankGuideCard.classList.add("modal-bronze");
+
+        rankGuideName.textContent = data.nombre;
+        rankGuideRequirement.textContent = data.minRutas + (data.minRutas === 1 ? " ruta" : " rutas");
+        rankGuideRequirement.style.color = data.color;
+        rankGuideRequirement.style.borderColor = data.color;
+        if (rankGuideStory) {
+          rankGuideStory.style.setProperty("--rank-accent", data.color || "#76c893");
+        }
+        if (rankGuideHook) {
+          rankGuideHook.textContent = data.gancho || "";
+        }
+        if (rankGuideBody) {
+          rankGuideBody.textContent = data.cuerpo || "";
+        }
+        rankGuideRecompensa.innerHTML = "";
+        if (Array.isArray(data.recompensa) && data.recompensa.length > 1) {
+          const ul = document.createElement("ul");
+          ul.className = "rank-guide-recompensa-list";
+          data.recompensa.forEach(function (linea) {
+            const li = document.createElement("li");
+            li.textContent = linea;
+            ul.appendChild(li);
+          });
+          rankGuideRecompensa.appendChild(ul);
+        } else {
+          const p = document.createElement("p");
+          p.className = "rank-guide-recompensa-single";
+          p.textContent = Array.isArray(data.recompensa) ? data.recompensa[0] : data.recompensa;
+          rankGuideRecompensa.appendChild(p);
+        }
+
+        const badgeSrc = getBadgeSrc(data.nombre);
+        rankGuideBadgeWrap.innerHTML = "";
+        const badgeContainer = document.createElement("div");
+        badgeContainer.className = "rank-badge-container";
+        badgeContainer.setAttribute("style", "box-shadow: 0 0 20px " + data.color + "44, 0 0 40px " + data.color + "22;");
+        const imgBadge = document.createElement("img");
+        imgBadge.src = badgeSrc;
+        imgBadge.alt = data.nombre;
+        const badgeFallback = document.createElement("span");
+        badgeFallback.className = "rank-badge-fallback";
+        badgeFallback.style.display = "none";
+        badgeFallback.style.color = data.color;
+        badgeFallback.textContent = data.nombre;
+        imgBadge.onerror = function () {
+          imgBadge.style.display = "none";
+          badgeFallback.style.display = "block";
+        };
+        badgeContainer.appendChild(imgBadge);
+        badgeContainer.appendChild(badgeFallback);
+        rankGuideBadgeWrap.appendChild(badgeContainer);
+        return true;
+      }
+
+      function resetRankGuideSlideTransform() {
+        if (!rankGuideSlide) return;
+        rankGuideSlide.classList.remove("is-dragging");
+        rankGuideSlide.style.transition = "";
+        rankGuideSlide.style.transform = "";
+      }
+
+      /** Tras deslizar la tarjeta fuera: coloca la nueva desde derecha (enterFromRight) o izquierda y anima al centro (misma lógica que index.html lightbox). */
+      function rankGuideCompleteSlideChange(enterFromRight, onSettled) {
+        if (!rankGuideSlide) {
+          poblarModalRango(RANK_GUIDE_KEYS[rankGuideCurrentIndex]);
+          if (typeof onSettled === "function") onSettled();
+          return;
+        }
+        rankGuideSlide.classList.remove("is-dragging");
+        rankGuideSlide.style.transition = "none";
+        rankGuideSlide.style.transform = enterFromRight ? "translateX(100%)" : "translateX(-100%)";
+        rankGuideSlide.offsetHeight;
+        poblarModalRango(RANK_GUIDE_KEYS[rankGuideCurrentIndex]);
+        rankGuideSlide.style.transition =
+          "transform " + RANK_GUIDE_SWIPE_DURATION + "ms cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+        rankGuideSlide.style.transform = "translateX(0)";
+        const onCenter = function () {
+          rankGuideSlide.removeEventListener("transitionend", onCenter);
+          rankGuideSlide.style.transition = "";
+          if (typeof onSettled === "function") onSettled();
+        };
+        rankGuideSlide.addEventListener("transitionend", onCenter);
+      }
+
+      function changeRankGuide(direction) {
+        if (!rankGuideModal || !rankGuideSlide || RANK_GUIDE_KEYS.length < 2 || rankGuideAnimating) return;
+        const n = RANK_GUIDE_KEYS.length;
+        const nextIndex = (rankGuideCurrentIndex + direction + n) % n;
+        if (nextIndex === rankGuideCurrentIndex) return;
+
+        rankGuideAnimating = true;
+        rankGuideSlide.classList.remove("is-dragging");
+        rankGuideSlide.style.transition =
+          "transform " + RANK_GUIDE_SWIPE_DURATION + "ms cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+        rankGuideSlide.style.transform = direction === 1 ? "translateX(-100%)" : "translateX(100%)";
+
+        const onEnd = function () {
+          rankGuideSlide.removeEventListener("transitionend", onEnd);
+          rankGuideCurrentIndex = nextIndex;
+          rankGuideCompleteSlideChange(direction === 1, function () {
+            rankGuideAnimating = false;
+          });
+        };
+        rankGuideSlide.addEventListener("transitionend", onEnd);
+      }
+
+      function abrirModalRango(rankKey) {
+        if (!rankGuideModal || !rankGuideCard) return;
+        rankGuideCurrentIndex = rankGuideIndexFromKey(rankKey);
+        resetRankGuideSlideTransform();
+        rankGuideAnimating = false;
+        if (!poblarModalRango(RANK_GUIDE_KEYS[rankGuideCurrentIndex])) return;
+        rankGuideModal.classList.add("active");
+        rankGuideModal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      }
+
+      function cerrarModalRango() {
+        if (!rankGuideModal) return;
+        rankGuideModal.classList.remove("active");
+        rankGuideModal.setAttribute("aria-hidden", "true");
+        resetRankGuideSlideTransform();
+        rankGuideAnimating = false;
+        if (!profileModal || !profileModal.classList.contains("active")) {
+          document.body.style.overflow = "";
+        }
+      }
+
+      if (rankGuidePrev) {
+        rankGuidePrev.addEventListener("click", function (e) {
+          e.stopPropagation();
+          changeRankGuide(-1);
+        });
+      }
+      if (rankGuideNext) {
+        rankGuideNext.addEventListener("click", function (e) {
+          e.stopPropagation();
+          changeRankGuide(1);
+        });
+      }
+
+      (function initRankGuideSwipe() {
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isRankGuideSwipe = false;
+        let axisDecided = false;
+
+        if (!rankGuideModal || !rankGuideSlide) return;
+
+        rankGuideModal.addEventListener(
+          "touchstart",
+          function (e) {
+            if (!rankGuideModal.classList.contains("active") || rankGuideAnimating || RANK_GUIDE_KEYS.length < 2) return;
+            touchStartX = e.touches[0].screenX;
+            touchStartY = e.touches[0].screenY;
+            isRankGuideSwipe = false;
+            axisDecided = false;
+          },
+          { passive: true }
+        );
+
+        rankGuideModal.addEventListener(
+          "touchmove",
+          function (e) {
+            if (!rankGuideModal.classList.contains("active") || rankGuideAnimating || RANK_GUIDE_KEYS.length < 2) return;
+            const x = e.touches[0].screenX;
+            const y = e.touches[0].screenY;
+            const dx = x - touchStartX;
+            const dy = y - touchStartY;
+            if (!axisDecided) {
+              if (Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy) * 1.15) {
+                axisDecided = true;
+                isRankGuideSwipe = true;
+                rankGuideSlide.classList.add("is-dragging");
+                rankGuideSlide.style.transition = "none";
+              } else if (Math.abs(dy) > 14 && Math.abs(dy) > Math.abs(dx)) {
+                axisDecided = true;
+                isRankGuideSwipe = false;
+              }
+            }
+            if (isRankGuideSwipe) {
+              e.preventDefault();
+              rankGuideSlide.style.transform = "translateX(" + dx + "px)";
+            }
+          },
+          { passive: false }
+        );
+
+        rankGuideModal.addEventListener(
+          "touchend",
+          function (e) {
+            if (!rankGuideModal.classList.contains("active") || rankGuideAnimating || RANK_GUIDE_KEYS.length < 2) return;
+            const touchEndX = e.changedTouches[0].screenX;
+            const deltaX = touchEndX - touchStartX;
+            rankGuideSlide.classList.remove("is-dragging");
+            rankGuideSlide.style.transition =
+              "transform " + RANK_GUIDE_SWIPE_DURATION + "ms cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+
+            if (!isRankGuideSwipe) {
+              rankGuideSlide.style.transform = "";
+              axisDecided = false;
+              return;
+            }
+
+            if (deltaX < -RANK_GUIDE_SWIPE_THRESHOLD) {
+              rankGuideAnimating = true;
+              rankGuideSlide.style.transform = "translateX(-100%)";
+              const onEnd = function () {
+                rankGuideSlide.removeEventListener("transitionend", onEnd);
+                rankGuideCurrentIndex = (rankGuideCurrentIndex + 1) % RANK_GUIDE_KEYS.length;
+                rankGuideCompleteSlideChange(true, function () {
+                  rankGuideAnimating = false;
+                });
+              };
+              rankGuideSlide.addEventListener("transitionend", onEnd);
+            } else if (deltaX > RANK_GUIDE_SWIPE_THRESHOLD) {
+              rankGuideAnimating = true;
+              rankGuideSlide.style.transform = "translateX(100%)";
+              const onEnd = function () {
+                rankGuideSlide.removeEventListener("transitionend", onEnd);
+                rankGuideCurrentIndex =
+                  (rankGuideCurrentIndex - 1 + RANK_GUIDE_KEYS.length) % RANK_GUIDE_KEYS.length;
+                rankGuideCompleteSlideChange(false, function () {
+                  rankGuideAnimating = false;
+                });
+              };
+              rankGuideSlide.addEventListener("transitionend", onEnd);
+            } else {
+              rankGuideSlide.style.transform = "translateX(0)";
+            }
+            isRankGuideSwipe = false;
+            axisDecided = false;
+          },
+          { passive: true }
+        );
+      })();
+
+      function floorToStep(value, step) {
+        const n = Number(value) || 0;
+        const s = Number(step) || 1;
+        return Math.floor(n / s) * s;
       }
 
       function getSiguienteRangoLanding(rango) {
         if (!rango) return null;
-        if (rango.nombre === 'Novato') return calcularRangoAventurado(2);
-        if (rango.nombre === 'Bronce') return calcularRangoAventurado(5);
-        if (rango.nombre === 'Plata') return calcularRangoAventurado(10);
-        if (rango.nombre === 'Oro') return calcularRangoAventurado(15);
-        if (rango.nombre === 'Platino') return calcularRangoAventurado(20);
+        if (rango.nombre === "Novato") return calcularRangoAventurado(2);
+        if (rango.nombre === "Bronce") return calcularRangoAventurado(5);
+        if (rango.nombre === "Plata") return calcularRangoAventurado(10);
+        if (rango.nombre === "Oro") return calcularRangoAventurado(15);
+        if (rango.nombre === "Platino") return calcularRangoAventurado(20);
         return null;
       }
 
-      function escapeHtmlLanding(s) {
-        if (s == null) return '';
-        var div = document.createElement('div');
-        div.textContent = s;
-        return div.innerHTML;
-      }
-
-      function escapeHtml(s) {
-        if (s == null) return '';
-        const div = document.createElement('div');
-        div.textContent = s;
-        return div.innerHTML;
-      }
-
-      function escapeAttr(s) {
-        if (s == null) return '';
-        const str = String(s);
-        return str
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;');
-      }
-
-      function renderCard(entry, position, avatarMap) {
-        const r = entry.rango;
-        const badgeSrc = 'badges/' + (r.nombre || '').toLowerCase() + '.png';
-        const nombreAttr = escapeAttr(entry.nombre);
-        const rutasText = entry.rutasAsistidas === 1 ? '1 RUTA' : entry.rutasAsistidas + ' RUTAS';
-        const statsPillText = (r.nombre || '').toUpperCase() + ' | ' + rutasText;
-        const glowColor = r.color || 'rgba(118, 200, 147, 0.5)';
-        const badgeGlowStyle = 'box-shadow: 0 0 20px ' + glowColor + '44, 0 0 40px ' + glowColor + '22;';
-        const avatarUrl = avatarMap && avatarMap.get(entry.nombre);
-
-        const avatarHtml = (position <= 3)
-            ? (avatarUrl
-            ? '<div class="rank-avatar-placeholder"><img src="' + escapeAttr(avatarUrl) + '" alt="" class="rank-avatar-img" onerror="this.onerror=null;this.parentNode.innerHTML=\'👤\';this.parentNode.setAttribute(\'aria-hidden\',\'true\');"></div>'
-            : '<div class="rank-avatar-placeholder" aria-hidden="true">👤</div>')
-          : '';
-
-        const pillStyle = 'color:' + (r.color || '#b8c5be') + ';border-color:' + (r.color || 'rgba(118,200,147,0.5)') + ';';
-
-        return `
-          <div class="ranking-card rank-${position}" role="listitem" data-nombre="${nombreAttr}">
-            <div class="rank-pos">${position}</div>
-            ${avatarHtml}
-            <div class="user-details">
-              <h3>${escapeHtml(entry.nombre)}</h3>
-              <span class="stats-pill" style="${pillStyle}">${escapeHtml(statsPillText)}</span>
-            </div>
-            <div class="badge-container" style="${badgeGlowStyle}">
-              <img src="${badgeSrc}" alt="${escapeHtml(r.nombre)}" onerror="this.onerror=null;this.style.display='none';var s=this.nextElementSibling;if(s)s.style.display='inline';">
-              <span class="rank-badge-fallback" style="display:none;color:${r.color || '#b8c5be'}">${escapeHtml(r.nombre)}</span>
-            </div>
-          </div>`;
-      }
-
-      // Fondos aleatorios para el modal (archivos en /Fotos del proyecto)
-      const MODAL_FOTOS = [
-        'fotos/1.jpg',
-        'fotos/2.jpg',
-        'fotos/3.jpg',
-        'fotos/4.jpg',
-        'fotos/5.jpg',
-        'fotos/6.jpg'
-      ];
+      const MODAL_FOTOS = ["fotos/1.jpg", "fotos/2.jpg", "fotos/3.jpg", "fotos/4.jpg", "fotos/5.jpg", "fotos/6.jpg", "fotos/7.jpg"];
 
       function setRandomModalBackground(contentEl) {
-        if (!contentEl || !MODAL_FOTOS || MODAL_FOTOS.length === 0) return;
-        const url = MODAL_FOTOS[Math.floor(Math.random() * MODAL_FOTOS.length)];
-        // Gradiente encima para asegurar contraste del texto.
-        contentEl.style.backgroundImage =
-          "linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.88) 100%), url('" + url + "')";
-        // Guardar para el export del story (misma foto).
+        if (!contentEl) return;
+        const url = MODAL_FOTOS[Math.floor(Math.random() * MODAL_FOTOS.length)] || "fondo3.jpg";
+        contentEl.style.backgroundImage = "linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.88) 100%), url('" + url + "')";
         window._modalRandomBgUrl = url;
       }
 
-      function renderStoryTemplate(entry, position, backgroundUrl) {
-        if (!storyExport) return;
-
+      function abrirModal(entry, position) {
+        if (!entry || !profileModal || !modalCard) return;
+        const pos = position || 0;
         const r = entry.rango || {};
-        const badgeSrc = 'badges/' + (r.nombre || '').toLowerCase() + '.png';
-        const nombre = entry.nombre || '';
+        const badgeSrc = getBadgeSrc(r.nombre);
+        const avatarUrl = avatarMap.get(entry.nombre);
+        const rutasText = entry.rutasAsistidas === 1 ? "1 RUTA" : entry.rutasAsistidas + " RUTAS";
+        const statsPillText = (r.nombre || "").toUpperCase() + " | " + rutasText;
 
-        // Aplicar el fondo aleatorio al story.
-        storyExport.style.backgroundImage =
-          "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.88) 100%), url('" + (backgroundUrl || '') + "')";
+        setRandomModalBackground(modalCard);
+        window._rankingModalEntry = entry;
+        window._rankingModalPosition = pos;
 
-        document.getElementById('storyRankPos').textContent = '#' + position;
-        document.getElementById('storyNombre').textContent = nombre;
+        modalCard.classList.remove("modal-gold", "modal-silver", "modal-bronze");
+        if (pos === 1) modalCard.classList.add("modal-gold");
+        else if (pos === 2) modalCard.classList.add("modal-silver");
+        else if (pos === 3) modalCard.classList.add("modal-bronze");
 
-        const rutasText = entry.rutasAsistidas === 1 ? '1 RUTA' : entry.rutasAsistidas + ' RUTAS';
-        const statsPillText = (r.nombre || '').toUpperCase() + ' | ' + rutasText;
-        document.getElementById('storyStatsPill').textContent = statsPillText;
+        if (modalAvatar) {
+          modalAvatar.innerHTML = "";
+          if (avatarUrl) {
+            modalAvatar.style.display = "";
+            const imgAvatar = document.createElement("img");
+            imgAvatar.src = String(avatarUrl);
+            imgAvatar.alt = "";
+            imgAvatar.onerror = function () {
+              modalAvatar.innerHTML = '<span class="avatar-fallback" aria-hidden="true">👤</span>';
+            };
+            modalAvatar.appendChild(imgAvatar);
+          } else {
+            modalAvatar.style.display = "none";
+          }
+        }
 
-        const badgeRow = document.getElementById('storyBadgeRow');
-        badgeRow.innerHTML = '';
-        var imgBadge = document.createElement('img');
+        if (modalRankPos) {
+          modalRankPos.textContent = "#" + pos;
+          modalRankPos.style.color = r.color || "#b8c5be";
+        }
+        modalName.textContent = entry.nombre || "";
+        modalBadge.textContent = statsPillText;
+        modalBadge.style.color = r.color || "#b8c5be";
+        modalBadge.style.borderColor = r.color || "rgba(118,200,147,0.5)";
+
+        const badgeGlowColor = r.color || "rgba(118,200,147,0.5)";
+        modalBadgeWrap.innerHTML = "";
+        const badgeContainer = document.createElement("div");
+        badgeContainer.className = "rank-badge-container";
+        badgeContainer.setAttribute("style", "box-shadow: 0 0 20px " + badgeGlowColor + "44, 0 0 40px " + badgeGlowColor + "22;");
+        const imgBadge = document.createElement("img");
         imgBadge.src = badgeSrc;
-        imgBadge.alt = r.nombre || '';
-        badgeRow.appendChild(imgBadge);
+        imgBadge.alt = r.nombre || "";
+        const badgeFallback = document.createElement("span");
+        badgeFallback.className = "rank-badge-fallback";
+        badgeFallback.style.display = "none";
+        badgeFallback.style.color = r.color || "#b8c5be";
+        badgeFallback.textContent = r.nombre || "";
+        imgBadge.onerror = function () { imgBadge.style.display = "none"; badgeFallback.style.display = "block"; };
+        badgeContainer.appendChild(imgBadge);
+        badgeContainer.appendChild(badgeFallback);
+        modalBadgeWrap.appendChild(badgeContainer);
 
-        // Tags rutas
-        const tagsEl = document.getElementById('storyTags');
-        tagsEl.innerHTML = '';
         const rutasList = entry.rutasAsistidasList || [];
-        const slice = rutasList.slice(0, 14);
-        for (var i = 0; i < slice.length; i++) {
-          const ru = slice[i];
-          const veces = ru.vecesAsistio || 1;
-          const text = escapeHtmlLanding(ru.nombre) + (veces > 1 ? ' x' + veces : '');
-          var tag = document.createElement('div');
-          tag.className = 'story-tag';
-          tag.textContent = text;
-          tagsEl.appendChild(tag);
-        }
-        if (rutasList.length > slice.length) {
-          var tagMore = document.createElement('div');
-          tagMore.className = 'story-tag';
-          tagMore.style.borderStyle = 'dashed';
-          tagMore.textContent = '+' + (rutasList.length - slice.length) + ' más';
-          tagsEl.appendChild(tagMore);
+        if (rutasList.length === 0) {
+          modalRoutesWrap.innerHTML = "";
+          modalRoutesWrap.style.display = "none";
+        } else {
+          modalRoutesWrap.style.display = "block";
+          let listHtml = '<div class="modal-routes-title">🏔️ Rutas conquistadas</div><div class="modal-routes">';
+          const sliceRutas = rutasList.slice(0, 8);
+          for (let i = 0; i < sliceRutas.length; i++) {
+            const ru = sliceRutas[i];
+            const veces = ru.vecesAsistio || 1;
+            const badgeRepetida = veces > 1 ? ' <span class="ruta-veces">x' + veces + "</span>" : "";
+            listHtml += '<span class="modal-route-tag">' + escapeHtml(ru.nombre) + badgeRepetida + "</span>";
+          }
+          if (rutasList.length > 8) listHtml += '<span class="modal-route-tag" style="border-style:dashed;color:rgba(255,255,255,0.7)">+' + (rutasList.length - 8) + " más</span>";
+          listHtml += "</div>";
+          modalRoutesWrap.innerHTML = listHtml;
         }
 
-        // Próximo rango (si existe)
-        const nextEl = document.getElementById('storyNext');
         const sig = entry.siguienteRango;
         if (!sig) {
-          nextEl.style.display = 'none';
-          return;
+          modalNext.innerHTML = "";
+          modalNext.style.display = "none";
+        } else {
+          modalNext.style.display = "block";
+          let faltan = (sig.minRutas || 0) - (entry.rutasAsistidas || 0);
+          if (faltan < 0) faltan = 0;
+          const totalPara = entry.totalParaSiguiente || 1;
+          const progreso = entry.progreso || 0;
+          const pct = totalPara > 0 ? Math.min(100, (progreso / totalPara) * 100) : 0;
+          modalNext.innerHTML = '<div class="modal-next-title" style="color:' + (sig.color || "") + '">' + (sig.emoji || "") + " Próximo rango: " + escapeHtml(sig.nombre) + "</div>" +
+            '<div class="modal-next-text">Necesitas ' + faltan + " ruta" + (faltan !== 1 ? "s" : "") + " más</div>" +
+            '<div class="modal-next-bar"><div class="modal-next-fill" style="width:' + pct + "%;background:" + (sig.color || "") + '"></div></div>' +
+            '<div class="modal-next-meta"><span>' + progreso + "/" + totalPara + "</span><span>" + Math.round(pct) + "%</span></div>";
         }
-        nextEl.style.display = 'block';
 
-        const faltan = (sig.minRutas || 0) - (entry.rutasAsistidas || 0);
-        const totalPara = entry.totalParaSiguiente || 1;
-        const progreso = entry.progreso || 0;
-        const pct = totalPara > 0 ? Math.min(100, (progreso / totalPara) * 100) : 0;
+        profileModal.classList.add("active");
+        document.body.style.overflow = "hidden";
+      }
 
-        document.getElementById('storyNextTitle').textContent = (sig.emoji || '') + ' Próximo rango: ' + (sig.nombre || '');
-        document.getElementById('storyNextText').textContent = 'Necesitas ' + faltan + ' ruta' + (faltan !== 1 ? 's' : '') + ' más';
-        document.getElementById('storyNextProgressFill').style.width = pct + '%';
-        document.getElementById('storyNextProgressFill').style.background = sig.color || 'var(--accent)';
-        document.getElementById('storyNextMetaLeft').textContent = progreso + '/' + totalPara;
-        document.getElementById('storyNextMetaRight').textContent = Math.round(pct) + '%';
+      function cerrarModal() {
+        if (!profileModal) return;
+        profileModal.classList.remove("active");
+        document.body.style.overflow = "";
       }
 
       async function exportStoryAndShare() {
@@ -1230,44 +2379,18 @@
           await exportStoryCanvasFallback(entry, position, bg);
         } catch (e) {
           console.error(e);
-          alert('Error exportando la historia.');
+          alert("Error exportando la historia.");
         }
       }
 
-      // ===== Fallback offline: generar imagen historia con canvas nativo =====
       function loadImage(src) {
         return new Promise((resolve, reject) => {
           const img = new Image();
-          // Permite cargar imágenes remotas (avatars) si el host envía CORS.
-          img.crossOrigin = 'anonymous';
+          img.crossOrigin = "anonymous";
           img.onload = () => resolve(img);
           img.onerror = reject;
           img.src = src;
         });
-      }
-
-      async function waitForImagesInElement(rootEl, timeoutMs) {
-        if (!rootEl) return;
-        const imgs = Array.from(rootEl.querySelectorAll('img'));
-        if (!imgs.length) return;
-
-        const waitOne = (img) => new Promise(resolve => {
-          if (img.complete && img.naturalWidth > 0) {
-            resolve();
-            return;
-          }
-          const done = () => {
-            img.removeEventListener('load', done);
-            img.removeEventListener('error', done);
-            resolve();
-          };
-          img.addEventListener('load', done);
-          img.addEventListener('error', done);
-        });
-
-        const all = Promise.all(imgs.map(waitOne));
-        const timeout = new Promise(resolve => setTimeout(resolve, timeoutMs || 2500));
-        await Promise.race([all, timeout]);
       }
 
       function drawRoundRect(ctx, x, y, w, h, r) {
@@ -1281,62 +2404,56 @@
         ctx.closePath();
       }
 
-      function drawImageCover(ctx, img, targetW, targetH) {
-        const iw = img.naturalWidth || img.width;
-        const ih = img.naturalHeight || img.height;
-        if (!iw || !ih) return;
-        const scale = Math.max(targetW / iw, targetH / ih);
-        const sw = targetW / scale;
-        const sh = targetH / scale;
-        const sx = (iw - sw) / 2;
-        const sy = (ih - sh) / 2;
-        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
-      }
-
       function safeText(s) {
-        return (s == null) ? '' : String(s);
+        return s == null ? "" : String(s);
       }
 
       async function exportStoryCanvasFallback(entry, position, bgUrl) {
-        // Mantener mismo flujo de descarga/compartir que el caso html2canvas.
+        if (document.fonts && document.fonts.ready) {
+          try { await document.fonts.ready; } catch (e) {}
+        }
         const w = 1080;
         const h = 1920;
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         canvas.width = w;
         canvas.height = h;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext("2d");
         if (!ctx) {
-          alert('Error exportando la historia.');
+          alert("Error exportando la historia.");
           return;
         }
 
-        // Fondo aleatorio
         let bgImg = null;
         try {
-          const fallbackBg = 'fondo2.jpg';
+          const fallbackBg = "fondo2.jpg";
           const src = bgUrl || fallbackBg;
           bgImg = await loadImage(src);
         } catch (e) {
-          // Si falla el fondo, dejamos fondo oscuro.
           bgImg = null;
         }
 
         if (bgImg) {
-          drawImageCover(ctx, bgImg, w, h);
+          const iw = bgImg.naturalWidth || bgImg.width;
+          const ih = bgImg.naturalHeight || bgImg.height;
+          const scale = Math.max(w / iw, h / ih);
+          const sw = w / scale;
+          const sh = h / scale;
+          const sx = (iw - sw) / 2;
+          const sy = (ih - sh) / 2;
+          ctx.drawImage(bgImg, sx, sy, sw, sh, 0, 0, w, h);
         } else {
-          ctx.fillStyle = '#0e2f36';
+          ctx.fillStyle = "#0e2f36";
           ctx.fillRect(0, 0, w, h);
         }
 
-        // Overlay para que se lean los textos
         const grad = ctx.createLinearGradient(0, 0, 0, h);
-        grad.addColorStop(0, 'rgba(0,0,0,0.55)');
-        grad.addColorStop(1, 'rgba(0,0,0,0.88)');
+        grad.addColorStop(0, "rgba(0,0,0,0.55)");
+        grad.addColorStop(1, "rgba(0,0,0,0.88)");
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, w, h);
 
         const r = entry.rango || {};
-        const badgeSrc = 'badges/' + (r.nombre || '').toLowerCase() + '.png';
+        const badgeSrc = getBadgeSrc(r.nombre);
         let badgeImg = null;
         try {
           badgeImg = await loadImage(badgeSrc);
@@ -1344,14 +2461,12 @@
           badgeImg = null;
         }
 
-        // ===== Layout (centrado, similar al modal actual) =====
         const padX = 70;
         const centerX = w / 2;
         let y = 120;
-        const avatarMap = window._avatarMapLanding;
-        const avatarUrl = avatarMap && avatarMap.get(entry.nombre);
+        const avatarMapLocal = window._avatarMapLanding;
+        const avatarUrl = avatarMapLocal && avatarMapLocal.get(entry.nombre);
 
-        // Avatar circular arriba
         const avatarSize = 180;
         const avatarX = Math.round(centerX - avatarSize / 2);
         if (avatarUrl) {
@@ -1364,13 +2479,13 @@
             ctx.clip();
             ctx.drawImage(avatarImg, avatarX, y, avatarSize, avatarSize);
             ctx.restore();
-            ctx.strokeStyle = 'rgba(118,200,147,0.7)';
+            ctx.strokeStyle = "rgba(118,200,147,0.7)";
             ctx.lineWidth = 6;
             ctx.beginPath();
             ctx.arc(centerX, y + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
             ctx.stroke();
           } catch (e) {
-            ctx.fillStyle = 'rgba(255,255,255,0.12)';
+            ctx.fillStyle = "rgba(255,255,255,0.12)";
             ctx.beginPath();
             ctx.arc(centerX, y + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
             ctx.fill();
@@ -1378,67 +2493,62 @@
         }
         y += avatarSize + 34;
 
-        // Rank centrado
-        ctx.font = '900 64px Poppins, sans-serif';
-        ctx.fillStyle = '#FFFFFF';
-        ctx.textBaseline = 'top';
-        ctx.shadowColor = 'rgba(0,0,0,0.55)';
+        ctx.font = "900 64px Poppins, sans-serif";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.textBaseline = "top";
+        ctx.shadowColor = "rgba(0,0,0,0.55)";
         ctx.shadowBlur = 10;
-        const rankText = '#' + position;
+        const rankText = "#" + position;
         ctx.fillText(rankText, centerX - ctx.measureText(rankText).width / 2, y);
         y += 86;
 
-        // Nombre centrado
         ctx.shadowBlur = 0;
         const nombre = safeText(entry.nombre);
-        let fontSize = 72;
-        ctx.font = '900 ' + fontSize + 'px Poppins, sans-serif';
-        while (ctx.measureText(nombre).width > (w - 120) && fontSize > 40) {
+        let fontSize = 66;
+        ctx.font = "900 " + fontSize + "px Poppins, sans-serif";
+        while (ctx.measureText(nombre).width > w - 140 && fontSize > 38) {
           fontSize -= 4;
-          ctx.font = '900 ' + fontSize + 'px Poppins, sans-serif';
+          ctx.font = "900 " + fontSize + "px Poppins, sans-serif";
         }
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = "#FFFFFF";
         ctx.fillText(nombre, centerX - ctx.measureText(nombre).width / 2, y);
         y += fontSize + 26;
 
-        // Pill stats centrado
-        const rutasText = entry.rutasAsistidas === 1 ? '1 RUTA' : entry.rutasAsistidas + ' RUTAS';
-        const pillText = safeText(r.nombre).toUpperCase() + ' | ' + rutasText;
-        ctx.font = '800 34px Poppins, sans-serif';
+        const rutasText = entry.rutasAsistidas === 1 ? "1 RUTA" : entry.rutasAsistidas + " RUTAS";
+        const pillText = safeText(r.nombre).toUpperCase() + " | " + rutasText;
+        ctx.font = "800 34px Poppins, sans-serif";
         const pillH = 70;
         const pillW = ctx.measureText(pillText).width + 40;
         const pillX = centerX - pillW / 2;
         const pillY = y;
-        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.fillStyle = "rgba(0,0,0,0.35)";
         drawRoundRect(ctx, pillX, pillY, pillW, pillH, 999);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+        ctx.strokeStyle = "rgba(255,255,255,0.18)";
         ctx.lineWidth = 3;
         ctx.stroke();
-        ctx.fillStyle = '#e9f3ec';
-        ctx.textBaseline = 'middle';
+        ctx.fillStyle = "#e9f3ec";
+        ctx.textBaseline = "middle";
         ctx.fillText(pillText, pillX + 20, pillY + pillH / 2);
-        ctx.textBaseline = 'top';
+        ctx.textBaseline = "top";
         y += pillH + 24;
 
-        // Badge centrado (igual enfoque visual del modal)
-        const badgeBoxW = 220;
-        const badgeBoxH = 220;
+        const badgeBoxW = 260;
+        const badgeBoxH = 260;
         const badgeX = Math.round(centerX - badgeBoxW / 2);
         const badgeY = y;
-        ctx.fillStyle = 'rgba(18,18,18,0.72)';
+        ctx.fillStyle = "rgba(18,18,18,0.72)";
         drawRoundRect(ctx, badgeX, badgeY, badgeBoxW, badgeBoxH, 28);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.strokeStyle = "rgba(255,255,255,0.08)";
         ctx.lineWidth = 2;
         ctx.stroke();
         if (badgeImg) {
-          ctx.drawImage(badgeImg, badgeX + 16, badgeY + 16, badgeBoxW - 32, badgeBoxH - 32);
+          ctx.drawImage(badgeImg, badgeX + 14, badgeY + 14, badgeBoxW - 28, badgeBoxH - 28);
         }
         y += badgeBoxH + 34;
 
-        // Separador
-        ctx.strokeStyle = 'rgba(118,200,147,0.25)';
+        ctx.strokeStyle = "rgba(118,200,147,0.25)";
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(padX, y);
@@ -1446,13 +2556,11 @@
         ctx.stroke();
         y += 26;
 
-        // Título rutas asistidas
-        ctx.font = '900 42px Poppins, sans-serif';
-        ctx.fillStyle = 'rgba(255,255,255,0.92)';
-        ctx.fillText('🏔️ Rutas asistidas', padX, y);
+        ctx.font = "900 42px Poppins, sans-serif";
+        ctx.fillStyle = "rgba(255,255,255,0.92)";
+        ctx.fillText("🏔️ Rutas conquistadas", padX, y);
         y += 60;
 
-        // Tags rutas (más compactos)
         const rutasList = entry.rutasAsistidasList || [];
         const slice = rutasList.slice(0, 12);
         const tagAreaW = w - padX * 2;
@@ -1460,91 +2568,82 @@
         const tagGapY = 14;
         let tagX = padX;
         let tagY = y;
-
-        ctx.font = '800 30px Poppins, sans-serif';
+        ctx.font = "400 30px Poppins, sans-serif";
         for (let i = 0; i < slice.length; i++) {
           const ru = slice[i];
           const veces = ru.vecesAsistio || 1;
-          const text = safeText(ru.nombre) + (veces > 1 ? ' x' + veces : '');
+          const text = safeText(ru.nombre) + (veces > 1 ? " x" + veces : "");
           const textW = ctx.measureText(text).width;
           const tagH = 62;
           const tagW = Math.min(tagAreaW, textW + 36);
-
           if (tagX + tagW > padX + tagAreaW) {
             tagX = padX;
             tagY += tagH + tagGapY;
           }
-
-          ctx.fillStyle = 'rgba(26,58,40,0.55)';
-          ctx.strokeStyle = 'rgba(118,200,147,0.35)';
+          ctx.fillStyle = "rgba(26,58,40,0.55)";
+          ctx.strokeStyle = "rgba(118,200,147,0.35)";
           ctx.lineWidth = 3;
           drawRoundRect(ctx, tagX, tagY, tagW, tagH, 18);
           ctx.fill();
           ctx.stroke();
-
-          ctx.fillStyle = 'rgba(255,255,255,0.95)';
-          ctx.textBaseline = 'middle';
+          ctx.fillStyle = "rgba(255,255,255,0.95)";
+          ctx.textBaseline = "middle";
           ctx.fillText(text, tagX + 18, tagY + tagH / 2);
-          ctx.textBaseline = 'top';
-
+          ctx.textBaseline = "top";
           tagX += tagW + tagGapX;
         }
 
         const sig = entry.siguienteRango;
         const blockX = padX;
         const blockW = w - padX * 2;
-        const blockY = Math.min(h - 430, tagY + 62 + 34);
+        const nextCardH = 380;
+        const nextCardBottom = 76;
+        const blockY = h - nextCardH - nextCardBottom;
         if (sig) {
-          ctx.fillStyle = 'rgba(26,58,40,0.55)';
-          ctx.strokeStyle = 'rgba(118,200,147,0.25)';
+          ctx.fillStyle = "rgba(26,58,40,0.55)";
+          ctx.strokeStyle = "rgba(118,200,147,0.25)";
           ctx.lineWidth = 4;
-          drawRoundRect(ctx, blockX, blockY, blockW, 380, 28);
+          drawRoundRect(ctx, blockX, blockY, blockW, nextCardH, 28);
           ctx.fill();
           ctx.stroke();
 
-          ctx.fillStyle = '#ffffff';
-          ctx.font = '900 40px Poppins, sans-serif';
-          ctx.fillText((sig.emoji || '') + ' Próximo rango: ' + safeText(sig.nombre), blockX + 26, blockY + 52);
+          ctx.fillStyle = sig.color || "#ffffff";
+          ctx.font = "700 40px Poppins, sans-serif";
+          ctx.fillText((sig.emoji || "") + " Próximo rango: " + safeText(sig.nombre), blockX + 26, blockY + 52);
 
           const faltan = Math.max(0, (sig.minRutas || 0) - (entry.rutasAsistidas || 0));
-          ctx.fillStyle = 'rgba(255,255,255,0.75)';
-          ctx.font = '900 34px Poppins, sans-serif';
-          ctx.fillText('Necesitas ' + faltan + ' ruta' + (faltan !== 1 ? 's' : '') + ' más', blockX + 26, blockY + 120);
+          ctx.fillStyle = "rgba(255,255,255,0.65)";
+          ctx.font = "500 34px Poppins, sans-serif";
+          ctx.fillText("Necesitas " + faltan + " ruta" + (faltan !== 1 ? "s" : "") + " más", blockX + 26, blockY + 120);
 
           const totalPara = entry.totalParaSiguiente || 1;
           const progreso = entry.progreso || 0;
           const pct = totalPara > 0 ? Math.min(100, (progreso / totalPara) * 100) : 0;
-
-          // progress bar
           const barX = blockX + 26;
           const barY = blockY + 180;
           const barW = blockW - 52;
           const barH = 22;
-          ctx.fillStyle = 'rgba(255,255,255,0.12)';
+          ctx.fillStyle = "rgba(255,255,255,0.1)";
           drawRoundRect(ctx, barX, barY, barW, barH, 999);
           ctx.fill();
-
-          ctx.fillStyle = r.color || 'rgba(118,200,147,1)';
-          drawRoundRect(ctx, barX, barY, (barW * (pct / 100)), barH, 999);
+          ctx.fillStyle = sig.color || r.color || "rgba(118,200,147,1)";
+          drawRoundRect(ctx, barX, barY, barW * (pct / 100), barH, 999);
           ctx.fill();
-
-          ctx.fillStyle = 'rgba(255,255,255,0.6)';
-          ctx.font = '900 28px Poppins, sans-serif';
-          ctx.fillText(progreso + '/' + totalPara, barX, barY + 50);
-          ctx.fillText(Math.round(pct) + '%', barX + barW - 110, barY + 50);
+          ctx.fillStyle = "rgba(255,255,255,0.5)";
+          ctx.font = "500 28px Poppins, sans-serif";
+          ctx.fillText(progreso + "/" + totalPara, barX, barY + 50);
+          ctx.fillText(Math.round(pct) + "%", barX + barW - 110, barY + 50);
         }
 
-        // Guardar y descargar
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
         if (!blob) {
-          alert('No se pudo generar la imagen.');
+          alert("No se pudo generar la imagen.");
           return;
         }
 
-        const safeNombre = safeText(entry.nombre || 'ranking').replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 40);
-        const file = new File([blob], 'ranking-historia-' + safeNombre + '.png', { type: 'image/png' });
-
-        const a = document.createElement('a');
+        const safeNombre = safeText(entry.nombre || "ranking").replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 40);
+        const file = new File([blob], "ranking-historia-" + safeNombre + ".png", { type: "image/png" });
+        const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = file.name;
         document.body.appendChild(a);
@@ -1555,234 +2654,232 @@
           try {
             await navigator.share({
               files: [file],
-              title: 'Ranking SomosAventura2',
-              text: 'Mira mi progreso en el ranking de SomosAventura2.'
+              title: "Ranking SomosAventura2",
+              text: "Mira mi progreso en el ranking de SomosAventura2."
             });
-          } catch (e) {
-            // Falla share => ya hay descarga.
-          }
+          } catch (e) {}
         }
       }
 
       if (btnCompartir) {
-        btnCompartir.addEventListener('click', async () => {
+        btnCompartir.addEventListener("click", async () => {
           btnCompartir.disabled = true;
           await exportStoryAndShare();
           btnCompartir.disabled = false;
         });
       }
 
-      function abrirModalRankingLanding(nombre) {
-        var ranking = window._rankingLanding;
-        var avatarMap = window._avatarMapLanding;
-        if (!ranking || !nombre) return;
-
-        var entry = ranking.find(function (e) { return (e.nombre || '') === nombre; });
-        if (!entry) return;
-
-        var position = ranking.indexOf(entry) + 1;
-        var r = entry.rango;
-        var badgeSrc = 'badges/' + (r.nombre || '').toLowerCase() + '.png';
-        var avatarUrl = avatarMap && avatarMap.get(nombre);
-        var rutasText = entry.rutasAsistidas === 1 ? '1 RUTA' : entry.rutasAsistidas + ' RUTAS';
-        var statsPillText = (r.nombre || '').toUpperCase() + ' | ' + rutasText;
-
-        var modal = document.getElementById('rankingModal');
-        var contentEl = document.getElementById('rankingModalContent');
-        var avatarEl = document.getElementById('rankingModalAvatar');
-        var badgeWrap = document.getElementById('rankingModalBadge');
-        var nombreEl = document.getElementById('rankingModalNombre');
-        var rankPosEl = document.getElementById('rankingModalRankPos');
-        var statsPillEl = document.getElementById('rankingModalStatsPill');
-        var rutasEl = document.getElementById('rankingModalRutas');
-        var proximoEl = document.getElementById('rankingModalProximo');
-
-        if (!modal || !contentEl || !badgeWrap || !nombreEl || !statsPillEl) return;
-
-        // Fondo aleatorio para el modal
-        setRandomModalBackground(contentEl);
-
-        // Guardar datos para el export
-        window._rankingModalEntry = entry;
-        window._rankingModalPosition = position;
-
-        contentEl.classList.remove('ranking-modal-content--gold', 'ranking-modal-content--silver', 'ranking-modal-content--bronze', 'ranking-modal-content--green');
-        if (position === 1) contentEl.classList.add('ranking-modal-content--gold');
-        else if (position === 2) contentEl.classList.add('ranking-modal-content--silver');
-        else if (position === 3) contentEl.classList.add('ranking-modal-content--bronze');
-        else contentEl.classList.add('ranking-modal-content--green');
-
-        if (avatarEl) {
-          avatarEl.innerHTML = '';
-          if (avatarUrl) {
-            avatarEl.style.display = '';
-            var imgAvatar = document.createElement('img');
-            imgAvatar.src = String(avatarUrl);
-            imgAvatar.alt = '';
-            imgAvatar.onerror = function () {
-              avatarEl.innerHTML = '<span class="avatar-fallback" aria-hidden="true">👤</span>';
-            };
-            avatarEl.appendChild(imgAvatar);
-          } else {
-            avatarEl.style.display = 'none';
-          }
-        }
-
-        var badgeGlowColor = r.color || 'rgba(118,200,147,0.5)';
-        var badgeGlowStyle = 'box-shadow: 0 0 20px ' + badgeGlowColor + '44, 0 0 40px ' + badgeGlowColor + '22;';
-        badgeWrap.innerHTML = '';
-        var badgeContainer = document.createElement('div');
-        badgeContainer.className = 'badge-container';
-        badgeContainer.setAttribute('style', badgeGlowStyle);
-
-        var imgBadge = document.createElement('img');
-        imgBadge.src = badgeSrc;
-        imgBadge.alt = r.nombre || '';
-
-        var badgeFallback = document.createElement('span');
-        badgeFallback.className = 'rank-badge-fallback';
-        badgeFallback.style.display = 'none';
-        badgeFallback.style.color = r.color || '#b8c5be';
-        badgeFallback.textContent = r.nombre || '';
-
-        imgBadge.onerror = function () {
-          imgBadge.style.display = 'none';
-          badgeFallback.style.display = 'block';
-        };
-
-        badgeContainer.appendChild(imgBadge);
-        badgeContainer.appendChild(badgeFallback);
-        badgeWrap.appendChild(badgeContainer);
-
-        if (rankPosEl) {
-          rankPosEl.textContent = '#' + position;
-          rankPosEl.style.color = r.color || '#b8c5be';
-        }
-
-        nombreEl.textContent = entry.nombre || '';
-        statsPillEl.textContent = statsPillText;
-        statsPillEl.style.display = 'block';
-        statsPillEl.style.color = r.color || '#b8c5be';
-        statsPillEl.style.borderColor = r.color || 'rgba(118,200,147,0.5)';
-
-        var rutasList = entry.rutasAsistidasList || [];
-        if (rutasEl) {
-          if (rutasList.length === 0) {
-            rutasEl.innerHTML = '';
-            rutasEl.style.display = 'none';
-          } else {
-            rutasEl.style.display = 'block';
-            var listHtml = '<div class="ranking-modal-rutas-title">🏔️ Rutas asistidas</div><div class="ranking-modal-rutas-list">';
-            var sliceRutas = rutasList.slice(0, 8);
-            for (var i = 0; i < sliceRutas.length; i++) {
-              var ru = sliceRutas[i];
-              var veces = ru.vecesAsistio || 1;
-              var badgeRepetida = veces > 1 ? ' <span class="ruta-veces">x' + veces + '</span>' : '';
-              listHtml += '<span class="ranking-modal-ruta-tag">' + escapeHtmlLanding(ru.nombre) + badgeRepetida + '</span>';
-            }
-            if (rutasList.length > 8) listHtml += '<span class="ranking-modal-ruta-tag" style="border-style:dashed;color:var(--text-secondary)">+' + (rutasList.length - 8) + ' más</span>';
-            listHtml += '</div>';
-            rutasEl.innerHTML = listHtml;
-          }
-        }
-
-        var sig = entry.siguienteRango;
-        if (proximoEl) {
-          if (!sig) {
-            proximoEl.innerHTML = '';
-            proximoEl.style.display = 'none';
-          } else {
-            proximoEl.style.display = 'block';
-            var faltan = (sig.minRutas || 0) - (entry.rutasAsistidas || 0);
-            if (faltan < 0) faltan = 0;
-            var totalPara = entry.totalParaSiguiente || 1;
-            var progreso = entry.progreso || 0;
-            var pct = totalPara > 0 ? Math.min(100, (progreso / totalPara) * 100) : 0;
-            proximoEl.innerHTML = '<div class="ranking-modal-proximo-title" style="color:' + (sig.color || '') + '">' + (sig.emoji || '') + ' Próximo rango: ' + escapeHtmlLanding(sig.nombre) + '</div>' +
-              '<div class="ranking-modal-proximo-text">Necesitas ' + faltan + ' ruta' + (faltan !== 1 ? 's' : '') + ' más</div>' +
-              '<div class="ranking-modal-proximo-bar"><div class="ranking-modal-proximo-fill" style="width:' + pct + '%;background:' + (sig.color || '') + '"></div></div>' +
-              '<div class="ranking-modal-proximo-meta"><span>' + progreso + '/' + totalPara + '</span><span>' + Math.round(pct) + '%</span></div>';
-          }
-        }
-
-        modal.classList.add('active');
-        document.body.classList.add('lightbox-open');
-      }
-
-      function cerrarModalRankingLanding() {
-        var modal = document.getElementById('rankingModal');
-        if (modal) modal.classList.remove('active');
-        document.body.classList.remove('lightbox-open');
-      }
-
-      // Hook modal (cierre por botón / overlay / Escape)
-      (function () {
-        var btn = document.getElementById('rankingModalClose');
-        var modal = document.getElementById('rankingModal');
-        if (btn) btn.addEventListener('click', cerrarModalRankingLanding);
-        if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) cerrarModalRankingLanding(); });
-        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') cerrarModalRankingLanding(); });
-
-        if (rankingContainer) rankingContainer.addEventListener('click', function (e) {
-          var card = e.target.closest('.ranking-card[data-nombre]');
-          if (card) {
-            var nombre = card.getAttribute('data-nombre');
-            if (nombre != null) abrirModalRankingLanding(nombre);
-          }
+      if (modalClose) modalClose.addEventListener("click", cerrarModal);
+      if (rankGuideClose) rankGuideClose.addEventListener("click", cerrarModalRango);
+      if (profileModal) {
+        profileModal.addEventListener("click", function (e) {
+          if (e.target === profileModal) cerrarModal();
         });
-      })();
+      }
+      if (rankGuideModal) {
+        rankGuideModal.addEventListener("click", function (e) {
+          if (e.target === rankGuideModal) cerrarModalRango();
+        });
+      }
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+          cerrarModal();
+          cerrarModalRango();
+          return;
+        }
+        if (rankGuideModal && rankGuideModal.classList.contains("active")) {
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            changeRankGuide(-1);
+          } else if (e.key === "ArrowRight") {
+            e.preventDefault();
+            changeRankGuide(1);
+          }
+        }
+      });
+
+      if (typeof supabase === "undefined") {
+        await new Promise(function (resolve) { setTimeout(resolve, 300); });
+      }
+      if (typeof supabase === "undefined") {
+        messageEl.textContent = "No se pudo cargar Supabase.";
+        return;
+      }
+
+      const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const ordenRangos = { Diamante: 6, Platino: 5, Oro: 4, Plata: 3, Bronce: 2, Novato: 1 };
+      let rankingBase = [];
+      let rankingStep = 0; // 0 => 10, 1 => 20, 2 => 50, 3 => todo
+
+      function renderTop3(entries) {
+        const top3 = entries.slice(0, 3);
+        if (!top3.length) {
+          top3Podium.innerHTML = '<div class="empty-state">Sin datos para el podio.</div>';
+          return;
+        }
+        const medals = ["🥇", "🥈", "🥉"];
+        top3Podium.innerHTML = top3.map(function (entry, idx) {
+          const color = entry.rango.color || "#b8c5be";
+          const badgeSrc = getBadgeSrc(entry.rango.nombre);
+          const rutasText = entry.rutasAsistidas === 1 ? "1 RUTA" : (entry.rutasAsistidas + " RUTAS");
+          const pillText = (entry.rango.nombre || "").toUpperCase() + " | " + rutasText;
+          const rankClass = idx === 0 ? "is-first podium-rank-1" : idx === 1 ? "podium-rank-2" : "podium-rank-3";
+          return (
+            '<div class="podium-item ' + rankClass + '" data-name="' + escapeHtml(entry.nombre) + '">' +
+              '<div class="podium-emoji">' + medals[idx] + '</div>' +
+              '<div class="podium-main">' +
+                '<div class="podium-name">' + escapeHtml(entry.nombre) + '</div>' +
+                '<span class="podium-pill" style="color:' + color + ';border-color:' + color + ';">' + escapeHtml(pillText) + "</span>" +
+              "</div>" +
+              '<div class="podium-score" style="box-shadow: 0 0 20px ' + color + '44, 0 0 40px ' + color + '22;">' +
+                '<img class="podium-badge" src="' + badgeSrc + '" alt="' + escapeHtml(entry.rango.nombre) + '" onerror="this.onerror=null;this.style.display=\'none\';var s=this.nextElementSibling;if(s)s.style.display=\'inline\';">' +
+                '<span class="podium-badge-fallback" style="color:' + color + ';">' + escapeHtml(entry.rango.nombre) + "</span>" +
+              "</div>" +
+            "</div>"
+          );
+        }).join("");
+      }
+
+      function renderRanking(entries) {
+        if (!entries.length) {
+          mobileContainer.innerHTML = '<div class="empty-state">No encontramos ese aventurero.</div>';
+          desktopContainer.innerHTML = '<div class="empty-state">No encontramos ese aventurero.</div>';
+          return;
+        }
+        mobileContainer.innerHTML = entries.map(function (entry) {
+          const pos = entry.pos || 0;
+          const color = entry.rango.color || "#b8c5be";
+          const badgeSrc = getBadgeSrc(entry.rango.nombre);
+          const rutasText = entry.rutasAsistidas === 1 ? "1 RUTA" : (entry.rutasAsistidas + " RUTAS");
+          const statsText = (entry.rango.nombre || "").toUpperCase() + " | " + rutasText;
+          const avatarUrl = avatarMap.get(entry.nombre);
+          return (
+            '<article class="rank-card rank-' + pos + '" data-name="' + escapeHtml(entry.nombre) + '">' +
+              '<div class="rank-pos">' + pos + "</div>" +
+              (avatarUrl
+                ? '<div class="rank-avatar-placeholder"><img src="' + escapeHtml(avatarUrl) + '" class="rank-avatar-img" alt="" onerror="this.onerror=null;this.parentNode.textContent=\'👤\';"></div>'
+                : '<div class="rank-avatar-placeholder" aria-hidden="true">👤</div>') +
+              '<div class="rank-user-details">' +
+                '<h3 class="rank-name">' + escapeHtml(entry.nombre) + "</h3>" +
+                '<span class="rank-stats-pill" style="color:' + color + ';border-color:' + color + ';">' + escapeHtml(statsText) + "</span>" +
+              "</div>" +
+              '<div class="rank-badge-container" style="box-shadow: 0 0 20px ' + color + '44, 0 0 40px ' + color + '22;">' +
+                '<img src="' + badgeSrc + '" alt="' + escapeHtml(entry.rango.nombre) + '" onerror="this.onerror=null;this.style.display=\'none\';var s=this.nextElementSibling;if(s)s.style.display=\'inline\';">' +
+                '<span class="rank-badge-fallback" style="display:none;color:' + color + ';">' + escapeHtml(entry.rango.nombre) + "</span>" +
+              "</div>" +
+            "</article>"
+          );
+        }).join("");
+
+        desktopContainer.innerHTML = entries.map(function (entry) {
+          const pos = entry.pos || 0;
+          const color = entry.rango.color || "#b8c5be";
+          const badgeSrc = getBadgeSrc(entry.rango.nombre);
+          const rutasText = entry.rutasAsistidas === 1 ? "1 RUTA" : (entry.rutasAsistidas + " RUTAS");
+          const statsText = (entry.rango.nombre || "").toUpperCase() + " | " + rutasText;
+          const avatarUrl = avatarMap.get(entry.nombre);
+          return (
+            '<article class="rank-card rank-' + pos + '" data-name="' + escapeHtml(entry.nombre) + '">' +
+              '<div class="rank-pos">' + pos + "</div>" +
+              (avatarUrl
+                ? '<div class="rank-avatar-placeholder"><img src="' + escapeHtml(avatarUrl) + '" class="rank-avatar-img" alt="" onerror="this.onerror=null;this.parentNode.textContent=\'👤\';"></div>'
+                : '<div class="rank-avatar-placeholder" aria-hidden="true">👤</div>') +
+              '<div class="rank-user-details">' +
+                '<h3 class="rank-name">' + escapeHtml(entry.nombre) + "</h3>" +
+                '<span class="rank-stats-pill" style="color:' + color + ';border-color:' + color + ';">' + escapeHtml(statsText) + "</span>" +
+              "</div>" +
+              '<div class="rank-badge-container" style="box-shadow: 0 0 20px ' + color + '44, 0 0 40px ' + color + '22;">' +
+                '<img src="' + badgeSrc + '" alt="' + escapeHtml(entry.rango.nombre) + '" onerror="this.onerror=null;this.style.display=\'none\';var s=this.nextElementSibling;if(s)s.style.display=\'inline\';">' +
+                '<span class="rank-badge-fallback" style="display:none;color:' + color + ';">' + escapeHtml(entry.rango.nombre) + "</span>" +
+              "</div>" +
+            "</article>"
+          );
+        }).join("");
+      }
+
+      function renderAll(query) {
+        const q = (query || "").trim().toLowerCase();
+        const filtered = !q ? rankingBase : rankingBase.filter(function (entry) {
+          return (entry.nombre || "").toLowerCase().includes(q);
+        });
+
+        if (q) {
+          if (btnVerMas) btnVerMas.style.display = "none";
+          if (btnVerTodo) btnVerTodo.style.display = "none";
+          renderTop3(filtered.length ? filtered : rankingBase);
+          renderRanking(filtered);
+          return;
+        }
+
+        let visibleCount = Number.POSITIVE_INFINITY;
+        if (rankingStep === 0) visibleCount = 10;
+        else if (rankingStep === 1) visibleCount = 20;
+        else if (rankingStep === 2) visibleCount = 50;
+        const visibleEntries = rankingBase.slice(0, visibleCount);
+
+        renderTop3(rankingBase);
+        renderRanking(visibleEntries);
+
+        const len = rankingBase.length;
+        const showVerMas =
+          (rankingStep === 0 && len > 10) ||
+          (rankingStep === 1 && len > 20);
+        if (btnVerMas) btnVerMas.style.display = showVerMas ? "inline-flex" : "none";
+        if (btnVerTodo) btnVerTodo.style.display = rankingStep === 2 && len > 50 ? "inline-flex" : "none";
+      }
 
       try {
-        loading.style.display = '';
-
-        const [{ data: participantes, error: errPart }, { data: rutas }, { data: avatares }] = await Promise.all([
-          db.from('participantes').select('nombre, ruta_id, asiste'),
-          db.from('rutas').select('id, nombre'),
-          db.from('avatares_ranking').select('nombre, avatar_url')
+        const results = await Promise.all([
+          db.from("participantes").select("nombre, ruta_id, asiste"),
+          db.from("rutas").select("id, nombre"),
+          db.from("avatares_ranking").select("nombre, avatar_url")
         ]);
+        const participantes = results[0].data || [];
+        const errPart = results[0].error;
+        const rutas = results[1].data || [];
+        const avatares = results[2].data || [];
 
         if (errPart) throw errPart;
 
-        let avatarMap = new Map();
-        if (avatares && avatares.length) {
-          avatares.forEach(function (a) { avatarMap.set((a.nombre || '').trim(), a.avatar_url); });
-        }
-
-        const rutasMap = new Map((rutas || []).map(function (r) { return [r.id, r.nombre || ('Ruta ' + r.id)]; }));
+        const rutasMap = new Map(rutas.map(function (r) { return [r.id, r.nombre || ("Ruta " + r.id)]; }));
+        avatarMap = new Map();
+        avatares.forEach(function (a) {
+          avatarMap.set((a.nombre || "").trim(), a.avatar_url);
+        });
+        window._avatarMapLanding = avatarMap;
         const personasMap = new Map();
 
-        (participantes || []).forEach(function (p) {
-          const nombre = (p.nombre || '').trim();
+        participantes.forEach(function (p) {
+          const nombre = (p.nombre || "").trim();
           if (!nombre) return;
-
           if (!personasMap.has(nombre)) {
             personasMap.set(nombre, { nombre: nombre, rutasSet: new Set(), rutasDetalleMap: new Map() });
           }
           const persona = personasMap.get(nombre);
-
           if (p.asiste === true && p.ruta_id) {
             persona.rutasSet.add(p.ruta_id);
-            const nomRuta = rutasMap.get(p.ruta_id) || ('Ruta ' + p.ruta_id);
+            const nomRuta = rutasMap.get(p.ruta_id) || ("Ruta " + p.ruta_id);
             persona.rutasDetalleMap.set(nomRuta, (persona.rutasDetalleMap.get(nomRuta) || 0) + 1);
           }
         });
 
-        const ordenRangos = { 'Diamante': 6, 'Platino': 5, 'Oro': 4, 'Plata': 3, 'Bronce': 2, 'Novato': 1 };
-
-        const ranking = Array.from(personasMap.values())
+        rankingBase = Array.from(personasMap.values())
           .map(function (persona) {
             const rutasAsistidas = persona.rutasSet.size;
             const rango = calcularRangoAventurado(rutasAsistidas);
             const siguienteRango = getSiguienteRangoLanding(rango);
-            const rutasAsistidasList = Array.from(persona.rutasDetalleMap.entries()).map(function (e) { return { nombre: e[0], vecesAsistio: e[1] }; });
+            const rutasAsistidasList = Array.from(persona.rutasDetalleMap.entries()).map(function (e) {
+              return { nombre: e[0], vecesAsistio: e[1] };
+            }).sort(function (a, b) { return b.vecesAsistio - a.vecesAsistio; });
             return {
               nombre: persona.nombre,
               rutasAsistidas: rutasAsistidas,
-              rango: rango,
               rutasAsistidasList: rutasAsistidasList,
+              rango: rango,
               siguienteRango: siguienteRango,
               progreso: rango && siguienteRango ? rutasAsistidas - rango.minRutas : 0,
-              totalParaSiguiente: rango && siguienteRango ? siguienteRango.minRutas - rango.minRutas : 0
+              totalParaSiguiente: rango && siguienteRango ? siguienteRango.minRutas - rango.minRutas : 0,
+              puntos: rutasAsistidas * 50
             };
           })
           .filter(function (p) { return p.rutasAsistidas >= 2; })
@@ -1791,79 +2888,89 @@
             const pesoB = ordenRangos[b.rango.nombre] || 0;
             if (pesoB !== pesoA) return pesoB - pesoA;
             if (b.rutasAsistidas !== a.rutasAsistidas) return b.rutasAsistidas - a.rutasAsistidas;
-            return (a.nombre || '').localeCompare(b.nombre || '', 'es');
+            return (a.nombre || "").localeCompare(b.nombre || "", "es");
           });
 
-        loading.style.display = 'none';
-        list.style.display = 'flex';
+        rankingBase.forEach(function (entry, idx) {
+          entry.pos = idx + 1;
+        });
 
-        if (ranking.length === 0) {
-          restEl.innerHTML = '<div style="padding: 18px 0; color: var(--text-secondary); text-align:center;">No hay ranking todavía.</div>';
-          btnLoadMore.style.display = 'none';
+        if (!rankingBase.length) {
+          messageEl.textContent = "No hay ranking todavía.";
+          renderTop3([]);
+          renderRanking([]);
           return;
         }
 
-        window._rankingLanding = ranking;
-        window._avatarMapLanding = avatarMap;
+        messageEl.style.display = "none";
+        window._rankingLanding = rankingBase;
+        statActive.textContent = "+" + floorToStep(rankingBase.length, 5);
+        statRoutes.textContent = "+" + floorToStep(rutas.length, 5);
+        statTopScore.textContent = rankingBase[0].rutasAsistidas;
 
-        const top3 = ranking.slice(0, 3);
-        const restAll = ranking.slice(3);
+        renderAll("");
 
-        // Igual que la landing: reordenamos los 3 primeros para que el layout apilado
-        // muestre #1 arriba (y #2 abajo) a pesar de cómo se aplica el CSS por nth-child.
-        const displayIndices = top3.length === 1 ? [0] : top3.length === 2 ? [1, 0] : [1, 0, 2];
-        const displayPositions = top3.length === 1 ? [1] : top3.length === 2 ? [2, 1] : [2, 1, 3];
-        podioEl.innerHTML = displayIndices
-          .map(function (idx, i) { return renderCard(top3[idx], displayPositions[i], avatarMap); })
-          .join('');
-
-        const CHUNK_SIZE = 18;
-        let visible = 0;
-        restEl.innerHTML = '';
-
-        function renderNextRestChunk() {
-          if (visible >= restAll.length) {
-            btnLoadMore.style.display = 'none';
-            return;
-          }
-          const slice = restAll.slice(visible, visible + CHUNK_SIZE);
-          const html = slice.map((entry, i) => renderCard(entry, 4 + visible + i, avatarMap)).join('');
-          restEl.insertAdjacentHTML('beforeend', html);
-          visible += slice.length;
-          if (visible >= restAll.length) btnLoadMore.style.display = 'none';
+        if (btnVerMas) {
+          btnVerMas.addEventListener("click", function () {
+            if (rankingStep === 0) rankingStep = 1;
+            else if (rankingStep === 1) rankingStep = 2;
+            renderAll(nameSearch ? nameSearch.value : "");
+          });
+        }
+        if (btnVerTodo) {
+          btnVerTodo.addEventListener("click", function () {
+            rankingStep = 3;
+            renderAll(nameSearch ? nameSearch.value : "");
+          });
         }
 
-        if (restAll.length > 0) {
-          btnLoadMore.style.display = 'block';
-          btnLoadMore.onclick = renderNextRestChunk;
-          renderNextRestChunk();
-        } else {
-          btnLoadMore.style.display = 'none';
-        }
+        document.querySelectorAll(".points-item[data-rank]").forEach(function (item) {
+          item.addEventListener("click", function () {
+            const rankKey = item.getAttribute("data-rank") || "";
+            abrirModalRango(rankKey);
+          });
+        });
 
-        // Activar animaciones de entrada cuando el bloque ranking entra en viewport.
-        const sectionEl = document.getElementById('rankingSection');
-        if (sectionEl) {
-          const observer = new IntersectionObserver(function (entries, obs) {
-            entries.forEach(function (entry) {
-              if (entry.isIntersecting) {
-                sectionEl.classList.add('in-view');
-                obs.disconnect();
-              }
-            });
-          }, { threshold: 0.12 });
-          observer.observe(sectionEl);
-        } else {
-          // Fallback: si no existe el contenedor, mostrar sin animación oculta.
-          document.querySelectorAll('.ranking-section').forEach(el => el.classList.add('in-view'));
-        }
+        nameSearch.addEventListener("input", function () {
+          renderAll(nameSearch.value);
+        });
+
+        mobileContainer.addEventListener("click", function (e) {
+          const btn = e.target.closest("[data-name]");
+          if (!btn) return;
+          const name = btn.getAttribute("data-name") || "";
+          const entry = rankingBase.find(function (x) { return x.nombre === name; });
+          const pos = rankingBase.findIndex(function (x) { return x.nombre === name; }) + 1;
+          abrirModal(entry, pos);
+        });
+        top3Podium.addEventListener("click", function (e) {
+          const card = e.target.closest(".podium-item[data-name]");
+          if (!card) return;
+          const name = card.getAttribute("data-name") || "";
+          const entry = rankingBase.find(function (x) { return x.nombre === name; });
+          const pos = rankingBase.findIndex(function (x) { return x.nombre === name; }) + 1;
+          abrirModal(entry, pos);
+        });
+        desktopContainer.addEventListener("click", function (e) {
+          const row = e.target.closest("[data-name]");
+          if (!row) return;
+          const name = row.getAttribute("data-name") || "";
+          const entry = rankingBase.find(function (x) { return x.nombre === name; });
+          const pos = rankingBase.findIndex(function (x) { return x.nombre === name; }) + 1;
+          abrirModal(entry, pos);
+        });
       } catch (err) {
         console.error(err);
-        loading.style.display = '';
-        loading.textContent = 'No pudimos cargar el ranking.';
+        messageEl.textContent = "No pudimos cargar el ranking.";
       }
     });
   </script>
+
+  <!-- Botón flotante de WhatsApp (igual que index.html) -->
+  <a href="https://wa.me/584244656881" class="whatsapp-fab" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
+    <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+    </svg>
+  </a>
 </body>
 </html>
-
