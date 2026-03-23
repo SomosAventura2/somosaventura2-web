@@ -531,28 +531,28 @@
       width: 100%;
       max-height: 90vh;
       overflow-y: auto;
-      border: 1px solid rgba(118, 200, 147, 0.5);
+      border: none;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
       animation: rankingModalIn 0.3s ease-out;
     }
 
     .ranking-modal-content.ranking-modal-content--gold {
-      border: 1px solid #FFD700;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.25);
+      border: none;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 16px rgba(255, 215, 0, 0.18);
     }
 
     .ranking-modal-content.ranking-modal-content--silver {
-      border: 1px solid #C0C0C0;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 20px rgba(192, 192, 192, 0.25);
+      border: none;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 16px rgba(192, 192, 192, 0.18);
     }
 
     .ranking-modal-content.ranking-modal-content--bronze {
-      border: 1px solid #CD7F32;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 20px rgba(205, 127, 50, 0.25);
+      border: none;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 16px rgba(205, 127, 50, 0.18);
     }
 
     .ranking-modal-content.ranking-modal-content--green {
-      border: 1px solid rgba(118, 200, 147, 0.5);
+      border: none;
     }
 
     @keyframes rankingModalIn {
@@ -1078,7 +1078,7 @@
         const url = MODAL_FOTOS[Math.floor(Math.random() * MODAL_FOTOS.length)];
         // Gradiente encima para asegurar contraste del texto.
         contentEl.style.backgroundImage =
-          "linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.88) 100%), url('" + url + "')";
+          "linear-gradient(180deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.92) 100%), url('" + url + "')";
         // Guardar para el export del story (misma foto).
         window._modalRandomBgUrl = url;
       }
@@ -1220,19 +1220,23 @@
 
             // Overlay para contraste
             const overlay = outCtx.createLinearGradient(0, 0, 0, outH);
-            overlay.addColorStop(0, 'rgba(0,0,0,0.60)');
-            overlay.addColorStop(1, 'rgba(0,0,0,0.86)');
+            overlay.addColorStop(0, 'rgba(0,0,0,0.74)');
+            overlay.addColorStop(1, 'rgba(0,0,0,0.92)');
             outCtx.fillStyle = overlay;
             outCtx.fillRect(0, 0, outW, outH);
 
             // Escalado proporcional del modal capturado dentro de la historia
             const marginX = 70;
             const marginTop = 90;
+            const marginBottom = 90;
             const maxW = outW - marginX * 2;
-            const scale = maxW / modalCanvas.width;
-            const targetW = maxW;
+            const maxH = outH - marginTop - marginBottom;
+            const scaleW = maxW / modalCanvas.width;
+            const scaleH = maxH / modalCanvas.height;
+            const scale = Math.min(scaleW, scaleH);
+            const targetW = Math.round(modalCanvas.width * scale);
             const targetH = Math.round(modalCanvas.height * scale);
-            const targetX = marginX;
+            const targetX = Math.round((outW - targetW) / 2);
             const targetY = marginTop;
 
             // Sombra + dibujo del modal capturado (se ve exactamente como el modal)
