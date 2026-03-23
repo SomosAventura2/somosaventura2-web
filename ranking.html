@@ -1298,75 +1298,107 @@
           badgeImg = null;
         }
 
-        // ===== Layout =====
-        // Posiciones (mobile-first estilo story)
+        // ===== Layout (centrado, similar al modal actual) =====
         const padX = 70;
-        let y = 150;
+        const centerX = w / 2;
+        let y = 120;
+        const avatarMap = window._avatarMapLanding;
+        const avatarUrl = avatarMap && avatarMap.get(entry.nombre);
 
-        // Rank
+        // Avatar circular arriba
+        const avatarSize = 180;
+        const avatarX = Math.round(centerX - avatarSize / 2);
+        if (avatarUrl) {
+          try {
+            const avatarImg = await loadImage(avatarUrl);
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(centerX, y + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(avatarImg, avatarX, y, avatarSize, avatarSize);
+            ctx.restore();
+            ctx.strokeStyle = 'rgba(118,200,147,0.7)';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.arc(centerX, y + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+            ctx.stroke();
+          } catch (e) {
+            ctx.fillStyle = 'rgba(255,255,255,0.12)';
+            ctx.beginPath();
+            ctx.arc(centerX, y + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        y += avatarSize + 34;
+
+        // Rank centrado
         ctx.font = '900 64px Poppins, sans-serif';
         ctx.fillStyle = '#FFFFFF';
         ctx.textBaseline = 'top';
         ctx.shadowColor = 'rgba(0,0,0,0.55)';
         ctx.shadowBlur = 10;
-        ctx.fillText('#' + position, padX, y);
-        y += 90;
+        const rankText = '#' + position;
+        ctx.fillText(rankText, centerX - ctx.measureText(rankText).width / 2, y);
+        y += 86;
 
-        // Nombre
-        ctx.font = '900 72px Poppins, sans-serif';
-        ctx.fillStyle = '#FFFFFF';
-        // Ajuste simple por longitud
+        // Nombre centrado
+        ctx.shadowBlur = 0;
         const nombre = safeText(entry.nombre);
-        const maxNombreWidth = w - padX * 2;
         let fontSize = 72;
-        while (ctx.measureText(nombre).width > maxNombreWidth && fontSize > 38) {
+        ctx.font = '900 ' + fontSize + 'px Poppins, sans-serif';
+        while (ctx.measureText(nombre).width > (w - 120) && fontSize > 40) {
           fontSize -= 4;
           ctx.font = '900 ' + fontSize + 'px Poppins, sans-serif';
         }
-        ctx.fillText(nombre, padX, y);
-        y += fontSize + 34;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(nombre, centerX - ctx.measureText(nombre).width / 2, y);
+        y += fontSize + 26;
 
-        // Pill stats
+        // Pill stats centrado
         const rutasText = entry.rutasAsistidas === 1 ? '1 RUTA' : entry.rutasAsistidas + ' RUTAS';
         const pillText = safeText(r.nombre).toUpperCase() + ' | ' + rutasText;
         ctx.font = '800 34px Poppins, sans-serif';
-        const pillTextW = ctx.measureText(pillText).width;
         const pillH = 70;
-        const pillW = pillTextW + 40;
-        const pillX = padX;
-        const pillY = y + 4;
-
-        // pill background
-        ctx.shadowBlur = 0;
+        const pillW = ctx.measureText(pillText).width + 40;
+        const pillX = centerX - pillW / 2;
+        const pillY = y;
         ctx.fillStyle = 'rgba(0,0,0,0.35)';
         drawRoundRect(ctx, pillX, pillY, pillW, pillH, 999);
         ctx.fill();
         ctx.strokeStyle = 'rgba(255,255,255,0.18)';
         ctx.lineWidth = 3;
         ctx.stroke();
-
-        // pill text
         ctx.fillStyle = '#e9f3ec';
         ctx.textBaseline = 'middle';
         ctx.fillText(pillText, pillX + 20, pillY + pillH / 2);
         ctx.textBaseline = 'top';
+        y += pillH + 24;
 
-        y += 110;
-
-        // Badge (derecha)
-        const badgeBoxW = 180;
-        const badgeBoxH = 180;
-        const badgeX = w - padX - badgeBoxW;
-        const badgeY = y - 10;
+        // Badge centrado (igual enfoque visual del modal)
+        const badgeBoxW = 220;
+        const badgeBoxH = 220;
+        const badgeX = Math.round(centerX - badgeBoxW / 2);
+        const badgeY = y;
+        ctx.fillStyle = 'rgba(18,18,18,0.72)';
+        drawRoundRect(ctx, badgeX, badgeY, badgeBoxW, badgeBoxH, 28);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
         if (badgeImg) {
-          ctx.drawImage(badgeImg, badgeX, badgeY, badgeBoxW, badgeBoxH);
-        } else {
-          ctx.fillStyle = 'rgba(255,255,255,0.12)';
-          drawRoundRect(ctx, badgeX, badgeY, badgeBoxW, badgeBoxH, 24);
-          ctx.fill();
+          ctx.drawImage(badgeImg, badgeX + 16, badgeY + 16, badgeBoxW - 32, badgeBoxH - 32);
         }
+        y += badgeBoxH + 34;
 
-        y += 210;
+        // Separador
+        ctx.strokeStyle = 'rgba(118,200,147,0.25)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(padX, y);
+        ctx.lineTo(w - padX, y);
+        ctx.stroke();
+        y += 26;
 
         // Título rutas asistidas
         ctx.font = '900 42px Poppins, sans-serif';
@@ -1374,14 +1406,14 @@
         ctx.fillText('🏔️ Rutas asistidas', padX, y);
         y += 60;
 
-        // Tags rutas
+        // Tags rutas (más compactos)
         const rutasList = entry.rutasAsistidasList || [];
-        const slice = rutasList.slice(0, 14);
+        const slice = rutasList.slice(0, 12);
         const tagAreaW = w - padX * 2;
-        const tagGap = 18;
+        const tagGapX = 14;
+        const tagGapY = 14;
         let tagX = padX;
         let tagY = y;
-        const rowLimitY = 1360;
 
         ctx.font = '800 30px Poppins, sans-serif';
         for (let i = 0; i < slice.length; i++) {
@@ -1389,39 +1421,33 @@
           const veces = ru.vecesAsistio || 1;
           const text = safeText(ru.nombre) + (veces > 1 ? ' x' + veces : '');
           const textW = ctx.measureText(text).width;
-          const tagH = 64;
+          const tagH = 62;
           const tagW = Math.min(tagAreaW, textW + 36);
 
-          if (tagY > rowLimitY) break;
           if (tagX + tagW > padX + tagAreaW) {
             tagX = padX;
-            tagY += tagH + tagGap;
+            tagY += tagH + tagGapY;
           }
 
-          // Tag pill
           ctx.fillStyle = 'rgba(26,58,40,0.55)';
           ctx.strokeStyle = 'rgba(118,200,147,0.35)';
-          ctx.lineWidth = 4;
-          drawRoundRect(ctx, tagX, tagY, tagW, tagH, 999);
+          ctx.lineWidth = 3;
+          drawRoundRect(ctx, tagX, tagY, tagW, tagH, 18);
           ctx.fill();
-          ctx.setLineDash([18, 14]);
           ctx.stroke();
-          ctx.setLineDash([]);
 
-          // Text
           ctx.fillStyle = 'rgba(255,255,255,0.95)';
           ctx.textBaseline = 'middle';
           ctx.fillText(text, tagX + 18, tagY + tagH / 2);
           ctx.textBaseline = 'top';
 
-          tagX += tagW + tagGap;
+          tagX += tagW + tagGapX;
         }
 
-        // Próximo rango (block)
         const sig = entry.siguienteRango;
         const blockX = padX;
         const blockW = w - padX * 2;
-        const blockY = 1460;
+        const blockY = Math.min(h - 430, tagY + 62 + 34);
         if (sig) {
           ctx.fillStyle = 'rgba(26,58,40,0.55)';
           ctx.strokeStyle = 'rgba(118,200,147,0.25)';
