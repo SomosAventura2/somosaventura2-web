@@ -1167,18 +1167,33 @@
           try {
             const modalContent = document.getElementById('rankingModalContent');
             if (!modalContent) throw new Error('No se encontró #rankingModalContent');
+            const shareBtnInModal = document.getElementById('btnCompartirRanking');
+            const closeBtnInModal = document.getElementById('rankingModalClose');
 
             // Esperar badge/avatar antes de capturar para evitar export sin imágenes.
             await waitForImagesInElement(modalContent, 3000);
             // Un par de frames para asegurar pintado final.
             await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-            // 1) Captura del modal real (así queda idéntico al diseño visible).
-            const modalCanvas = await html2canvas(modalContent, {
-              backgroundColor: null,
-              scale: 3,
-              useCORS: true
-            });
+            // Ocultar botones del modal para que no salgan en la imagen exportada.
+            const prevShareVisibility = shareBtnInModal ? shareBtnInModal.style.visibility : '';
+            const prevCloseVisibility = closeBtnInModal ? closeBtnInModal.style.visibility : '';
+            if (shareBtnInModal) shareBtnInModal.style.visibility = 'hidden';
+            if (closeBtnInModal) closeBtnInModal.style.visibility = 'hidden';
+
+            let modalCanvas;
+            try {
+              // 1) Captura del modal real (así queda idéntico al diseño visible).
+              modalCanvas = await html2canvas(modalContent, {
+                backgroundColor: null,
+                scale: 3,
+                useCORS: true
+              });
+            } finally {
+              // Restaurar visibilidad de botones pase lo que pase.
+              if (shareBtnInModal) shareBtnInModal.style.visibility = prevShareVisibility;
+              if (closeBtnInModal) closeBtnInModal.style.visibility = prevCloseVisibility;
+            }
 
             // 2) Composición story 1080x1920 con fondo aleatorio del modal.
             const outW = 1080;
@@ -1599,11 +1614,8 @@
       if (btnCompartir) {
         btnCompartir.addEventListener('click', async () => {
           btnCompartir.disabled = true;
-          const old = btnCompartir.textContent;
-          btnCompartir.textContent = 'Generando...';
           await exportStoryAndShare();
           btnCompartir.disabled = false;
-          btnCompartir.textContent = old;
         });
       }
 
