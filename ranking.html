@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ranking Completo | SomosAventura2</title>
+  <title>Ranking | SomosAventura2</title>
   <link rel="icon" type="image/png" href="/favicon.png?v=99" sizes="32x32">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=99">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -531,28 +531,28 @@
       width: 100%;
       max-height: 90vh;
       overflow-y: auto;
-      border: none;
+      border: 1px solid rgba(118, 200, 147, 0.5);
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
       animation: rankingModalIn 0.3s ease-out;
     }
 
     .ranking-modal-content.ranking-modal-content--gold {
-      border: none;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 16px rgba(255, 215, 0, 0.18);
+      border: 1px solid #FFD700;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.25);
     }
 
     .ranking-modal-content.ranking-modal-content--silver {
-      border: none;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 16px rgba(192, 192, 192, 0.18);
+      border: 1px solid #C0C0C0;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 20px rgba(192, 192, 192, 0.25);
     }
 
     .ranking-modal-content.ranking-modal-content--bronze {
-      border: none;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 16px rgba(205, 127, 50, 0.18);
+      border: 1px solid #CD7F32;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 20px rgba(205, 127, 50, 0.25);
     }
 
     .ranking-modal-content.ranking-modal-content--green {
-      border: none;
+      border: 1px solid rgba(118, 200, 147, 0.5);
     }
 
     @keyframes rankingModalIn {
@@ -1078,7 +1078,7 @@
         const url = MODAL_FOTOS[Math.floor(Math.random() * MODAL_FOTOS.length)];
         // Gradiente encima para asegurar contraste del texto.
         contentEl.style.backgroundImage =
-          "linear-gradient(180deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.92) 100%), url('" + url + "')";
+          "linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.88) 100%), url('" + url + "')";
         // Guardar para el export del story (misma foto).
         window._modalRandomBgUrl = url;
       }
@@ -1178,8 +1178,13 @@
             // Ocultar botones del modal para que no salgan en la imagen exportada.
             const prevShareVisibility = shareBtnInModal ? shareBtnInModal.style.visibility : '';
             const prevCloseVisibility = closeBtnInModal ? closeBtnInModal.style.visibility : '';
+            const prevBorder = modalContent.style.border;
+            const prevBoxShadow = modalContent.style.boxShadow;
             if (shareBtnInModal) shareBtnInModal.style.visibility = 'hidden';
             if (closeBtnInModal) closeBtnInModal.style.visibility = 'hidden';
+            // Export-only: sin borde/sombra del modal para integrarlo mejor en la historia.
+            modalContent.style.border = 'none';
+            modalContent.style.boxShadow = 'none';
 
             let modalCanvas;
             try {
@@ -1193,6 +1198,8 @@
               // Restaurar visibilidad de botones pase lo que pase.
               if (shareBtnInModal) shareBtnInModal.style.visibility = prevShareVisibility;
               if (closeBtnInModal) closeBtnInModal.style.visibility = prevCloseVisibility;
+              modalContent.style.border = prevBorder;
+              modalContent.style.boxShadow = prevBoxShadow;
             }
 
             // 2) Composición story 1080x1920 con fondo aleatorio del modal.
@@ -1218,7 +1225,7 @@
               outCtx.fillRect(0, 0, outW, outH);
             }
 
-            // Overlay para contraste
+            // Overlay para contraste (más oscuro para mejor legibilidad)
             const overlay = outCtx.createLinearGradient(0, 0, 0, outH);
             overlay.addColorStop(0, 'rgba(0,0,0,0.74)');
             overlay.addColorStop(1, 'rgba(0,0,0,0.92)');
@@ -1226,6 +1233,7 @@
             outCtx.fillRect(0, 0, outW, outH);
 
             // Escalado proporcional del modal capturado dentro de la historia
+            // (asegurando que entre completo, incluyendo "Próximo rango").
             const marginX = 70;
             const marginTop = 90;
             const marginBottom = 90;
