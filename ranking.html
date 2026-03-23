@@ -1065,12 +1065,12 @@
 
       // Fondos aleatorios para el modal (archivos en /Fotos del proyecto)
       const MODAL_FOTOS = [
-        'Fotos/1.jpeg',
-        'Fotos/2.jpeg',
-        'Fotos/3.jpeg',
-        'Fotos/4.jpeg',
-        'Fotos/5.jpeg',
-        'Fotos/6.jpeg'
+        'fotos/1.jpg',
+        'fotos/2.jpg',
+        'fotos/3.jpg',
+        'fotos/4.jpg',
+        'fotos/5.jpg',
+        'fotos/6.jpg'
       ];
 
       function setRandomModalBackground(contentEl) {
@@ -1165,18 +1165,70 @@
           }
 
           try {
-            renderStoryTemplate(entry, position, bg);
+            const modalContent = document.getElementById('rankingModalContent');
+            if (!modalContent) throw new Error('No se encontró #rankingModalContent');
 
-            // Esperar un frame para asegurar layout estable.
-            await new Promise(resolve => requestAnimationFrame(() => resolve()));
+            // Esperar badge/avatar antes de capturar para evitar export sin imágenes.
+            await waitForImagesInElement(modalContent, 3000);
+            // Un par de frames para asegurar pintado final.
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-            const canvas = await html2canvas(storyExport, {
+            // 1) Captura del modal real (así queda idéntico al diseño visible).
+            const modalCanvas = await html2canvas(modalContent, {
               backgroundColor: null,
-              scale: 1,
+              scale: 3,
               useCORS: true
             });
 
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            // 2) Composición story 1080x1920 con fondo aleatorio del modal.
+            const outW = 1080;
+            const outH = 1920;
+            const outCanvas = document.createElement('canvas');
+            outCanvas.width = outW;
+            outCanvas.height = outH;
+            const outCtx = outCanvas.getContext('2d');
+            if (!outCtx) throw new Error('No se pudo crear canvas de salida');
+
+            // Fondo (foto aleatoria del modal)
+            let bgImg = null;
+            try {
+              bgImg = await loadImage(bg || 'fondo2.jpg');
+            } catch (e) {
+              bgImg = null;
+            }
+            if (bgImg) {
+              drawImageCover(outCtx, bgImg, outW, outH);
+            } else {
+              outCtx.fillStyle = '#0e2f36';
+              outCtx.fillRect(0, 0, outW, outH);
+            }
+
+            // Overlay para contraste
+            const overlay = outCtx.createLinearGradient(0, 0, 0, outH);
+            overlay.addColorStop(0, 'rgba(0,0,0,0.60)');
+            overlay.addColorStop(1, 'rgba(0,0,0,0.86)');
+            outCtx.fillStyle = overlay;
+            outCtx.fillRect(0, 0, outW, outH);
+
+            // Escalado proporcional del modal capturado dentro de la historia
+            const marginX = 70;
+            const marginTop = 90;
+            const maxW = outW - marginX * 2;
+            const scale = maxW / modalCanvas.width;
+            const targetW = maxW;
+            const targetH = Math.round(modalCanvas.height * scale);
+            const targetX = marginX;
+            const targetY = marginTop;
+
+            // Sombra + dibujo del modal capturado (se ve exactamente como el modal)
+            outCtx.shadowColor = 'rgba(0,0,0,0.5)';
+            outCtx.shadowBlur = 24;
+            outCtx.shadowOffsetY = 8;
+            outCtx.drawImage(modalCanvas, targetX, targetY, targetW, targetH);
+            outCtx.shadowBlur = 0;
+            outCtx.shadowOffsetY = 0;
+
+            const blob = await new Promise(resolve => outCanvas.toBlob(resolve, 'image/png'));
             if (!blob) {
               throw new Error('No se pudo convertir a blob');
             }
@@ -1218,10 +1270,36 @@
       function loadImage(src) {
         return new Promise((resolve, reject) => {
           const img = new Image();
+          // Permite cargar imágenes remotas (avatars) si el host envía CORS.
+          img.crossOrigin = 'anonymous';
           img.onload = () => resolve(img);
           img.onerror = reject;
           img.src = src;
         });
+      }
+
+      async function waitForImagesInElement(rootEl, timeoutMs) {
+        if (!rootEl) return;
+        const imgs = Array.from(rootEl.querySelectorAll('img'));
+        if (!imgs.length) return;
+
+        const waitOne = (img) => new Promise(resolve => {
+          if (img.complete && img.naturalWidth > 0) {
+            resolve();
+            return;
+          }
+          const done = () => {
+            img.removeEventListener('load', done);
+            img.removeEventListener('error', done);
+            resolve();
+          };
+          img.addEventListener('load', done);
+          img.addEventListener('error', done);
+        });
+
+        const all = Promise.all(imgs.map(waitOne));
+        const timeout = new Promise(resolve => setTimeout(resolve, timeoutMs || 2500));
+        await Promise.race([all, timeout]);
       }
 
       function drawRoundRect(ctx, x, y, w, h, r) {
