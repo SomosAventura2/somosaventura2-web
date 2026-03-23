@@ -747,6 +747,41 @@
       transform: translateY(1px);
     }
 
+    /* Export-only: aumentar legibilidad en captura sin alterar UI normal */
+    .ranking-modal-content.export-capture {
+      filter: saturate(1.02) contrast(1.05);
+    }
+
+    .ranking-modal-content.export-capture .ranking-modal-title,
+    .ranking-modal-content.export-capture .ranking-modal-rutas-title,
+    .ranking-modal-content.export-capture .ranking-modal-proximo-title,
+    .ranking-modal-content.export-capture .ranking-modal-rank-pos {
+      color: #ffffff !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+    }
+
+    .ranking-modal-content.export-capture .ranking-modal-proximo-text,
+    .ranking-modal-content.export-capture .ranking-modal-proximo-meta {
+      color: rgba(255, 255, 255, 0.88) !important;
+    }
+
+    .ranking-modal-content.export-capture .ranking-modal-ruta-tag {
+      background: rgba(8, 30, 22, 0.82) !important;
+      border-color: rgba(118, 200, 147, 0.42) !important;
+      color: rgba(255, 255, 255, 0.96) !important;
+    }
+
+    .ranking-modal-content.export-capture .ranking-modal-stats-pill {
+      background: rgba(0, 0, 0, 0.5) !important;
+      border-color: rgba(255, 255, 255, 0.28) !important;
+      color: rgba(255, 255, 255, 0.96) !important;
+    }
+
+    .ranking-modal-content.export-capture .ranking-modal-proximo {
+      background: rgba(10, 35, 26, 0.72) !important;
+      border-color: rgba(118, 200, 147, 0.34) !important;
+    }
+
     /* ===== Story export (9:16) ===== */
     .story-export {
       position: fixed;
@@ -1180,11 +1215,18 @@
             const prevCloseVisibility = closeBtnInModal ? closeBtnInModal.style.visibility : '';
             const prevBorder = modalContent.style.border;
             const prevBoxShadow = modalContent.style.boxShadow;
+            const prevBgImage = modalContent.style.backgroundImage;
             if (shareBtnInModal) shareBtnInModal.style.visibility = 'hidden';
             if (closeBtnInModal) closeBtnInModal.style.visibility = 'hidden';
             // Export-only: sin borde/sombra del modal para integrarlo mejor en la historia.
             modalContent.style.border = 'none';
             modalContent.style.boxShadow = 'none';
+            modalContent.classList.add('export-capture');
+            // Export-only: bajar visibilidad de foto de fondo dentro del modal capturado.
+            if (window._modalRandomBgUrl) {
+              modalContent.style.backgroundImage =
+                "linear-gradient(180deg, rgba(0,0,0,0.84) 0%, rgba(0,0,0,0.95) 100%), url('" + window._modalRandomBgUrl + "')";
+            }
 
             let modalCanvas;
             try {
@@ -1200,6 +1242,8 @@
               if (closeBtnInModal) closeBtnInModal.style.visibility = prevCloseVisibility;
               modalContent.style.border = prevBorder;
               modalContent.style.boxShadow = prevBoxShadow;
+              modalContent.style.backgroundImage = prevBgImage;
+              modalContent.classList.remove('export-capture');
             }
 
             // 2) Composición story 1080x1920 con fondo aleatorio del modal.
