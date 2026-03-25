@@ -7,9 +7,9 @@
     name="description"
     content="Ranking de aventureros SomosAventura2: rutas conquistadas, rangos Bronce a Diamante y el podio de la comunidad. ¡Sube de nivel!"
   />
-  <title>Ranking | Somos Aventura</title>
+  <title>Ranking | Somos Aventura2</title>
   <!-- Open Graph -->
-  <meta property="og:title" content="Ranking | SomosAventura2 — Los aventureros que más suben">
+  <meta property="og:title" content="Ranking | SomosAventurados — Los aventureros que más suben">
   <meta
     property="og:description"
     content="Mira el podio, los rangos y cuántas rutas lleva cada aventurero. ¿Dónde estás tú en la montaña?"
@@ -21,7 +21,7 @@
   <meta property="og:site_name" content="SomosAventura2" />
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Ranking | SomosAventura2 — Los aventureros que más suben" />
+  <meta name="twitter:title" content="Ranking | SomosAventurados — Los aventureros que más suben" />
   <meta
     name="twitter:description"
     content="Mira el podio, los rangos y cuántas rutas lleva cada aventurero. ¿Dónde estás tú en la montaña?"
@@ -1120,6 +1120,11 @@
       overflow-y: auto;
       border: 1px solid rgba(118, 200, 147, 0.5);
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      touch-action: pan-y;
+    }
+
+    .modal-card.is-dragging {
+      user-select: none;
     }
 
     .modal-card.modal-gold { border-color: #FFD700; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 20px rgba(255,215,0,0.25); }
@@ -1470,6 +1475,10 @@
     }
 
     @media (max-width: 767px) {
+      .hero .top3 {
+        display: none;
+      }
+
       .hero-inner {
         padding: 4px 0 18px;
         gap: 10px;
@@ -1713,7 +1722,7 @@
       <div class="top3">
         <div class="top3-head">
           <div>
-            <div class="top3-title">Los que dominan la cima</div>
+            <div class="top3-title">Top 3 aventurados</div>
           </div>
           <div class="chip">Actualizado hoy</div>
         </div>
@@ -1833,6 +1842,8 @@
   </section>
 
   <div class="modal" id="profileModal" aria-hidden="true">
+    <button type="button" class="rank-guide-nav rank-guide-nav--prev" id="profileModalNavPrev" aria-label="Aventurero anterior">‹</button>
+    <button type="button" class="rank-guide-nav rank-guide-nav--next" id="profileModalNavNext" aria-label="Siguiente aventurero">›</button>
     <div class="modal-card" id="modalCard">
       <button type="button" class="modal-close" id="modalClose" aria-label="Cerrar">&times;</button>
       <button type="button" class="modal-share" id="btnCompartirRanking" aria-label="Compartir ranking">Compartir</button>
@@ -1914,7 +1925,10 @@
       const modalBadgeWrap = document.getElementById("modalBadgeWrap");
       const modalRoutesWrap = document.getElementById("modalRoutesWrap");
       const modalNext = document.getElementById("modalNext");
+      const profileModalNavPrev = document.getElementById("profileModalNavPrev");
+      const profileModalNavNext = document.getElementById("profileModalNavNext");
       let avatarMap = new Map();
+      let profileModalAnimating = false;
 
       function escapeHtml(s) {
         if (s == null) return "";
@@ -2307,8 +2321,102 @@
         window._modalRandomBgUrl = url;
       }
 
-      function abrirModal(entry, position) {
-        if (!entry || !profileModal || !modalCard) return;
+      function resetProfileModalCardTransform() {
+        if (!modalCard) return;
+        modalCard.classList.remove("is-dragging");
+        modalCard.style.transition = "";
+        modalCard.style.transform = "";
+      }
+
+      function updateProfileModalNavVisibility() {
+        if (!profileModalNavPrev || !profileModalNavNext) return;
+        const list = window._rankingModalBrowseList;
+        const idx = window._rankingModalBrowseIndex;
+        if (!profileModal.classList.contains("active") || !list || list.length < 2) {
+          profileModalNavPrev.style.display = "none";
+          profileModalNavNext.style.display = "none";
+          return;
+        }
+        profileModalNavPrev.style.display = "flex";
+        profileModalNavNext.style.display = "flex";
+        profileModalNavPrev.disabled = idx <= 0;
+        profileModalNavNext.disabled = idx >= list.length - 1;
+        profileModalNavPrev.tabIndex = idx <= 0 ? -1 : 0;
+        profileModalNavNext.tabIndex = idx >= list.length - 1 ? -1 : 0;
+        profileModalNavPrev.style.opacity = idx <= 0 ? "0.35" : "1";
+        profileModalNavNext.style.opacity = idx >= list.length - 1 ? "0.35" : "1";
+      }
+
+      function attachModalCardTransformEnd(callback) {
+        if (!modalCard) return;
+        let done = false;
+        function finish(ev) {
+          if (ev && ev.propertyName && ev.propertyName !== "transform") return;
+          if (done) return;
+          done = true;
+          modalCard.removeEventListener("transitionend", onTE);
+          clearTimeout(fallbackId);
+          callback();
+        }
+        function onTE(ev) {
+          finish(ev);
+        }
+        modalCard.addEventListener("transitionend", onTE);
+        const fallbackId = setTimeout(function () {
+          finish(null);
+        }, RANK_GUIDE_SWIPE_DURATION + 120);
+      }
+
+      function profileModalCompleteSlideChange(enterFromRight, entry, position) {
+        if (!modalCard || !entry) return;
+        modalCard.classList.remove("is-dragging");
+        modalCard.style.transition = "none";
+        modalCard.style.transform = enterFromRight ? "translateX(100%)" : "translateX(-100%)";
+        modalCard.offsetHeight;
+        poblarProfileModal(entry, position);
+        modalCard.style.transition =
+          "transform " + RANK_GUIDE_SWIPE_DURATION + "ms cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+        modalCard.style.transform = "translateX(0)";
+        attachModalCardTransformEnd(function () {
+          modalCard.style.transition = "";
+          profileModalAnimating = false;
+          updateProfileModalNavVisibility();
+        });
+      }
+
+      function profileModalGoNeighbor(direction) {
+        if (!modalCard || profileModalAnimating) return;
+        const list = window._rankingModalBrowseList;
+        const idx = window._rankingModalBrowseIndex;
+        if (!list || list.length < 2) return;
+        if (direction === 1 && idx >= list.length - 1) return;
+        if (direction === -1 && idx <= 0) return;
+        profileModalAnimating = true;
+        modalCard.classList.remove("is-dragging");
+        modalCard.style.transition =
+          "transform " + RANK_GUIDE_SWIPE_DURATION + "ms cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+        modalCard.style.transform = direction === 1 ? "translateX(-100%)" : "translateX(100%)";
+        attachModalCardTransformEnd(function () {
+          if (direction === 1) {
+            const nextIdx = idx + 1;
+            const nextEntry = list[nextIdx];
+            const nextPos =
+              rankingBase.findIndex(function (x) { return x.nombre === nextEntry.nombre; }) + 1;
+            window._rankingModalBrowseIndex = nextIdx;
+            profileModalCompleteSlideChange(true, nextEntry, nextPos);
+          } else {
+            const prevIdx = idx - 1;
+            const prevEntry = list[prevIdx];
+            const prevPos =
+              rankingBase.findIndex(function (x) { return x.nombre === prevEntry.nombre; }) + 1;
+            window._rankingModalBrowseIndex = prevIdx;
+            profileModalCompleteSlideChange(false, prevEntry, prevPos);
+          }
+        });
+      }
+
+      function poblarProfileModal(entry, position) {
+        if (!entry || !modalCard) return;
         const pos = position || 0;
         const r = entry.rango || {};
         const badgeSrc = getBadgeSrc(r.nombre);
@@ -2403,15 +2511,212 @@
             '<div class="modal-next-bar"><div class="modal-next-fill" style="width:' + pct + "%;background:" + (sig.color || "") + '"></div></div>' +
             '<div class="modal-next-meta"><span>' + progreso + "/" + totalPara + "</span><span>" + Math.round(pct) + "%</span></div>";
         }
-
-        profileModal.classList.add("active");
-        document.body.style.overflow = "hidden";
       }
+
+      function abrirModal(entry, position, browseList) {
+        if (!entry || !profileModal || !modalCard) return;
+        const list = browseList && browseList.length ? browseList : [entry];
+        let idx = list.findIndex(function (x) { return x.nombre === entry.nombre; });
+        if (idx < 0) idx = 0;
+        window._rankingModalBrowseList = list;
+        window._rankingModalBrowseIndex = idx;
+        const pos =
+          position ||
+          rankingBase.findIndex(function (x) { return x.nombre === entry.nombre; }) + 1;
+        resetProfileModalCardTransform();
+        profileModalAnimating = false;
+        poblarProfileModal(entry, pos);
+        profileModal.classList.add("active");
+        profileModal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        updateProfileModalNavVisibility();
+      }
+
+      if (profileModalNavPrev) {
+        profileModalNavPrev.addEventListener("click", function (e) {
+          e.stopPropagation();
+          profileModalGoNeighbor(-1);
+        });
+      }
+      if (profileModalNavNext) {
+        profileModalNavNext.addEventListener("click", function (e) {
+          e.stopPropagation();
+          profileModalGoNeighbor(1);
+        });
+      }
+
+      (function initProfileModalSwipe() {
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isProfileSwipe = false;
+        let axisDecided = false;
+
+        if (!profileModal || !modalCard) return;
+
+        profileModal.addEventListener(
+          "touchstart",
+          function (e) {
+            if (
+              !profileModal.classList.contains("active") ||
+              profileModalAnimating ||
+              !window._rankingModalBrowseList ||
+              window._rankingModalBrowseList.length < 2
+            )
+              return;
+            touchStartX = e.touches[0].screenX;
+            touchStartY = e.touches[0].screenY;
+            isProfileSwipe = false;
+            axisDecided = false;
+          },
+          { passive: true, capture: true }
+        );
+
+        profileModal.addEventListener(
+          "touchmove",
+          function (e) {
+            if (
+              !profileModal.classList.contains("active") ||
+              profileModalAnimating ||
+              !window._rankingModalBrowseList ||
+              window._rankingModalBrowseList.length < 2
+            )
+              return;
+            const x = e.touches[0].screenX;
+            const y = e.touches[0].screenY;
+            const dx = x - touchStartX;
+            const dy = y - touchStartY;
+            if (!axisDecided) {
+              if (Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy) * 1.15) {
+                axisDecided = true;
+                isProfileSwipe = true;
+                modalCard.classList.add("is-dragging");
+                modalCard.style.transition = "none";
+              } else if (Math.abs(dy) > 14 && Math.abs(dy) > Math.abs(dx)) {
+                axisDecided = true;
+                isProfileSwipe = false;
+              }
+            }
+            if (isProfileSwipe) {
+              e.preventDefault();
+              modalCard.style.transform = "translateX(" + dx + "px)";
+            }
+          },
+          { passive: false, capture: true }
+        );
+
+        profileModal.addEventListener(
+          "touchend",
+          function (e) {
+            if (
+              !profileModal.classList.contains("active") ||
+              profileModalAnimating ||
+              !window._rankingModalBrowseList ||
+              window._rankingModalBrowseList.length < 2
+            )
+              return;
+            const list = window._rankingModalBrowseList;
+            const idx = window._rankingModalBrowseIndex;
+            const touchEndX = e.changedTouches[0].screenX;
+            const deltaX = touchEndX - touchStartX;
+            modalCard.classList.remove("is-dragging");
+            modalCard.style.transition =
+              "transform " + RANK_GUIDE_SWIPE_DURATION + "ms cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+
+            if (!isProfileSwipe) {
+              modalCard.style.transform = "";
+              axisDecided = false;
+              return;
+            }
+
+            if (deltaX < -RANK_GUIDE_SWIPE_THRESHOLD) {
+              if (idx >= list.length - 1) {
+                modalCard.style.transform = "translateX(0)";
+                isProfileSwipe = false;
+                axisDecided = false;
+                return;
+              }
+              profileModalAnimating = true;
+              modalCard.style.transform = "translateX(-100%)";
+              attachModalCardTransformEnd(function () {
+                const nextIdx = idx + 1;
+                const nextEntry = list[nextIdx];
+                const nextPos =
+                  rankingBase.findIndex(function (fullWidth=150charLimit exceeded)
+```
+
+Let me read the file - I may have broken the replace
+</think>
+
+
+<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
+Read
+
+        var lastProfileWheelStep = 0;
+        profileModal.addEventListener(
+          "wheel",
+          function (e) {
+            if (
+              !profileModal.classList.contains("active") ||
+              profileModalAnimating ||
+              !window._rankingModalBrowseList ||
+              window._rankingModalBrowseList.length < 2
+            )
+              return;
+            var ax = Math.abs(e.deltaX);
+            var ay = Math.abs(e.deltaY);
+            if (ax < 14 || ax < ay * 0.85) return;
+            var now = Date.now();
+            if (now - lastProfileWheelStep < 400) return;
+            var list = window._rankingModalBrowseList;
+            var idx = window._rankingModalBrowseIndex;
+            if (e.deltaX < -12) {
+              if (idx >= list.length - 1) return;
+              e.preventDefault();
+              lastProfileWheelStep = now;
+              modalCard.classList.remove("is-dragging");
+              profileModalAnimating = true;
+              modalCard.style.transition =
+                "transform " + RANK_GUIDE_SWIPE_DURATION + "ms cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+              modalCard.style.transform = "translateX(-100%)";
+              attachModalCardTransformEnd(function () {
+                var nextIdx = idx + 1;
+                var nextEntry = list[nextIdx];
+                var nextPos =
+                  rankingBase.findIndex(function (x) { return x.nombre === nextEntry.nombre; }) + 1;
+                window._rankingModalBrowseIndex = nextIdx;
+                profileModalCompleteSlideChange(true, nextEntry, nextPos);
+              });
+            } else if (e.deltaX > 12) {
+              if (idx <= 0) return;
+              e.preventDefault();
+              lastProfileWheelStep = now;
+              modalCard.classList.remove("is-dragging");
+              profileModalAnimating = true;
+              modalCard.style.transition =
+                "transform " + RANK_GUIDE_SWIPE_DURATION + "ms cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+              modalCard.style.transform = "translateX(100%)";
+              attachModalCardTransformEnd(function () {
+                var prevIdx = idx - 1;
+                var prevEntry = list[prevIdx];
+                var prevPos =
+                  rankingBase.findIndex(function (x) { return x.nombre === prevEntry.nombre; }) + 1;
+                window._rankingModalBrowseIndex = prevIdx;
+                profileModalCompleteSlideChange(false, prevEntry, prevPos);
+              });
+            }
+          },
+          { passive: false }
+        );
+      })();
 
       function cerrarModal() {
         if (!profileModal) return;
         profileModal.classList.remove("active");
+        profileModal.setAttribute("aria-hidden", "true");
+        resetProfileModalCardTransform();
+        profileModalAnimating = false;
         document.body.style.overflow = "";
+        updateProfileModalNavVisibility();
       }
 
       async function exportStoryAndShare() {
@@ -2755,6 +3060,21 @@
       let rankingBase = [];
       let rankingStep = 0; // 0 => 10, 1 => 20, 2 => 50, 3 => todo
 
+      function getVisibleRankingBrowseList() {
+        const q = (nameSearch && nameSearch.value ? nameSearch.value : "").trim().toLowerCase();
+        if (q) {
+          const filtered = rankingBase.filter(function (entry) {
+            return (entry.nombre || "").toLowerCase().includes(q);
+          });
+          return filtered.length ? filtered : rankingBase;
+        }
+        let visibleCount = Number.POSITIVE_INFINITY;
+        if (rankingStep === 0) visibleCount = 10;
+        else if (rankingStep === 1) visibleCount = 20;
+        else if (rankingStep === 2) visibleCount = 50;
+        return rankingBase.slice(0, Math.min(visibleCount, rankingBase.length));
+      }
+
       function renderTop3(entries) {
         const top3 = entries.slice(0, 3);
         if (!top3.length) {
@@ -2985,7 +3305,7 @@
           const name = btn.getAttribute("data-name") || "";
           const entry = rankingBase.find(function (x) { return x.nombre === name; });
           const pos = rankingBase.findIndex(function (x) { return x.nombre === name; }) + 1;
-          abrirModal(entry, pos);
+          abrirModal(entry, pos, getVisibleRankingBrowseList());
         });
         top3Podium.addEventListener("click", function (e) {
           const card = e.target.closest(".podium-item[data-name]");
@@ -2993,7 +3313,7 @@
           const name = card.getAttribute("data-name") || "";
           const entry = rankingBase.find(function (x) { return x.nombre === name; });
           const pos = rankingBase.findIndex(function (x) { return x.nombre === name; }) + 1;
-          abrirModal(entry, pos);
+          abrirModal(entry, pos, rankingBase.slice(0, 3));
         });
         desktopContainer.addEventListener("click", function (e) {
           const row = e.target.closest("[data-name]");
@@ -3001,7 +3321,7 @@
           const name = row.getAttribute("data-name") || "";
           const entry = rankingBase.find(function (x) { return x.nombre === name; });
           const pos = rankingBase.findIndex(function (x) { return x.nombre === name; }) + 1;
-          abrirModal(entry, pos);
+          abrirModal(entry, pos, getVisibleRankingBrowseList());
         });
       } catch (err) {
         console.error(err);
