@@ -9,7 +9,7 @@
   />
   <title>Ranking | Somos Aventura2</title>
   <!-- Open Graph -->
-  <meta property="og:title" content="Ranking | SomosAventurados — Los aventureros que más suben">
+  <meta property="og:title" content="Ranking | SomosAventura2 — Los aventureros que más suben">
   <meta
     property="og:description"
     content="Mira el podio, los rangos y cuántas rutas lleva cada aventurero. ¿Dónde estás tú en la montaña?"
@@ -21,7 +21,7 @@
   <meta property="og:site_name" content="SomosAventura2" />
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Ranking | SomosAventurados — Los aventureros que más suben" />
+  <meta name="twitter:title" content="Ranking | SomosAventura2 — Los aventureros que más suben" />
   <meta
     name="twitter:description"
     content="Mira el podio, los rangos y cuántas rutas lleva cada aventurero. ¿Dónde estás tú en la montaña?"
@@ -40,7 +40,7 @@
     href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap"
     rel="stylesheet"
   />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.100.0/dist/umd/supabase.min.js" defer></script>
   <style>
     :root {
       --bg: #08120f;
@@ -1475,10 +1475,6 @@
     }
 
     @media (max-width: 767px) {
-      .hero .top3 {
-        display: none;
-      }
-
       .hero-inner {
         padding: 4px 0 18px;
         gap: 10px;
@@ -1503,6 +1499,17 @@
       .stats {
         margin-top: 8px;
         gap: 6px;
+      }
+    }
+
+    /* Mini ranking (Top 3): solo en escritorio; en móvil/tablet se prioriza ver el ranking completo */
+    .hero-inner > .top3 {
+      display: none;
+    }
+
+    @media (min-width: 1024px) {
+      .hero-inner > .top3 {
+        display: block;
       }
     }
 
@@ -2641,15 +2648,35 @@
                 const nextIdx = idx + 1;
                 const nextEntry = list[nextIdx];
                 const nextPos =
-                  rankingBase.findIndex(function (fullWidth=150charLimit exceeded)
-```
-
-Let me read the file - I may have broken the replace
-</think>
-
-
-<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
-Read
+                  rankingBase.findIndex(function (x) { return x.nombre === nextEntry.nombre; }) + 1;
+                window._rankingModalBrowseIndex = nextIdx;
+                profileModalCompleteSlideChange(true, nextEntry, nextPos);
+              });
+            } else if (deltaX > RANK_GUIDE_SWIPE_THRESHOLD) {
+              if (idx <= 0) {
+                modalCard.style.transform = "translateX(0)";
+                isProfileSwipe = false;
+                axisDecided = false;
+                return;
+              }
+              profileModalAnimating = true;
+              modalCard.style.transform = "translateX(100%)";
+              attachModalCardTransformEnd(function () {
+                const prevIdx = idx - 1;
+                const prevEntry = list[prevIdx];
+                const prevPos =
+                  rankingBase.findIndex(function (x) { return x.nombre === prevEntry.nombre; }) + 1;
+                window._rankingModalBrowseIndex = prevIdx;
+                profileModalCompleteSlideChange(false, prevEntry, prevPos);
+              });
+            } else {
+              modalCard.style.transform = "translateX(0)";
+            }
+            isProfileSwipe = false;
+            axisDecided = false;
+          },
+          { passive: true, capture: true }
+        );
 
         var lastProfileWheelStep = 0;
         profileModal.addEventListener(
@@ -3047,15 +3074,33 @@ Read
         }
       });
 
-      if (typeof supabase === "undefined") {
-        await new Promise(function (resolve) { setTimeout(resolve, 300); });
+      async function waitForSupabaseGlobal(maxMs) {
+        const deadline = Date.now() + maxMs;
+        while (Date.now() < deadline) {
+          if (typeof supabase !== "undefined" && supabase && typeof supabase.createClient === "function") {
+            return true;
+          }
+          await new Promise(function (resolve) { setTimeout(resolve, 50); });
+        }
+        return false;
       }
-      if (typeof supabase === "undefined") {
-        messageEl.textContent = "No se pudo cargar Supabase.";
+
+      const supabaseReady = await waitForSupabaseGlobal(8000);
+      if (!supabaseReady) {
+        messageEl.textContent =
+          "No se pudo cargar la librería de Supabase (revisa la conexión o bloqueadores). Si abres el archivo con file://, prueba un servidor local o la web publicada.";
         return;
       }
 
-      const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      let db;
+      try {
+        db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      } catch (initErr) {
+        console.error(initErr);
+        messageEl.textContent =
+          "Error al conectar con Supabase: " + (initErr && initErr.message ? initErr.message : String(initErr));
+        return;
+      }
       const ordenRangos = { Diamante: 6, Platino: 5, Oro: 4, Plata: 3, Bronce: 2, Novato: 1 };
       let rankingBase = [];
       let rankingStep = 0; // 0 => 10, 1 => 20, 2 => 50, 3 => todo
@@ -3199,11 +3244,17 @@ Read
           db.from("avatares_ranking").select("nombre, avatar_url")
         ]);
         const participantes = results[0].data || [];
-        const errPart = results[0].error;
         const rutas = results[1].data || [];
         const avatares = results[2].data || [];
 
-        if (errPart) throw errPart;
+        const errPart = results[0].error;
+        const errRutas = results[1].error;
+        const errAvatares = results[2].error;
+        const firstErr = errPart || errRutas || errAvatares;
+        if (firstErr) {
+          console.error("Supabase ranking:", { errPart: errPart, errRutas: errRutas, errAvatares: errAvatares });
+          throw firstErr;
+        }
 
         const rutasMap = new Map(rutas.map(function (r) { return [r.id, r.nombre || ("Ruta " + r.id)]; }));
         avatarMap = new Map();
@@ -3325,7 +3376,18 @@ Read
         });
       } catch (err) {
         console.error(err);
-        messageEl.textContent = "No pudimos cargar el ranking.";
+        const hint =
+          err && err.message
+            ? err.message
+            : err && err.error_description
+              ? err.error_description
+              : String(err);
+        messageEl.textContent =
+          "No pudimos cargar el ranking. " +
+          hint +
+          (hint.indexOf("JWT") >= 0 || hint.indexOf("key") >= 0
+            ? " Revisa en el panel de Supabase que la clave anon/publishable coincida con el proyecto."
+            : "");
       }
     });
   </script>
