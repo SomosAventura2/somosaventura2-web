@@ -9,7 +9,7 @@
   />
   <title>Ranking | Somos Aventurados</title>
   <!-- Open Graph -->
-  <meta property="og:title" content="Ranking | SomosAventura2 — Los aventureros que más suben">
+  <meta property="og:title" content="Ranking | SomosAventurados — Los aventureros que más suben">
   <meta
     property="og:description"
     content="Mira el podio, los rangos y cuántas rutas lleva cada aventurero. ¿Dónde estás tú en la montaña?"
@@ -1118,8 +1118,8 @@
       width: 100%;
       max-height: 90vh;
       overflow-y: auto;
-      border: 1px solid rgba(118, 200, 147, 0.5);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      border: 1px solid #76c893;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 18px rgba(118, 200, 147, 0.22);
       touch-action: pan-y;
     }
 
@@ -1147,20 +1147,41 @@
       align-items: center;
       justify-content: center;
       line-height: 1;
+      transition: background 0.2s;
+    }
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.2);
     }
 
     .modal-share {
       position: absolute;
       top: 16px;
       left: 16px;
-      border: 1px solid rgba(118, 200, 147, 0.35);
-      background: rgba(118, 200, 147, 0.12);
-      color: #ffffff;
-      padding: 10px 14px;
-      border-radius: 12px;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      padding: 0 14px;
+      min-height: 40px;
+      border-radius: 999px;
       font-weight: 800;
       font-size: 12px;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      transition: background 0.2s;
+      user-select: none;
+    }
+    .modal-share:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .modal-share:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+    .modal-share:active {
+      transform: translateY(1px);
     }
 
     .modal-avatar-wrap { display: flex; justify-content: center; margin-bottom: 16px; }
@@ -1171,6 +1192,18 @@
       overflow: hidden;
       border: 3px solid rgba(118, 200, 147, 0.5);
       background: rgba(0, 0, 0, 0.3);
+    }
+    .modal-card.modal-gold .modal-avatar {
+      border-color: #FFD700;
+      box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+    .modal-card.modal-silver .modal-avatar {
+      border-color: #C0C0C0;
+      box-shadow: 0 0 0 1px rgba(192, 192, 192, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+    .modal-card.modal-bronze .modal-avatar {
+      border-color: #CD7F32;
+      box-shadow: 0 0 0 1px rgba(205, 127, 50, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
     .modal-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .modal-avatar .avatar-fallback {
@@ -1729,7 +1762,7 @@
       <div class="top3">
         <div class="top3-head">
           <div>
-            <div class="top3-title">Top 3 aventurados</div>
+            <div class="top3-title">Top 3 Aventurados</div>
           </div>
           <div class="chip">Actualizado hoy</div>
         </div>
@@ -2845,6 +2878,11 @@
 
         const avatarSize = 180;
         const avatarX = Math.round(centerX - avatarSize / 2);
+        let avatarRingColor = "rgba(118,200,147,0.7)";
+        if (position === 1) avatarRingColor = "#FFD700";
+        else if (position === 2) avatarRingColor = "#C0C0C0";
+        else if (position === 3) avatarRingColor = "#CD7F32";
+
         if (avatarUrl) {
           try {
             const avatarImg = await loadImage(avatarUrl);
@@ -2855,7 +2893,7 @@
             ctx.clip();
             ctx.drawImage(avatarImg, avatarX, y, avatarSize, avatarSize);
             ctx.restore();
-            ctx.strokeStyle = "rgba(118,200,147,0.7)";
+            ctx.strokeStyle = avatarRingColor;
             ctx.lineWidth = 6;
             ctx.beginPath();
             ctx.arc(centerX, y + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
@@ -3009,6 +3047,12 @@
           ctx.font = "500 28px Poppins, sans-serif";
           ctx.fillText(progreso + "/" + totalPara, barX, barY + 50);
           ctx.fillText(Math.round(pct) + "%", barX + barW - 110, barY + 50);
+
+          const igHandle = "@somosaventura2";
+          ctx.textBaseline = "top";
+          ctx.fillStyle = "rgba(233,243,236,0.92)";
+          ctx.font = "700 34px Poppins, sans-serif";
+          ctx.fillText(igHandle, centerX - ctx.measureText(igHandle).width / 2, blockY + nextCardH + 18);
         }
 
         const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
