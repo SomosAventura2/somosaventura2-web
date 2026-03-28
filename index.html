@@ -324,7 +324,6 @@
     /* ===== GALERÍA MOBILE-FIRST (480px container) ===== */
     .gallery-section {
       padding: 40px 24px;
-      --gallery-card-radius: 18px;
     }
 
     .gallery-filters {
@@ -384,9 +383,7 @@
       height: 330px;
       perspective: 1100px;
       overflow: hidden;
-      border-radius: var(--gallery-card-radius, 18px);
-      /* Recorte redondeado fiable con hijos en 3D (evita cantos rectos en los previews) */
-      clip-path: inset(0 round var(--gallery-card-radius, 18px));
+      border-radius: 20px;
       padding: 8px 0;
       margin-top: 8px;
     }
@@ -398,11 +395,6 @@
       list-style: none;
     }
 
-    /*
-      Coverflow: el figure solo centra (translate 2D). El 3D (rotateY, translateZ…) va en .gallery-item-tilt.
-      Si rotateY y overflow/border-radius comparten elemento (o el padre transformado es el mismo que recorta),
-      WebKit/Blink suelen pintar la imagen con cantos rectos.
-    */
     .gallery-item {
       margin: 0;
       position: absolute;
@@ -410,53 +402,20 @@
       left: 50%;
       width: min(72vw, 320px);
       aspect-ratio: 1 / 1;
-      overflow: visible;
-      border-radius: 0;
-      background: transparent;
-      box-shadow: none;
-      transform: translate(-50%, -50%);
-      transform-style: preserve-3d;
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
-      transition: opacity 0.35s ease, filter 0.35s ease;
-      will-change: opacity;
-    }
-
-    .gallery-item-tilt {
-      width: 100%;
-      height: 100%;
-      transform-style: preserve-3d;
-      transform-origin: 50% 50%;
-      transition: transform 0.45s ease;
-      will-change: transform;
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
-    }
-
-    .gallery-item-surface {
-      width: 100%;
-      height: 100%;
-      border-radius: var(--gallery-card-radius, 18px);
+      border-radius: 16px;
       overflow: hidden;
-      position: relative;
-      -webkit-clip-path: inset(0 round var(--gallery-card-radius, 18px));
-      clip-path: inset(0 round var(--gallery-card-radius, 18px));
-      box-shadow:
-        0 10px 28px rgba(0, 0, 0, 0.45),
-        0 0 0 1px rgba(118, 200, 147, 0.18);
-      transition: box-shadow 0.45s ease;
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+      transform-style: preserve-3d;
+      transition: transform 0.45s ease, box-shadow 0.45s ease, opacity 0.35s ease, filter 0.35s ease;
+      will-change: transform, opacity;
     }
 
     .gallery-item.gallery-item-hidden {
       display: none;
     }
 
-    .gallery-item.gallery-item-active .gallery-item-surface {
-      box-shadow:
-        0 16px 38px rgba(0, 0, 0, 0.55),
-        0 0 0 1px rgba(118, 200, 147, 0.35);
+    .gallery-item.gallery-item-active {
+      box-shadow: 0 16px 38px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(118, 200, 147, 0.3);
     }
 
     .gallery-item-trigger {
@@ -470,8 +429,6 @@
       background: none;
       cursor: pointer;
       display: block;
-      border-radius: inherit;
-      overflow: hidden;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -490,18 +447,11 @@
       height: 100%;
       object-fit: cover;
       display: block;
-      border-radius: inherit;
-      /* Recorte explícito en la imagen: evita cantos rectos cuando un antepasado lleva rotateY (bug de capas). */
-      -webkit-clip-path: inset(0 round var(--gallery-card-radius, 18px));
-      clip-path: inset(0 round var(--gallery-card-radius, 18px));
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
     }
 
     .gallery-item-overlay {
       position: absolute;
       inset: 0;
-      border-radius: inherit;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
@@ -2991,6 +2941,7 @@
 
     .gallery-item {
       width: min(62vw, 340px);
+      border-radius: 20px;
     }
 
     .ranking-section {
@@ -3007,10 +2958,6 @@
     }
 
     @media (min-width: 768px) {
-      .gallery-section {
-        --gallery-card-radius: 20px;
-      }
-
       .hero-premium .hero-inner {
         padding: 38px 0 54px;
       }
@@ -3269,8 +3216,6 @@
       <div class="gallery-coverflow-viewport" id="galleryCoverflowViewport">
       <div class="gallery-grid" role="list">
         <figure class="gallery-item" data-category="cascada" data-caption="Cascada Los Gavilanes" data-badge="Cascada" data-date="2024">
-          <div class="gallery-item-tilt">
-          <div class="gallery-item-surface">
           <button type="button" class="gallery-item-trigger" aria-label="Ver Cascada Los Gavilanes, 2024">
             <img src="galeria1.jpg" alt="Cascada Los Gavilanes" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
@@ -3278,12 +3223,8 @@
               <span class="gallery-item-date">2025</span>
             </span>
           </button>
-          </div>
-          </div>
         </figure>
         <figure class="gallery-item" data-category="ruta" data-caption="Nuestros aventurados" data-badge="Aventura" data-date="2024">
-          <div class="gallery-item-tilt">
-          <div class="gallery-item-surface">
           <button type="button" class="gallery-item-trigger" aria-label="Ver Nuestros aventurados, 2024">
             <img src="galeria2.jpg" alt="Nuestros aventurados" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
@@ -3291,12 +3232,8 @@
               <span class="gallery-item-date">2026</span>
             </span>
           </button>
-          </div>
-          </div>
         </figure>
         <figure class="gallery-item" data-category="cascada" data-caption="Cascada Los Aguacates" data-badge="Cascada" data-date="2024">
-          <div class="gallery-item-tilt">
-          <div class="gallery-item-surface">
           <button type="button" class="gallery-item-trigger" aria-label="Ver Cascada Los Aguacates, 2024">
             <img src="galeria3.jpg" alt="Cascada Los Aguacates" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
@@ -3304,12 +3241,8 @@
               <span class="gallery-item-date">2025</span>
             </span>
           </button>
-          </div>
-          </div>
         </figure>
         <figure class="gallery-item" data-category="cascada" data-caption="El chorrerón de Chuao" data-badge="Cascada" data-date="2024">
-          <div class="gallery-item-tilt">
-          <div class="gallery-item-surface">
           <button type="button" class="gallery-item-trigger" aria-label="Ver El chorrerón de Chuao, 2024">
             <img src="galeria4.jpg" alt="El chorrerón de Chuao" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
@@ -3317,12 +3250,8 @@
               <span class="gallery-item-date">2025</span>
             </span>
           </button>
-          </div>
-          </div>
         </figure>
         <figure class="gallery-item" data-category="cascada" data-caption="Cascada la reina" data-badge="Cascada" data-date="2024">
-          <div class="gallery-item-tilt">
-          <div class="gallery-item-surface">
           <button type="button" class="gallery-item-trigger" aria-label="Ver Cascada la reina, 2024">
             <img src="galeria5.jpg" alt="Cascada la reina" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
@@ -3330,12 +3259,8 @@
               <span class="gallery-item-date">2025</span>
             </span>
           </button>
-          </div>
-          </div>
         </figure>
         <figure class="gallery-item" data-category="ruta" data-caption="Los Azules" data-badge="Ruta" data-date="2024">
-          <div class="gallery-item-tilt">
-          <div class="gallery-item-surface">
           <button type="button" class="gallery-item-trigger" aria-label="Ver Los Azules, 2024">
             <img src="galeria6.jpg" alt="Los Azules" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
@@ -3343,8 +3268,6 @@
               <span class="gallery-item-date">2026</span>
             </span>
           </button>
-          </div>
-          </div>
         </figure>
       </div>
       </div>
@@ -3532,8 +3455,6 @@
       updateGalleryControls(len);
       document.querySelectorAll('.gallery-item').forEach(item => {
         item.classList.remove('gallery-item-active');
-        const tilt = item.querySelector('.gallery-item-tilt');
-        if (tilt) tilt.style.transform = '';
         item.style.transform = '';
         item.style.opacity = item.classList.contains('gallery-item-hidden') ? '0' : '';
         item.style.zIndex = '';
@@ -3558,12 +3479,8 @@
         item.classList.toggle('gallery-item-active', offset === 0);
         item.style.zIndex = String(100 - abs);
         item.style.opacity = String(opacity);
-        item.style.transform = '';
-        const tilt = item.querySelector('.gallery-item-tilt');
-        if (tilt) {
-          tilt.style.transform =
-            'translateX(' + translateX + '%) translateZ(' + translateZ + 'px) rotateY(' + rotateY + 'deg) scale(' + scale + ')';
-        }
+        item.style.transform =
+          'translate(-50%, -50%) translateX(' + translateX + '%) translateZ(' + translateZ + 'px) rotateY(' + rotateY + 'deg) scale(' + scale + ')';
       });
     }
 
