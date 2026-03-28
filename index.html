@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
   <meta name="description" content="Somos Aventurados - Ecoturismo responsable, senderismo guiado y aventuras en la naturaleza. Únete a nuestra comunidad de aventureros.">
   <title>Somos Aventurados | Ecoturismo y Senderismo</title>
   <!-- Open Graph -->
@@ -53,28 +53,18 @@
 
     body {
       font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
-      background: var(--bg-dark);
       color: var(--text-primary);
       line-height: 1.45;
-      overflow-x: hidden;
+      touch-action: manipulation;
     }
 
     body.lightbox-open {
       overflow: hidden;
     }
 
-    .container {
-      max-width: 480px;
-      margin: 0 auto;
-      background: linear-gradient(180deg, rgba(14, 47, 54, 0.95) 0%, rgba(18, 56, 64, 0.97) 100%),
-                  url('fondo2.jpg') center/cover fixed;
-      min-height: 100vh;
-      position: relative;
-    }
-
     .hero {
       background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(10, 22, 18, 0.9) 100%), 
-                  url('fondo.jpg') center/cover;
+                  url('fondos/fondo5.jpg') center/cover;
       text-align: center;
       padding: 60px 24px 50px;
       position: relative;
@@ -1872,6 +1862,15 @@
     #upcomingRoutes .routes-carousel-btns-wrap.gallery-coverflow-controls {
       margin-top: 14px;
     }
+    /* Solo móvil: oculto por defecto (evita que .gallery-coverflow-controls fuerce flex con 1 sola ruta) */
+    @media (max-width: 1023px) {
+      #routesVerMasWrap {
+        display: none !important;
+      }
+      #routesVerMasWrap.routes-coverflow-nav-visible {
+        display: flex !important;
+      }
+    }
     /* ===== Próximas Aventuras: desktop sin carrusel (3 columnas) ===== */
     @media (min-width: 1024px) {
       #upcomingRoutes {
@@ -2459,9 +2458,12 @@
       }
     }
   
-    /* ===== Premium responsive refresh (visual alineado con ranking.html) ===== */
+    /* ===== Premium responsive refresh (mismo criterio de fondo que ranking.html) ===== */
     html {
       scroll-behavior: smooth;
+      /* Mismo tono base que ranking (:root --bg); evita bordes distintos en bounce/overscroll */
+      background-color: #08120f;
+      touch-action: manipulation;
     }
 
     :root {
@@ -2475,21 +2477,32 @@
       --container: 1120px;
     }
 
+    /* Mobile-first: mismo fondo que ranking en móvil por defecto (evita que el estilo de escritorio “gane” en Safari) */
     body {
+      margin: 0;
       font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
       line-height: 1.45;
-      background:
-        linear-gradient(180deg, rgba(8, 18, 15, 0.84) 0%, rgba(8, 18, 15, 0.88) 100%),
-        url('fondo3.jpg') center/cover fixed no-repeat;
+      color: var(--text-primary);
+      touch-action: manipulation;
+      background-color: #08120f;
+      background-image:
+        linear-gradient(180deg, rgba(6, 14, 12, 0.91) 0%, rgba(8, 18, 15, 0.94) 45%, rgba(5, 10, 9, 0.96) 100%),
+        url('fondos/fondo3.jpg');
+      background-position: center, center 30%;
+      background-size: cover, cover;
+      background-repeat: no-repeat, no-repeat;
+      background-attachment: scroll;
     }
 
-    /* iOS Safari fallback: evita distorsión con background-attachment: fixed */
-    @supports (-webkit-touch-callout: none) {
+    @media (min-width: 1025px) {
       body {
-        background:
+        background-image:
           linear-gradient(180deg, rgba(8, 18, 15, 0.84) 0%, rgba(8, 18, 15, 0.88) 100%),
-          url('fondo3.jpg') center/cover no-repeat;
-        background-attachment: scroll;
+          url('fondos/fondo3.jpg');
+        background-position: center, center;
+        background-size: cover, cover;
+        background-repeat: no-repeat, no-repeat;
+        background-attachment: fixed;
       }
     }
 
@@ -2524,7 +2537,7 @@
     .hero.hero-premium .hero-bg {
       position: absolute;
       inset: 0;
-      background-image: url('fondo3.jpg');
+      background-image: url('fondos/fondo5.jpg');
       background-size: cover;
       background-position: center;
       opacity: 0.22;
@@ -3196,7 +3209,7 @@
           <div class="routes-loading">Cargando próximas rutas...</div>
         </div>
       </div>
-      <div class="gallery-coverflow-controls routes-carousel-btns-wrap" id="routesVerMasWrap" style="display: none;" aria-label="Controles del carrusel de rutas">
+      <div class="gallery-coverflow-controls routes-carousel-btns-wrap" id="routesVerMasWrap" aria-label="Controles del carrusel de rutas">
         <button type="button" class="gallery-coverflow-btn" id="routesCarouselBtnPrev" aria-label="Ruta anterior">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M15 18L9 12L15 6"></path>
@@ -3216,56 +3229,101 @@
       <div class="gallery-coverflow-viewport" id="galleryCoverflowViewport">
       <div class="gallery-grid" role="list">
         <figure class="gallery-item" data-category="cascada" data-caption="Cascada Los Gavilanes" data-badge="Cascada" data-date="2024">
-          <button type="button" class="gallery-item-trigger" aria-label="Ver Cascada Los Gavilanes, 2024">
-            <img src="galeria1.jpg" alt="Cascada Los Gavilanes" loading="lazy" width="240" height="240" decoding="async">
+          <button type="button" class="gallery-item-trigger" aria-label="Ver Cascada Los Gavilanes, La Cumaca, 2025">
+            <img src="galeria/galeria1.jpg" alt="Cascada Los Gavilanes, La Cumaca" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
               <span class="gallery-item-title">Los Gavilanes</span>
-              <span class="gallery-item-date">2025</span>
+              <span class="gallery-item-date">La Cumaca · 2025</span>
             </span>
           </button>
         </figure>
         <figure class="gallery-item" data-category="ruta" data-caption="Nuestros aventurados" data-badge="Aventura" data-date="2024">
-          <button type="button" class="gallery-item-trigger" aria-label="Ver Nuestros aventurados, 2024">
-            <img src="galeria2.jpg" alt="Nuestros aventurados" loading="lazy" width="240" height="240" decoding="async">
+          <button type="button" class="gallery-item-trigger" aria-label="Ver Nuestros aventurados, Naguanagua, 2026">
+            <img src="galeria/galeria2.jpg" alt="Nuestros aventurados, Naguanagua" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
               <span class="gallery-item-title">Nuestros aventurados</span>
-              <span class="gallery-item-date">2026</span>
+              <span class="gallery-item-date">Naguanagua · 2026</span>
             </span>
           </button>
         </figure>
         <figure class="gallery-item" data-category="cascada" data-caption="Cascada Los Aguacates" data-badge="Cascada" data-date="2024">
-          <button type="button" class="gallery-item-trigger" aria-label="Ver Cascada Los Aguacates, 2024">
-            <img src="galeria3.jpg" alt="Cascada Los Aguacates" loading="lazy" width="240" height="240" decoding="async">
+          <button type="button" class="gallery-item-trigger" aria-label="Ver Cascada Los Aguacates, San Joaquin, 2025">
+            <img src="galeria/galeria3.jpg" alt="Cascada Los Aguacates, San Joaquin" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
               <span class="gallery-item-title">Los Aguacates</span>
-              <span class="gallery-item-date">2025</span>
+              <span class="gallery-item-date">San Joaquin · 2025</span>
             </span>
           </button>
         </figure>
         <figure class="gallery-item" data-category="cascada" data-caption="El chorrerón de Chuao" data-badge="Cascada" data-date="2024">
-          <button type="button" class="gallery-item-trigger" aria-label="Ver El chorrerón de Chuao, 2024">
-            <img src="galeria4.jpg" alt="El chorrerón de Chuao" loading="lazy" width="240" height="240" decoding="async">
+          <button type="button" class="gallery-item-trigger" aria-label="Ver El chorrerón de Chuao, Chuao, 2025">
+            <img src="galeria/galeria4.jpg" alt="El chorrerón de Chuao, Chuao" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
               <span class="gallery-item-title">Chorrerón de Chuao</span>
-              <span class="gallery-item-date">2025</span>
+              <span class="gallery-item-date">Chuao · 2025</span>
             </span>
           </button>
         </figure>
         <figure class="gallery-item" data-category="cascada" data-caption="Cascada la reina" data-badge="Cascada" data-date="2024">
-          <button type="button" class="gallery-item-trigger" aria-label="Ver Cascada la reina, 2024">
-            <img src="galeria5.jpg" alt="Cascada la reina" loading="lazy" width="240" height="240" decoding="async">
+          <button type="button" class="gallery-item-trigger" aria-label="Ver Cascada la reina, Naguanagua, 2025">
+            <img src="galeria/galeria5.jpg" alt="Cascada la reina, Naguanagua" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
               <span class="gallery-item-title">La Reina</span>
-              <span class="gallery-item-date">2025</span>
+              <span class="gallery-item-date">Naguanagua · 2025</span>
             </span>
           </button>
         </figure>
         <figure class="gallery-item" data-category="ruta" data-caption="Los Azules" data-badge="Ruta" data-date="2024">
-          <button type="button" class="gallery-item-trigger" aria-label="Ver Los Azules, 2024">
-            <img src="galeria6.jpg" alt="Los Azules" loading="lazy" width="240" height="240" decoding="async">
+          <button type="button" class="gallery-item-trigger" aria-label="Ver Los Azules, Mariara, 2026">
+            <img src="galeria/galeria6.jpg" alt="Los Azules, Mariara" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
               <span class="gallery-item-title">Los Azules</span>
-              <span class="gallery-item-date">2026</span>
+              <span class="gallery-item-date">Mariara · 2026</span>
+            </span>
+          </button>
+        </figure>
+        <figure class="gallery-item" data-category="ruta" data-caption="Cascada el Ventilador — Los Azules" data-badge="Ruta" data-date="2026">
+          <button type="button" class="gallery-item-trigger" aria-label="Ver Cascada el Ventilador, Mariara, 2026">
+            <img src="galeria/galeria7.jpg" alt="Cascada el Ventilador, Mariara" loading="lazy" width="240" height="240" decoding="async">
+            <span class="gallery-item-overlay">
+              <span class="gallery-item-title">Cascada el Ventilador</span>
+              <span class="gallery-item-date">Mariara · 2026</span>
+            </span>
+          </button>
+        </figure>
+        <figure class="gallery-item" data-category="ruta" data-caption="Cascada la Manilla — Morón" data-badge="Ruta" data-date="2026">
+          <button type="button" class="gallery-item-trigger" aria-label="Ver Cascada la Manilla, Morón, 2026">
+            <img src="galeria/galeria8.jpg" alt="Cascada la Manilla, Morón" loading="lazy" width="240" height="240" decoding="async">
+            <span class="gallery-item-overlay">
+              <span class="gallery-item-title">Cascada la Manilla</span>
+              <span class="gallery-item-date">Morón · 2026</span>
+            </span>
+          </button>
+        </figure>
+        <figure class="gallery-item" data-category="ruta" data-caption="Ruta nocturna — Cruz del Trigal" data-badge="Ruta" data-date="2026">
+          <button type="button" class="gallery-item-trigger" aria-label="Ver Ruta nocturna, Cruz del Trigal, 2026">
+            <img src="galeria/galeria9.jpg" alt="Ruta nocturna, Cruz del Trigal" loading="lazy" width="240" height="240" decoding="async">
+            <span class="gallery-item-overlay">
+              <span class="gallery-item-title">Ruta nocturna</span>
+              <span class="gallery-item-date">Cruz del Trigal · 2026</span>
+            </span>
+          </button>
+        </figure>
+        <figure class="gallery-item" data-category="ruta" data-caption="Parque acuatico natural — La Cumaca" data-badge="Ruta" data-date="2026">
+          <button type="button" class="gallery-item-trigger" aria-label="Ver Parque acuatico natural, La Cumaca, 2026">
+            <img src="galeria/galeria10.jpg" alt="Parque acuatico natural, La Cumaca" loading="lazy" width="240" height="240" decoding="async">
+            <span class="gallery-item-overlay">
+              <span class="gallery-item-title">Parque acuatico natural</span>
+              <span class="gallery-item-date">La Cumaca · 2026</span>
+            </span>
+          </button>
+        </figure>
+        <figure class="gallery-item" data-category="ruta" data-caption="Pozo Azul — Cojedes" data-badge="Ruta" data-date="2026">
+          <button type="button" class="gallery-item-trigger" aria-label="Ver Pozo Azul, Cojedes, 2026">
+            <img src="galeria/galeria11.jpg" alt="Pozo Azul, Cojedes" loading="lazy" width="240" height="240" decoding="async">
+            <span class="gallery-item-overlay">
+              <span class="gallery-item-title">Pozo Azul</span>
+              <span class="gallery-item-date">Cojedes · 2026</span>
             </span>
           </button>
         </figure>
@@ -3325,7 +3383,7 @@
       <h2 class="section-title">Nuestra Historia</h2>
       <div class="about-content">
         <div class="about-image">
-          <img src="cl.jpg" alt="Chantal y Luisfer" loading="lazy" width="480" height="320">
+          <img src="cl2.jpg" alt="Chantal y Luisfer" loading="lazy" width="480" height="320">
         </div>
         <div class="about-text">
           <p>Somos Chantal y Luisfer, dos amantes de la naturaleza que decidimos compartir nuestra pasión por el ecoturismo y el senderismo con el mundo.</p>
@@ -3340,14 +3398,14 @@
       <h2 class="section-title">Equípate para la Aventura</h2>
       <div class="products-grid">
         <div class="product-card">
-          <img src="chaqueta.jpg" alt="Cortavientos personalizados" class="product-image" loading="lazy" width="240" height="160">
+          <img src="tienda/chaqueta.jpg" alt="Cortavientos personalizados" class="product-image" loading="lazy" width="240" height="160">
           <div class="product-info">
             <h4>Chaquetas Cortavientos</h4>
             <p>Diseños exclusivos</p>
           </div>
         </div>
         <div class="product-card">
-          <img src="franela.png" alt="Franelas personalizadas" class="product-image" loading="lazy" width="240" height="160">
+          <img src="tienda/franela.png" alt="Franelas personalizadas" class="product-image" loading="lazy" width="240" height="160">
           <div class="product-info">
             <h4>Franelas Aventura</h4>
             <p>Diseños exclusivos</p>
@@ -3963,11 +4021,13 @@
             viewport.classList.add('routes-coverflow-mode');
             gridRutas.classList.add('routes-grid--coverflow');
             rutasProximasActiveIndex = 0;
+            if (verMasWrap) {
+              verMasWrap.classList.toggle('routes-coverflow-nav-visible', rutasParaMostrar.length > 1);
+            }
             requestAnimationFrame(function () {
               aplicarCoverflowRutas();
               actualizarFlechaCarruselRutas();
             });
-            if (verMasWrap) verMasWrap.style.display = rutasParaMostrar.length > 1 ? 'flex' : 'none';
           } else {
             if (viewport) {
               viewport.classList.remove('routes-coverflow-mode');
@@ -3981,7 +4041,7 @@
               card.style.zIndex = '';
               card.classList.remove('route-card-active');
             });
-            if (verMasWrap) verMasWrap.style.display = 'none';
+            if (verMasWrap) verMasWrap.classList.remove('routes-coverflow-nav-visible');
           }
 
           // Mostrar sección con animación
@@ -4072,18 +4132,17 @@
         var btnNext = document.getElementById('routesCarouselBtnNext');
         if (!wrap) return;
         if (window.matchMedia('(min-width: 1024px)').matches) {
-          wrap.style.display = 'none';
+          wrap.classList.remove('routes-coverflow-nav-visible');
           return;
         }
         var total = document.querySelectorAll('#routesGrid .route-card').length;
         if (total <= 1) {
-          wrap.style.display = 'none';
+          wrap.classList.remove('routes-coverflow-nav-visible');
           return;
         }
-        wrap.style.display = 'flex';
-        var disabled = total <= 1;
-        if (btnPrev) btnPrev.disabled = disabled;
-        if (btnNext) btnNext.disabled = disabled;
+        wrap.classList.add('routes-coverflow-nav-visible');
+        if (btnPrev) btnPrev.disabled = false;
+        if (btnNext) btnNext.disabled = false;
       }
       function scrollRutasWrapAlFondo() {
         var wrap = document.getElementById('routesVerMasWrap');
@@ -4165,7 +4224,7 @@
       window.addEventListener('resize', function () {
         if (window.matchMedia('(min-width: 1024px)').matches) {
           var wrap = document.getElementById('routesVerMasWrap');
-          if (wrap) wrap.style.display = 'none';
+          if (wrap) wrap.classList.remove('routes-coverflow-nav-visible');
           return;
         }
         aplicarCoverflowRutas();
@@ -4542,7 +4601,7 @@
 
         var bgImg = null;
         try {
-          bgImg = await loadImage(bgUrl || 'fondo2.jpg');
+          bgImg = await loadImage(bgUrl || 'fondos/fondo2.jpg');
         } catch (e) {
           bgImg = null;
         }
