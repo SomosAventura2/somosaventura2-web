@@ -29,7 +29,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.100.0/dist/umd/supabase.min.js" defer></script>
   <style>
     :root {
       --whatsapp: #25D366;
@@ -324,6 +324,7 @@
     /* ===== GALERÍA MOBILE-FIRST (480px container) ===== */
     .gallery-section {
       padding: 40px 24px;
+      --gallery-card-radius: 18px;
     }
 
     .gallery-filters {
@@ -377,26 +378,85 @@
       outline-offset: 2px;
     }
 
+    .gallery-coverflow-viewport {
+      position: relative;
+      width: 100%;
+      height: 330px;
+      perspective: 1100px;
+      overflow: hidden;
+      border-radius: var(--gallery-card-radius, 18px);
+      /* Recorte redondeado fiable con hijos en 3D (evita cantos rectos en los previews) */
+      clip-path: inset(0 round var(--gallery-card-radius, 18px));
+      padding: 8px 0;
+      margin-top: 8px;
+    }
+
     .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
+      position: relative;
+      height: 100%;
       margin: 0;
       list-style: none;
     }
 
+    /*
+      Coverflow: el figure solo centra (translate 2D). El 3D (rotateY, translateZ…) va en .gallery-item-tilt.
+      Si rotateY y overflow/border-radius comparten elemento (o el padre transformado es el mismo que recorta),
+      WebKit/Blink suelen pintar la imagen con cantos rectos.
+    */
     .gallery-item {
       margin: 0;
-      position: relative;
-      border-radius: 16px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: min(72vw, 320px);
+      aspect-ratio: 1 / 1;
+      overflow: visible;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      transform: translate(-50%, -50%);
+      transform-style: preserve-3d;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      transition: opacity 0.35s ease, filter 0.35s ease;
+      will-change: opacity;
+    }
+
+    .gallery-item-tilt {
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transform-origin: 50% 50%;
+      transition: transform 0.45s ease;
+      will-change: transform;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+    }
+
+    .gallery-item-surface {
+      width: 100%;
+      height: 100%;
+      border-radius: var(--gallery-card-radius, 18px);
       overflow: hidden;
-      aspect-ratio: 1;
-      box-shadow: 0 4px 12px var(--shadow);
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      position: relative;
+      -webkit-clip-path: inset(0 round var(--gallery-card-radius, 18px));
+      clip-path: inset(0 round var(--gallery-card-radius, 18px));
+      box-shadow:
+        0 10px 28px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(118, 200, 147, 0.18);
+      transition: box-shadow 0.45s ease;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
     }
 
     .gallery-item.gallery-item-hidden {
       display: none;
+    }
+
+    .gallery-item.gallery-item-active .gallery-item-surface {
+      box-shadow:
+        0 16px 38px rgba(0, 0, 0, 0.55),
+        0 0 0 1px rgba(118, 200, 147, 0.35);
     }
 
     .gallery-item-trigger {
@@ -410,6 +470,8 @@
       background: none;
       cursor: pointer;
       display: block;
+      border-radius: inherit;
+      overflow: hidden;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -428,11 +490,18 @@
       height: 100%;
       object-fit: cover;
       display: block;
+      border-radius: inherit;
+      /* Recorte explícito en la imagen: evita cantos rectos cuando un antepasado lleva rotateY (bug de capas). */
+      -webkit-clip-path: inset(0 round var(--gallery-card-radius, 18px));
+      clip-path: inset(0 round var(--gallery-card-radius, 18px));
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
     }
 
     .gallery-item-overlay {
       position: absolute;
       inset: 0;
+      border-radius: inherit;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
@@ -479,10 +548,57 @@
       margin-top: 2px;
     }
 
-    .gallery-item:hover {
-      transform: scale(1.02);
-      box-shadow: 0 8px 24px rgba(118, 200, 147, 0.25);
-      z-index: 5;
+    .gallery-coverflow-controls {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Galería + Próximas Aventuras (móvil): mismas flechas (glass) y tamaño compacto */
+    .gallery-coverflow-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 48px;
+      height: 42px;
+      padding: 0 20px;
+      border-radius: 50px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+      font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+    }
+
+    .gallery-coverflow-btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .gallery-coverflow-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .gallery-coverflow-btn svg {
+      width: 24px;
+      height: 24px;
+      display: block;
+      stroke: currentColor;
+      stroke-width: 2.6;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     /* ===== RANKING TOP 10 AVENTURADOS ===== */
@@ -597,8 +713,9 @@
     }
 
     /* Al entrar en viewport (.in-view): se disparan las animaciones de entrada */
+    /* Fondo del podio: igual que ranking.html (.rank-card.rank-1|2|3), sin terminar en --bg-card sólido */
     .ranking-section.in-view .ranking-podio .ranking-card.rank-1 {
-      background: linear-gradient(145deg, rgba(255, 215, 0, 0.22), var(--bg-card));
+      background: linear-gradient(145deg, rgba(255, 215, 0, 0.22), rgba(32, 52, 46, 0.82));
       border-color: rgba(255, 215, 0, 0.55);
       animation: podio-entrance-1 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) backwards, podio-glow-gold 2.8s ease-in-out 0.8s infinite;
     }
@@ -612,13 +729,14 @@
       width: 28%;
       height: 200%;
       background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
-      transform: rotate(28deg);
+      transform: rotate(24deg);
       animation: podio-shine 3.2s ease-in-out 1.1s infinite;
       pointer-events: none;
+      z-index: 1;
     }
 
     .ranking-section.in-view .ranking-podio .ranking-card.rank-2 {
-      background: linear-gradient(145deg, rgba(192, 192, 192, 0.18), var(--bg-card));
+      background: linear-gradient(145deg, rgba(192, 192, 192, 0.18), rgba(32, 52, 46, 0.82));
       border-color: rgba(192, 192, 192, 0.5);
       animation: podio-entrance-2 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards, podio-glow-silver 3.2s ease-in-out 0.6s infinite;
     }
@@ -631,13 +749,14 @@
       width: 22%;
       height: 200%;
       background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-      transform: rotate(25deg);
+      transform: rotate(24deg);
       animation: podio-shine 3.2s ease-in-out 1.68s infinite;
       pointer-events: none;
+      z-index: 1;
     }
 
     .ranking-section.in-view .ranking-podio .ranking-card.rank-3 {
-      background: linear-gradient(145deg, rgba(205, 127, 50, 0.2), var(--bg-card));
+      background: linear-gradient(145deg, rgba(205, 127, 50, 0.2), rgba(32, 52, 46, 0.82));
       border-color: rgba(205, 127, 50, 0.5);
       animation: podio-entrance-3 0.5s ease-out backwards, podio-glow-bronze 3.8s ease-in-out 0.5s infinite;
     }
@@ -650,9 +769,10 @@
       width: 18%;
       height: 200%;
       background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
-      transform: rotate(22deg);
+      transform: rotate(24deg);
       animation: podio-shine 3.2s ease-in-out 2.26s infinite;
       pointer-events: none;
+      z-index: 1;
     }
 
     @keyframes podio-entrance-1 {
@@ -899,6 +1019,20 @@
       font-size: 22px;
       min-width: 28px;
     }
+    .ranking-rest .ranking-card.rank-4 .rank-pos,
+    .ranking-rest .ranking-card.rank-5 .rank-pos,
+    .ranking-rest .ranking-card.rank-6 .rank-pos,
+    .ranking-rest .ranking-card.rank-7 .rank-pos,
+    .ranking-rest .ranking-card.rank-8 .rank-pos,
+    .ranking-rest .ranking-card.rank-9 .rank-pos,
+    .ranking-rest .ranking-card.rank-10 .rank-pos {
+      font-size: 24px;
+      background: linear-gradient(135deg, #dffaf0 0%, #76c893 55%, #4aa37f 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 4px rgba(118, 200, 147, 0.18));
+    }
 
     .ranking-rest .ranking-card .user-details h3 {
       font-size: 14px;
@@ -1032,8 +1166,8 @@
       position: relative;
       max-width: 360px;
       width: 100%;
-      overflow: hidden;
-      border-radius: 16px;
+      overflow: visible;
+      border-radius: 0;
       flex-shrink: 0;
       animation: rankingModalViewportIn 0.3s ease-out;
     }
@@ -1045,26 +1179,26 @@
       background-size: cover;
       background-position: center;
       border-radius: 16px;
-      padding: 0;
+      padding: 24px 20px 8px;
       width: 100%;
       max-height: 90vh;
-      overflow: hidden;
+      overflow-y: auto;
+      overflow-x: hidden;
       border: 1px solid rgba(118, 200, 147, 0.5);
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-      touch-action: none;
+      touch-action: pan-y;
       position: relative;
       will-change: transform;
       -webkit-backface-visibility: hidden;
       backface-visibility: hidden;
+      -webkit-overflow-scrolling: touch;
     }
 
     .ranking-modal-scroll {
-      padding: 24px 20px;
-      max-height: min(85vh, calc(90vh - 4px));
-      overflow-y: auto;
-      overflow-x: hidden;
-      touch-action: pan-y;
-      -webkit-overflow-scrolling: touch;
+      padding: 0;
+      max-height: none;
+      overflow: visible;
+      box-sizing: border-box;
     }
 
     .ranking-modal-content.is-dragging {
@@ -1089,7 +1223,8 @@
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 20px rgba(205, 127, 50, 0.25);
     }
     .ranking-modal-content.ranking-modal-content--green {
-      border: 1px solid rgba(118, 200, 147, 0.5);
+      border: 1px solid #76c893;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 18px rgba(118, 200, 147, 0.22);
     }
     /* Solo opacidad: no mezclar scale/translate en la misma capa que el swipe (como modal-card en ranking). */
     @keyframes rankingModalViewportIn {
@@ -1111,6 +1246,19 @@
       background: rgba(0, 0, 0, 0.3);
       -webkit-mask-image: -webkit-radial-gradient(white, black);
       mask-image: radial-gradient(white, black);
+    }
+    /* Mismo criterio que ranking.html / aro del podio en las cards */
+    .ranking-modal-content.ranking-modal-content--gold .ranking-modal-avatar {
+      border-color: #FFD700;
+      box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+    .ranking-modal-content.ranking-modal-content--silver .ranking-modal-avatar {
+      border-color: #C0C0C0;
+      box-shadow: 0 0 0 1px rgba(192, 192, 192, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+    .ranking-modal-content.ranking-modal-content--bronze .ranking-modal-avatar {
+      border-color: #CD7F32;
+      box-shadow: 0 0 0 1px rgba(205, 127, 50, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
     .ranking-modal-avatar img {
       width: 100%;
@@ -1220,6 +1368,7 @@
     }
     .ranking-modal-proximo {
       margin-top: 16px;
+      margin-bottom: 0;
       padding: 16px;
       background: rgba(26, 58, 40, 0.5);
       border-radius: 12px;
@@ -1278,15 +1427,28 @@
       top: 16px;
       left: 16px;
       z-index: 100001;
-      border: 1px solid rgba(118, 200, 147, 0.35);
-      background: rgba(118, 200, 147, 0.12);
-      color: #ffffff;
-      padding: 10px 14px;
-      border-radius: 12px;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      padding: 0 14px;
+      min-height: 40px;
+      border-radius: 999px;
       font-weight: 800;
       font-size: 12px;
       cursor: pointer;
       user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      transition: background 0.2s;
+    }
+    .ranking-modal-share:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .ranking-modal-share:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
     }
     .ranking-modal-share:active {
       transform: translateY(1px);
@@ -1682,6 +1844,11 @@
     /* Nota: Los títulos de sección usan el estilo global `.section-title` */
 
     .routes-carousel-viewport {
+      position: relative;
+      width: 100%;
+      max-width: 100%;
+      margin-left: auto;
+      margin-right: auto;
       overflow: hidden;
       margin-top: 32px;
       border-radius: 16px;
@@ -1692,6 +1859,12 @@
       padding: 16px 24px 21px;
       box-sizing: content-box;
       transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .routes-carousel-viewport.routes-coverflow-mode {
+      perspective: 1100px;
+      height: 440px;
+      padding: 10px 0;
+      overflow: hidden;
     }
     .routes-carousel-track {
       transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1709,43 +1882,46 @@
       border: none;
       outline: none;
     }
+    .routes-grid.routes-grid--coverflow {
+      position: relative;
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      margin-left: auto;
+      margin-right: auto;
+      height: 100%;
+      perspective: 1100px;
+    }
+    .routes-grid.routes-grid--coverflow .route-card {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: min(74vw, 300px, 100%);
+      margin: 0;
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform 0.45s ease, box-shadow 0.35s ease, opacity 0.35s ease, border-color 0.35s ease;
+      animation: none;
+      will-change: transform, opacity;
+      transform-style: preserve-3d;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+    }
+    .routes-grid.routes-grid--coverflow .route-card:hover {
+      transform: none;
+    }
+    .routes-grid.routes-grid--coverflow .route-card.route-card-active {
+      box-shadow: 0 16px 38px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(118, 200, 147, 0.24);
+      border-color: rgba(118, 200, 147, 0.35);
+    }
     #upcomingRoutes .routes-carousel-viewport .routes-grid {
       margin-top: 0;
     }
-    .routes-carousel-btns-wrap {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
-      margin-top: 24px;
+    /* Controles bajo el carrusel de rutas (móvil); desktop se oculta en el media de abajo */
+    #upcomingRoutes .routes-carousel-btns-wrap.gallery-coverflow-controls {
+      margin-top: 14px;
     }
-    .routes-carousel-arrow-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 48px;
-      height: 42px;
-      padding: 0 20px;
-      color: var(--accent, #76c893);
-      background: rgba(26, 58, 40, 0.85);
-      border: 1px solid rgba(118, 200, 147, 0.3);
-      border-radius: 50px;
-      cursor: pointer;
-      transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
-    }
-    .routes-carousel-arrow-btn:hover:not(:disabled) {
-      background: rgba(26, 58, 40, 0.95);
-      border-color: rgba(118, 200, 147, 0.45);
-      transform: translateY(-1px);
-      box-shadow: 0 0 12px rgba(118, 200, 147, 0.2);
-    }
-    .routes-carousel-arrow-btn:disabled {
-      color: rgba(255, 255, 255, 0.35);
-      background: rgba(60, 70, 68, 0.6);
-      border-color: rgba(255, 255, 255, 0.08);
-      cursor: not-allowed;
-    }
-
     /* ===== Próximas Aventuras: desktop sin carrusel (3 columnas) ===== */
     @media (min-width: 1024px) {
       #upcomingRoutes {
@@ -1758,6 +1934,8 @@
         padding: 0;
         margin-top: 32px;
         transition: none;
+        perspective: none;
+        height: auto !important;
       }
 
       #upcomingRoutes .routes-carousel-track {
@@ -1771,22 +1949,56 @@
         flex-direction: initial;
         gap: 20px;
       }
+      #upcomingRoutes .routes-grid.routes-grid--coverflow {
+        position: static;
+        height: auto;
+        display: grid;
+      }
+      #upcomingRoutes .routes-grid.routes-grid--coverflow .route-card {
+        position: relative;
+        top: auto;
+        left: auto;
+        width: auto;
+        transform: none !important;
+        opacity: 1 !important;
+        z-index: auto !important;
+      }
 
       #upcomingRoutes .routes-carousel-btns-wrap {
         display: none !important;
       }
 
-      /* Centrado horizontal cuando hay pocas cards */
-      #upcomingRoutes .routes-grid.routes-grid--count-1 .route-card:nth-child(1) {
-        grid-column: 2;
+      /* Una sola card: centrada en la sección (no solo columna central del grid de 3) */
+      #upcomingRoutes .routes-grid.routes-grid--count-1 {
+        grid-template-columns: 1fr;
+        max-width: min(100%, 440px);
+        margin-left: auto;
+        margin-right: auto;
       }
-
-      #upcomingRoutes .routes-grid.routes-grid--count-2 .route-card:nth-child(1) {
+      #upcomingRoutes .routes-grid.routes-grid--count-1 .route-card:nth-child(1) {
         grid-column: 1;
       }
 
-      #upcomingRoutes .routes-grid.routes-grid--count-2 .route-card:nth-child(2) {
-        grid-column: 3;
+      /* Dos cards: juntas (solo gap), centradas; antes ocupaban cols 1 y 3 y dejaban un hueco enorme */
+      #upcomingRoutes .routes-grid.routes-grid--count-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-width: min(100%, 900px);
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      /* Misma altura de fila en el grid: el cuerpo debe rellenar hasta abajo (evita franja/borde raro bajo el pie). */
+      #upcomingRoutes .routes-grid:not(.routes-grid--coverflow) .route-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+      }
+      #upcomingRoutes .routes-grid:not(.routes-grid--coverflow) .route-card-inner {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
       }
     }
 
@@ -1819,6 +2031,7 @@
     /* Parte superior: imagen de flyer */
     .route-image-header {
       position: relative;
+      flex-shrink: 0;
       height: 200px;
       background-size: cover;
       background-position: center;
@@ -2320,6 +2533,16 @@
         url('fondo3.jpg') center/cover fixed no-repeat;
     }
 
+    /* iOS Safari fallback: evita distorsión con background-attachment: fixed */
+    @supports (-webkit-touch-callout: none) {
+      body {
+        background:
+          linear-gradient(180deg, rgba(8, 18, 15, 0.84) 0%, rgba(8, 18, 15, 0.88) 100%),
+          url('fondo3.jpg') center/cover no-repeat;
+        background-attachment: scroll;
+      }
+    }
+
     .container {
       width: min(100% - 32px, var(--container));
       max-width: none;
@@ -2762,12 +2985,12 @@
       color: var(--rank-green);
     }
 
-    .gallery-grid {
-      gap: 14px;
+    .gallery-coverflow-viewport {
+      height: 360px;
     }
 
     .gallery-item {
-      border-radius: 20px;
+      width: min(62vw, 340px);
     }
 
     .ranking-section {
@@ -2784,6 +3007,10 @@
     }
 
     @media (min-width: 768px) {
+      .gallery-section {
+        --gallery-card-radius: 20px;
+      }
+
       .hero-premium .hero-inner {
         padding: 38px 0 54px;
       }
@@ -2817,8 +3044,12 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
 
-      .gallery-grid {
-        grid-template-columns: repeat(3, 1fr);
+      .gallery-coverflow-viewport {
+        height: 390px;
+      }
+
+      .gallery-item {
+        width: min(52vw, 360px);
       }
 
       .about-content {
@@ -2883,16 +3114,16 @@
         padding: 16px;
       }
 
-      .gallery-grid {
-        grid-template-columns: repeat(4, 1fr);
+      .gallery-coverflow-viewport {
+        height: 410px;
+      }
+
+      .gallery-item {
+        width: min(42vw, 380px);
       }
     }
 
     @media (max-width: 767px) {
-      .container {
-        background-attachment: scroll;
-      }
-
       .hero-premium .hero-logo {
         width: 230px;
       }
@@ -3018,12 +3249,16 @@
           <div class="routes-loading">Cargando próximas rutas...</div>
         </div>
       </div>
-      <div class="routes-carousel-btns-wrap" id="routesVerMasWrap" style="display: none;">
-        <button type="button" class="routes-carousel-arrow-btn routes-carousel-arrow-btn--down" id="routesCarouselBtnDown" aria-label="Siguiente">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      <div class="gallery-coverflow-controls routes-carousel-btns-wrap" id="routesVerMasWrap" style="display: none;" aria-label="Controles del carrusel de rutas">
+        <button type="button" class="gallery-coverflow-btn" id="routesCarouselBtnPrev" aria-label="Ruta anterior">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M15 18L9 12L15 6"></path>
+          </svg>
         </button>
-        <button type="button" class="routes-carousel-arrow-btn routes-carousel-arrow-btn--up" id="routesCarouselBtnUp" aria-label="Anterior">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>
+        <button type="button" class="gallery-coverflow-btn" id="routesCarouselBtnNext" aria-label="Ruta siguiente">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M9 6L15 12L9 18"></path>
+          </svg>
         </button>
       </div>
     </section>
@@ -3031,72 +3266,99 @@
     <!-- Gallery Section (mobile-first, overlay al tap, filtros, lightbox) -->
     <section id="gallerySection" class="gallery-section">
       <h2 class="section-title">Nuestras Aventuras</h2>
-      <div class="gallery-filters" role="tablist" aria-label="Filtrar galería por categoría">
-        <button type="button" class="gallery-filter-btn active" data-filter="todas" role="tab" aria-selected="true">Todas</button>
-        <button type="button" class="gallery-filter-btn" data-filter="cascada" role="tab" aria-selected="false">Cascadas</button>
-        <button type="button" class="gallery-filter-btn" data-filter="ruta" role="tab" aria-selected="false">Rutas</button>
-      </div>
+      <div class="gallery-coverflow-viewport" id="galleryCoverflowViewport">
       <div class="gallery-grid" role="list">
         <figure class="gallery-item" data-category="cascada" data-caption="Cascada Los Gavilanes" data-badge="Cascada" data-date="2024">
+          <div class="gallery-item-tilt">
+          <div class="gallery-item-surface">
           <button type="button" class="gallery-item-trigger" aria-label="Ver Cascada Los Gavilanes, 2024">
             <img src="galeria1.jpg" alt="Cascada Los Gavilanes" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
-              <span class="gallery-item-badge">Cascada</span>
               <span class="gallery-item-title">Los Gavilanes</span>
               <span class="gallery-item-date">2025</span>
             </span>
           </button>
+          </div>
+          </div>
         </figure>
         <figure class="gallery-item" data-category="ruta" data-caption="Nuestros aventurados" data-badge="Aventura" data-date="2024">
+          <div class="gallery-item-tilt">
+          <div class="gallery-item-surface">
           <button type="button" class="gallery-item-trigger" aria-label="Ver Nuestros aventurados, 2024">
             <img src="galeria2.jpg" alt="Nuestros aventurados" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
-              <span class="gallery-item-badge">Aventura</span>
               <span class="gallery-item-title">Nuestros aventurados</span>
               <span class="gallery-item-date">2026</span>
             </span>
           </button>
+          </div>
+          </div>
         </figure>
         <figure class="gallery-item" data-category="cascada" data-caption="Cascada Los Aguacates" data-badge="Cascada" data-date="2024">
+          <div class="gallery-item-tilt">
+          <div class="gallery-item-surface">
           <button type="button" class="gallery-item-trigger" aria-label="Ver Cascada Los Aguacates, 2024">
             <img src="galeria3.jpg" alt="Cascada Los Aguacates" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
-              <span class="gallery-item-badge">Cascada</span>
               <span class="gallery-item-title">Los Aguacates</span>
               <span class="gallery-item-date">2025</span>
             </span>
           </button>
+          </div>
+          </div>
         </figure>
         <figure class="gallery-item" data-category="cascada" data-caption="El chorrerón de Chuao" data-badge="Cascada" data-date="2024">
+          <div class="gallery-item-tilt">
+          <div class="gallery-item-surface">
           <button type="button" class="gallery-item-trigger" aria-label="Ver El chorrerón de Chuao, 2024">
             <img src="galeria4.jpg" alt="El chorrerón de Chuao" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
-              <span class="gallery-item-badge">Cascada</span>
               <span class="gallery-item-title">Chorrerón de Chuao</span>
               <span class="gallery-item-date">2025</span>
             </span>
           </button>
+          </div>
+          </div>
         </figure>
         <figure class="gallery-item" data-category="cascada" data-caption="Cascada la reina" data-badge="Cascada" data-date="2024">
+          <div class="gallery-item-tilt">
+          <div class="gallery-item-surface">
           <button type="button" class="gallery-item-trigger" aria-label="Ver Cascada la reina, 2024">
             <img src="galeria5.jpg" alt="Cascada la reina" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
-              <span class="gallery-item-badge">Cascada</span>
               <span class="gallery-item-title">La Reina</span>
               <span class="gallery-item-date">2025</span>
             </span>
           </button>
+          </div>
+          </div>
         </figure>
         <figure class="gallery-item" data-category="ruta" data-caption="Los Azules" data-badge="Ruta" data-date="2024">
+          <div class="gallery-item-tilt">
+          <div class="gallery-item-surface">
           <button type="button" class="gallery-item-trigger" aria-label="Ver Los Azules, 2024">
             <img src="galeria6.jpg" alt="Los Azules" loading="lazy" width="240" height="240" decoding="async">
             <span class="gallery-item-overlay">
-              <span class="gallery-item-badge">Ruta</span>
               <span class="gallery-item-title">Los Azules</span>
               <span class="gallery-item-date">2026</span>
             </span>
           </button>
+          </div>
+          </div>
         </figure>
+      </div>
+      </div>
+      <div class="gallery-coverflow-controls" aria-label="Controles del carrusel">
+        <button type="button" class="gallery-coverflow-btn" id="galleryPrevBtn" aria-label="Imagen anterior">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M15 18L9 12L15 6"></path>
+          </svg>
+        </button>
+        <button type="button" class="gallery-coverflow-btn" id="galleryNextBtn" aria-label="Imagen siguiente">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M9 6L15 12L9 18"></path>
+          </svg>
+        </button>
       </div>
     </section>
 
@@ -3217,7 +3479,7 @@
 
   <script>
     // =============================================
-    // GALERÍA: Filtros + Overlay al tap + Lightbox
+    // GALERÍA: Coverflow + Filtros + Lightbox
     // =============================================
     const lightbox = document.getElementById('lightbox');
     const lightboxSlide = document.getElementById('lightboxSlide');
@@ -3226,9 +3488,13 @@
     const lightboxClose = document.getElementById('lightboxClose');
     const lightboxPrev = document.getElementById('lightboxPrev');
     const lightboxNext = document.getElementById('lightboxNext');
+    const galleryViewport = document.getElementById('galleryCoverflowViewport');
+    const galleryPrevBtn = document.getElementById('galleryPrevBtn');
+    const galleryNextBtn = document.getElementById('galleryNextBtn');
 
     let images = [];
     let currentIndex = 0;
+    let galleryActiveIndex = 0;
     const SWIPE_THRESHOLD = 60;
     const SWIPE_DURATION = 350;
 
@@ -3252,6 +3518,60 @@
     function syncImagesFromVisible() {
       const visible = getVisibleItems();
       images = buildImagesFromItems(visible);
+    }
+
+    function updateGalleryControls(len) {
+      const disabled = len <= 1;
+      if (galleryPrevBtn) galleryPrevBtn.disabled = disabled;
+      if (galleryNextBtn) galleryNextBtn.disabled = disabled;
+    }
+
+    function applyCoverflowLayout() {
+      const visible = getVisibleItems();
+      const len = visible.length;
+      updateGalleryControls(len);
+      document.querySelectorAll('.gallery-item').forEach(item => {
+        item.classList.remove('gallery-item-active');
+        const tilt = item.querySelector('.gallery-item-tilt');
+        if (tilt) tilt.style.transform = '';
+        item.style.transform = '';
+        item.style.opacity = item.classList.contains('gallery-item-hidden') ? '0' : '';
+        item.style.zIndex = '';
+        item.style.pointerEvents = item.classList.contains('gallery-item-hidden') ? 'none' : '';
+      });
+      if (len === 0) return;
+      if (galleryActiveIndex >= len) galleryActiveIndex = len - 1;
+      if (galleryActiveIndex < 0) galleryActiveIndex = 0;
+
+      visible.forEach((item, idx) => {
+        /* Offset circular: el ítem anterior al activo queda a la izquierda (como el siguiente a la derecha) */
+        let offset = idx - galleryActiveIndex;
+        if (offset > len / 2) offset -= len;
+        if (offset < -len / 2) offset += len;
+
+        const abs = Math.abs(offset);
+        const translateX = offset * 48;
+        const rotateY = offset * -28;
+        const translateZ = -abs * 90;
+        const scale = 1 - Math.min(abs * 0.1, 0.32);
+        const opacity = Math.max(0.28, 1 - abs * 0.2);
+        item.classList.toggle('gallery-item-active', offset === 0);
+        item.style.zIndex = String(100 - abs);
+        item.style.opacity = String(opacity);
+        item.style.transform = '';
+        const tilt = item.querySelector('.gallery-item-tilt');
+        if (tilt) {
+          tilt.style.transform =
+            'translateX(' + translateX + '%) translateZ(' + translateZ + 'px) rotateY(' + rotateY + 'deg) scale(' + scale + ')';
+        }
+      });
+    }
+
+    function shiftCoverflow(direction) {
+      const visible = getVisibleItems();
+      if (!visible.length) return;
+      galleryActiveIndex = (galleryActiveIndex + direction + visible.length) % visible.length;
+      applyCoverflowLayout();
     }
 
     function openLightbox(index) {
@@ -3321,7 +3641,7 @@
       lightboxSlide.addEventListener('transitionend', onEnd);
     }
 
-    // Filtros: integrar con lightbox (solo se navegan ítems visibles)
+    // Filtros: integrar con coverflow + lightbox (solo ítems visibles)
     document.querySelectorAll('.gallery-filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const filter = btn.getAttribute('data-filter');
@@ -3339,28 +3659,52 @@
           } else {
             item.classList.add('gallery-item-hidden');
           }
+          item.classList.remove('is-overlay-visible');
         });
+        galleryActiveIndex = 0;
         syncImagesFromVisible();
+        applyCoverflowLayout();
       });
     });
 
-    // Tap: primer toque muestra overlay, segundo abre lightbox
+    // Click en coverflow: primero centra, segundo abre lightbox.
     document.querySelectorAll('.gallery-item-trigger').forEach(trigger => {
       trigger.addEventListener('click', (e) => {
         const figure = trigger.closest('.gallery-item');
         if (!figure || figure.classList.contains('gallery-item-hidden')) return;
         const visible = getVisibleItems();
         const index = visible.indexOf(figure);
-        if (figure.classList.contains('is-overlay-visible')) {
+        if (index < 0) return;
+        if (index !== galleryActiveIndex) {
           e.preventDefault();
-          openLightbox(index);
-          figure.classList.remove('is-overlay-visible');
-        } else {
-          document.querySelectorAll('.gallery-item.is-overlay-visible').forEach(el => el.classList.remove('is-overlay-visible'));
-          figure.classList.add('is-overlay-visible');
+          galleryActiveIndex = index;
+          applyCoverflowLayout();
+          return;
         }
+        openLightbox(index);
       });
     });
+
+    if (galleryPrevBtn) {
+      galleryPrevBtn.addEventListener('click', () => shiftCoverflow(-1));
+    }
+    if (galleryNextBtn) {
+      galleryNextBtn.addEventListener('click', () => shiftCoverflow(1));
+    }
+
+    if (galleryViewport) {
+      let coverStartX = 0;
+      let coverEndX = 0;
+      galleryViewport.addEventListener('touchstart', (e) => {
+        coverStartX = e.touches[0].screenX;
+      }, { passive: true });
+      galleryViewport.addEventListener('touchend', (e) => {
+        coverEndX = e.changedTouches[0].screenX;
+        const dx = coverEndX - coverStartX;
+        if (Math.abs(dx) < 40) return;
+        shiftCoverflow(dx < 0 ? 1 : -1);
+      }, { passive: true });
+    }
 
     lightboxClose.addEventListener('click', closeLightbox);
     lightboxPrev.addEventListener('click', (e) => { e.stopPropagation(); changeImage(-1); });
@@ -3439,6 +3783,7 @@
     }, { passive: true });
 
     syncImagesFromVisible();
+    applyCoverflowLayout();
     lightbox.setAttribute('aria-hidden', 'true');
 
     // =============================================
@@ -3456,6 +3801,7 @@
       let rutasProximasCurrentPage = 0;
       let rutasProximasPageTops = [];
       let rutasProximasPageHeights = [];
+      let rutasProximasActiveIndex = 0;
       
       // Verificar que Supabase esté disponible antes de inicializar
       if (typeof supabase === 'undefined') {
@@ -3696,30 +4042,28 @@
 
           var viewport = document.getElementById('routesCarouselViewport');
           var verMasWrap = document.getElementById('routesVerMasWrap');
-          if (!isDesktop && rutasParaMostrar.length > 2 && viewport) {
-            // Calcular por cada "página" el top (relativo a la primera card) y la altura del viewport
-            // para que siempre se vea completa la primera card de cada página sin cortes ni huecos.
+          if (!isDesktop && viewport) {
+            viewport.classList.add('routes-coverflow-mode');
+            gridRutas.classList.add('routes-grid--coverflow');
+            rutasProximasActiveIndex = 0;
             requestAnimationFrame(function () {
-              var cards = gridRutas.querySelectorAll('.route-card');
-              if (cards.length < 2) return;
-              var baseTop = cards[0].offsetTop;
-              rutasProximasPageTops = [];
-              rutasProximasPageHeights = [];
-              for (var i = 0; i < cards.length; i += 2) {
-                // Top relativo a la primera card para alinear bien la parte superior
-                var pageTop = cards[i].offsetTop - baseTop;
-                rutasProximasPageTops.push(pageTop);
-                var lastCardIdx = Math.min(i + 1, cards.length - 1);
-                var top = cards[i].offsetTop;
-                var bottom = cards[lastCardIdx].offsetTop + cards[lastCardIdx].offsetHeight;
-                rutasProximasPageHeights.push(bottom - top);
-              }
-              viewport.style.height = (rutasProximasPageHeights[0] || 0) + 'px';
+              aplicarCoverflowRutas();
               actualizarFlechaCarruselRutas();
             });
-            if (verMasWrap) verMasWrap.style.display = 'flex';
+            if (verMasWrap) verMasWrap.style.display = rutasParaMostrar.length > 1 ? 'flex' : 'none';
           } else {
-            if (viewport) viewport.style.height = '';
+            if (viewport) {
+              viewport.classList.remove('routes-coverflow-mode');
+              viewport.style.height = '';
+            }
+            gridRutas.classList.remove('routes-grid--coverflow');
+            var desktopCards = gridRutas.querySelectorAll('.route-card');
+            desktopCards.forEach(function (card) {
+              card.style.transform = '';
+              card.style.opacity = '';
+              card.style.zIndex = '';
+              card.classList.remove('route-card-active');
+            });
             if (verMasWrap) verMasWrap.style.display = 'none';
           }
 
@@ -3767,19 +4111,62 @@
         }
       }
 
+      function aplicarCoverflowRutas() {
+        var viewport = document.getElementById('routesCarouselViewport');
+        var gridRutas = document.getElementById('routesGrid');
+        if (!viewport || !gridRutas || window.matchMedia('(min-width: 1024px)').matches) return;
+        var cards = Array.from(gridRutas.querySelectorAll('.route-card'));
+        if (!cards.length) {
+          viewport.style.height = '';
+          return;
+        }
+        var maxH = 0;
+        cards.forEach(function (card) {
+          card.style.display = '';
+          var h = card.offsetHeight || 0;
+          if (h > maxH) maxH = h;
+        });
+        viewport.style.height = (maxH + 22) + 'px';
+
+        if (rutasProximasActiveIndex >= cards.length) rutasProximasActiveIndex = cards.length - 1;
+        if (rutasProximasActiveIndex < 0) rutasProximasActiveIndex = 0;
+
+        cards.forEach(function (card, idx) {
+          var offset = idx - rutasProximasActiveIndex;
+          var abs = Math.abs(offset);
+          var tx = offset * 100;
+          var ry = offset * -20;
+          var tz = -abs * 120;
+          var scale = 1 - Math.min(abs * 0.16, 0.42);
+          var opacity = offset === 0 ? 1 : 0;
+          card.classList.toggle('route-card-active', offset === 0);
+          card.style.zIndex = String(offset === 0 ? 100 : 1);
+          card.style.opacity = String(opacity);
+          card.style.pointerEvents = offset === 0 ? 'auto' : 'none';
+          card.style.filter = 'none';
+          card.style.transform =
+            'translate(-50%, -50%) translateX(' + tx + '%) translateZ(' + tz + 'px) rotateY(' + ry + 'deg) scale(' + scale + ')';
+        });
+      }
+
       function actualizarFlechaCarruselRutas() {
         var wrap = document.getElementById('routesVerMasWrap');
-        var btnUp = document.getElementById('routesCarouselBtnUp');
-        var btnDown = document.getElementById('routesCarouselBtnDown');
-        var totalPages = rutasProximasPageTops.length;
+        var btnPrev = document.getElementById('routesCarouselBtnPrev');
+        var btnNext = document.getElementById('routesCarouselBtnNext');
         if (!wrap) return;
-        if (totalPages <= 1) {
+        if (window.matchMedia('(min-width: 1024px)').matches) {
+          wrap.style.display = 'none';
+          return;
+        }
+        var total = document.querySelectorAll('#routesGrid .route-card').length;
+        if (total <= 1) {
           wrap.style.display = 'none';
           return;
         }
         wrap.style.display = 'flex';
-        if (btnUp) btnUp.disabled = rutasProximasCurrentPage <= 0;
-        if (btnDown) btnDown.disabled = rutasProximasCurrentPage >= totalPages - 1;
+        var disabled = total <= 1;
+        if (btnPrev) btnPrev.disabled = disabled;
+        if (btnNext) btnNext.disabled = disabled;
       }
       function scrollRutasWrapAlFondo() {
         var wrap = document.getElementById('routesVerMasWrap');
@@ -3810,45 +4197,63 @@
         };
         viewport.addEventListener('transitionend', onTransitionEnd);
       }
+      var routesCoverflowNavInicializado = false;
       function initVerMasRutas() {
+        if (routesCoverflowNavInicializado) return;
+        routesCoverflowNavInicializado = true;
         var gridRutas = document.getElementById('routesGrid');
-        var btnUp = document.getElementById('routesCarouselBtnUp');
-        var btnDown = document.getElementById('routesCarouselBtnDown');
+        var btnPrev = document.getElementById('routesCarouselBtnPrev');
+        var btnNext = document.getElementById('routesCarouselBtnNext');
         var viewport = document.getElementById('routesCarouselViewport');
         if (!gridRutas) return;
-        if (btnUp) {
-          btnUp.addEventListener('click', function () {
-            if (this.disabled || rutasProximasCurrentPage <= 0) return;
-            rutasProximasCurrentPage--;
-            var y = rutasProximasPageTops[rutasProximasCurrentPage] || 0;
-            var h = rutasProximasPageHeights[rutasProximasCurrentPage];
-            if (viewport && h != null) viewport.style.height = h + 'px';
-            gridRutas.style.transform = 'translateY(-' + y + 'px)';
-            actualizarFlechaCarruselRutas();
-            programarScrollRutasDespuesDeAnimacion(viewport);
+        if (btnPrev) {
+          btnPrev.addEventListener('click', function () {
+            var cards = gridRutas.querySelectorAll('.route-card');
+            if (!cards.length || window.matchMedia('(min-width: 1024px)').matches) return;
+            rutasProximasActiveIndex = (rutasProximasActiveIndex - 1 + cards.length) % cards.length;
+            aplicarCoverflowRutas();
           });
         }
-        if (btnDown) {
-          btnDown.addEventListener('click', function () {
-            var totalPages = rutasProximasPageTops.length;
-            if (this.disabled || rutasProximasCurrentPage >= totalPages - 1) return;
-            rutasProximasCurrentPage++;
-            var y = rutasProximasPageTops[rutasProximasCurrentPage] || 0;
-            var h = rutasProximasPageHeights[rutasProximasCurrentPage];
-            if (viewport && h != null) viewport.style.height = h + 'px';
-            gridRutas.style.transform = 'translateY(-' + y + 'px)';
-            actualizarFlechaCarruselRutas();
-            programarScrollRutasDespuesDeAnimacion(viewport);
+        if (btnNext) {
+          btnNext.addEventListener('click', function () {
+            var cards = gridRutas.querySelectorAll('.route-card');
+            if (!cards.length || window.matchMedia('(min-width: 1024px)').matches) return;
+            rutasProximasActiveIndex = (rutasProximasActiveIndex + 1) % cards.length;
+            aplicarCoverflowRutas();
           });
+        }
+        if (viewport) {
+          var startX = 0;
+          viewport.addEventListener('touchstart', function (e) {
+            startX = e.touches[0].screenX;
+          }, { passive: true });
+          viewport.addEventListener('touchend', function (e) {
+            if (window.matchMedia('(min-width: 1024px)').matches) return;
+            var cards = gridRutas.querySelectorAll('.route-card');
+            if (!cards.length) return;
+            var dx = e.changedTouches[0].screenX - startX;
+            if (Math.abs(dx) < 40) return;
+            rutasProximasActiveIndex = dx < 0
+              ? (rutasProximasActiveIndex + 1) % cards.length
+              : (rutasProximasActiveIndex - 1 + cards.length) % cards.length;
+            aplicarCoverflowRutas();
+          }, { passive: true });
         }
       }
 
       // Cargar rutas y activar Realtime
+      initVerMasRutas();
       cargarRutasProximas();
       initRealtimeRutas();
-      if (!window.matchMedia('(min-width: 1024px)').matches) {
-        initVerMasRutas();
-      }
+      window.addEventListener('resize', function () {
+        if (window.matchMedia('(min-width: 1024px)').matches) {
+          var wrap = document.getElementById('routesVerMasWrap');
+          if (wrap) wrap.style.display = 'none';
+          return;
+        }
+        aplicarCoverflowRutas();
+        actualizarFlechaCarruselRutas();
+      });
 
       // =============================================
       // RANKING TOP 10 AVENTURADOS (desde participantes)
@@ -4078,11 +4483,9 @@
             const glowColor = r.color || 'rgba(118, 200, 147, 0.5)';
             const badgeGlowStyle = 'box-shadow: 0 0 20px ' + glowColor + '44, 0 0 40px ' + glowColor + '22;';
             const avatarUrl = avatarMap && avatarMap.get(entry.nombre);
-            const avatarHtml = (position <= 3)
-              ? (avatarUrl
-                ? '<div class="rank-avatar-placeholder"><img src="' + escapeAttr(avatarUrl) + '" alt="" class="rank-avatar-img" onerror="this.onerror=null;this.parentNode.innerHTML=\'👤\';this.parentNode.setAttribute(\'aria-hidden\',\'true\');"></div>'
-                : '<div class="rank-avatar-placeholder" aria-hidden="true">👤</div>')
-              : '';
+            const avatarHtml = avatarUrl
+              ? '<div class="rank-avatar-placeholder"><img src="' + escapeAttr(avatarUrl) + '" alt="" class="rank-avatar-img" onerror="this.onerror=null;this.parentNode.innerHTML=\'👤\';this.parentNode.setAttribute(\'aria-hidden\',\'true\');"></div>'
+              : '<div class="rank-avatar-placeholder" aria-hidden="true">👤</div>';
             const pillStyle = 'color:' + (r.color || '#b8c5be') + ';border-color:' + (r.color || 'rgba(118,200,147,0.5)') + ';';
             return `
               <div class="ranking-card rank-${position}" role="listitem" data-nombre="${nombreAttr}">
@@ -4253,6 +4656,10 @@
 
         var avatarSize = 180;
         var avatarX = Math.round(centerX - avatarSize / 2);
+        var avatarRingColor = 'rgba(118,200,147,0.7)';
+        if (position === 1) avatarRingColor = '#FFD700';
+        else if (position === 2) avatarRingColor = '#C0C0C0';
+        else if (position === 3) avatarRingColor = '#CD7F32';
         if (avatarUrl) {
           try {
             var avatarImg = await loadImage(avatarUrl);
@@ -4263,7 +4670,7 @@
             ctx.clip();
             ctx.drawImage(avatarImg, avatarX, y, avatarSize, avatarSize);
             ctx.restore();
-            ctx.strokeStyle = 'rgba(118,200,147,0.7)';
+            ctx.strokeStyle = avatarRingColor;
             ctx.lineWidth = 6;
             ctx.beginPath();
             ctx.arc(centerX, y + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
@@ -4424,6 +4831,12 @@
           ctx.font = '500 28px Poppins, sans-serif';
           ctx.fillText(progreso + '/' + totalPara, barX, barY + 50);
           ctx.fillText(Math.round(pct) + '%', barX + barW - 110, barY + 50);
+
+          var igHandle = '@somosaventura2';
+          ctx.textBaseline = 'top';
+          ctx.fillStyle = 'rgba(233,243,236,0.92)';
+          ctx.font = '700 34px Poppins, sans-serif';
+          ctx.fillText(igHandle, centerX - ctx.measureText(igHandle).width / 2, blockY + nextCardH + 18);
         }
 
         var blob = await new Promise(function(resolve) { canvas.toBlob(resolve, 'image/png'); });
