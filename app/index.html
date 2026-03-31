@@ -3531,6 +3531,13 @@ async function loadUsuarios() {
             return list.slice().sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
         }
 
+        /** Devuelve participantes de una ruta específica por ID (evita mezclar historial por nombre). */
+        function obtenerParticipantesRuta(rutaId) {
+            return (data.participantes || []).filter(p =>
+                (p.rutaId === rutaId || p.ruta_id === rutaId)
+            );
+        }
+
         /** ID estable del card de asistencia (líder + rutaId) */
         function getAsistenciaCardId(lider, rutaId) {
             const slug = (lider || '').replace(/\s+/g, '-').toLowerCase();
@@ -5637,9 +5644,7 @@ async function agregarPersonaRapida(lider, ruta) {
             
             // Calcular asistencia (presentes vs cupos reservados) por ruta específica
             const reservasRuta = data.reservas.filter(r => r.rutaId === ruta.id);
-            const participantesRuta = data.participantes.filter(p => 
-                reservasRuta.some(r => r.lider === p.lider && (p.ruta_nombre || p.ruta) === ruta.nombre)
-            );
+            const participantesRuta = obtenerParticipantesRuta(ruta.id);
             const presentes = participantesRuta.filter(p => p.asiste).length;
             const cuposReservados = reservasRuta.reduce((sum, r) => sum + getCuposReserva(r), 0);
             const porcentajeAsistencia = cuposReservados > 0 ? (presentes / cuposReservados * 100).toFixed(0) : 0;
@@ -7241,9 +7246,7 @@ async function marcarTodosPresentes() {
                     const precioEuros = ruta.precioEuros || 0;
                     
                     // Calcular asistencia (presentes vs cupos reservados) — solo participantes de esta ruta
-                    const participantesRuta = data.participantes.filter(p => 
-                        (p.rutaId === ruta.id || p.ruta_id === ruta.id) || ((p.ruta_nombre || p.ruta) === ruta.nombre)
-                    );
+                    const participantesRuta = obtenerParticipantesRuta(ruta.id);
                     const presentes = participantesRuta.filter(p => p.asiste).length;
                     const cuposReservados = reservasRuta.reduce((sum, r) => sum + r.cantidad, 0);
                     const porcentajeAsistencia = cuposReservados > 0 ? (presentes / cuposReservados * 100).toFixed(0) : 0;
@@ -7314,10 +7317,7 @@ async function marcarTodosPresentes() {
                                     <div style="margin-top: 20px;">
                                         <div style="font-weight: 700; margin-bottom: 16px; color: var(--accent); font-size: 16px;">👥 Reservas y Participantes</div>
                                         ${reservasRuta.map(reserva => {
-                                            const participantesReserva = data.participantes.filter(p => 
-                                                p.lider === reserva.lider && 
-                                                (p.rutaId === reserva.rutaId || p.ruta_id === reserva.rutaId || (p.ruta_nombre || p.ruta) === ruta.nombre)
-                                            );
+                                            const participantesReserva = obtenerParticipantesReserva(reserva.lider, reserva.rutaId);
                                             const presentes = participantesReserva.filter(p => p.asiste).length;
                                             const totalPagado = reserva.montoPagado || 0; // Usar campo normalizado
                                             
