@@ -170,6 +170,7 @@
     }
 
     .hero-logo {
+      display: block;
       width: 280px;
       height: auto;
       margin: 0 auto 0;
@@ -179,6 +180,17 @@
       position: relative;
       z-index: 3;
       display: block;
+    }
+
+    .hero-logo-link {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .hero-logo-link:focus-visible {
+      outline: 2px solid var(--green);
+      outline-offset: 4px;
+      border-radius: 4px;
     }
 
     .hero-badge-global {
@@ -1151,6 +1163,9 @@
     .modal-card.modal-gold { border-color: #FFD700; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 20px rgba(255,215,0,0.25); }
     .modal-card.modal-silver { border-color: #C0C0C0; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 20px rgba(192,192,192,0.25); }
     .modal-card.modal-bronze { border-color: #CD7F32; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 20px rgba(205,127,50,0.25); }
+    /* Mismos bordes que .points-item.rank-platino / .points-item.rank-diamante */
+    .modal-card.modal-platino { border-color: rgba(185, 242, 255, 0.34); box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 20px rgba(185,242,255,0.25), inset 0 0 0 1px rgba(185, 242, 255, 0.1); }
+    .modal-card.modal-diamante { border-color: rgba(120, 170, 245, 0.32); box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 20px rgba(120,170,245,0.25), inset 0 0 0 1px rgba(120, 170, 245, 0.08); }
 
     .modal-close {
       position: absolute;
@@ -1454,6 +1469,9 @@
       overflow: hidden;
       border-radius: 16px;
       flex-shrink: 0;
+      /* Deja 1px de aire para que el borde del .modal-card no lo recorte el clip del viewport */
+      padding: 1px;
+      box-sizing: border-box;
     }
 
     .rank-guide-slide {
@@ -1465,6 +1483,23 @@
 
     .rank-guide-slide.is-dragging {
       transition: none;
+    }
+
+    /* El scroll no va en el mismo nodo que border-radius + border (evita borde inferior “cortado”) */
+    #rankGuideCard.modal-card {
+      overflow: visible;
+      display: flex;
+      flex-direction: column;
+      max-height: 90vh;
+    }
+
+    #rankGuideCard .rank-guide-card-scroll {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
     }
 
     .rank-guide-nav {
@@ -1795,7 +1830,9 @@
   <section class="hero">
     <div class="hero-bg"></div>
     <div class="hero-overlay"></div>
-    <img src="logo.png" alt="Logo SomosAventurados" class="hero-logo hero-logo-global">
+    <a href="index.html" class="hero-logo-global hero-logo-link" aria-label="Ir a la página de inicio">
+      <img src="logo.png" alt="Logo SomosAventurados" class="hero-logo">
+    </a>
     <div class="badge hero-badge-global">Ranking oficial</div>
 
     <div class="container hero-inner">
@@ -1994,16 +2031,18 @@
           <h3 class="modal-title" id="rankGuideName">Rango</h3>
           <div class="modal-badge-wrap" id="rankGuideBadgeWrap"></div>
           <div class="modal-pill" id="rankGuideRequirement">0 rutas</div>
-          <div class="rank-guide-modal-content">
-            <div class="rank-guide-story" id="rankGuideStory" style="--rank-accent: #76c893;">
-              <span class="rank-guide-story-kicker" id="rankGuideKicker">Tu historia en la montaña</span>
-              <p class="rank-guide-hook" id="rankGuideHook"></p>
-              <div class="rank-guide-divider" id="rankGuideDivider" aria-hidden="true"></div>
-              <p class="rank-guide-body" id="rankGuideBody"></p>
-            </div>
-            <div class="rank-guide-recompensa">
-              <div class="rank-guide-recompensa-title">Recompensa</div>
-              <div class="rank-guide-recompensa-text" id="rankGuideRecompensa"></div>
+          <div class="rank-guide-card-scroll">
+            <div class="rank-guide-modal-content">
+              <div class="rank-guide-story" id="rankGuideStory" style="--rank-accent: #76c893;">
+                <span class="rank-guide-story-kicker" id="rankGuideKicker">Tu historia en la montaña</span>
+                <p class="rank-guide-hook" id="rankGuideHook"></p>
+                <div class="rank-guide-divider" id="rankGuideDivider" aria-hidden="true"></div>
+                <p class="rank-guide-body" id="rankGuideBody"></p>
+              </div>
+              <div class="rank-guide-recompensa">
+                <div class="rank-guide-recompensa-title">Recompensa</div>
+                <div class="rank-guide-recompensa-text" id="rankGuideRecompensa"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -2172,10 +2211,12 @@
         if (!data || !rankGuideCard) return false;
         setRankGuideBackground(rankKey);
 
-        rankGuideCard.classList.remove("modal-gold", "modal-silver", "modal-bronze");
+        rankGuideCard.classList.remove("modal-gold", "modal-silver", "modal-bronze", "modal-platino", "modal-diamante");
         if (data.nombre === "Oro") rankGuideCard.classList.add("modal-gold");
         else if (data.nombre === "Plata") rankGuideCard.classList.add("modal-silver");
         else if (data.nombre === "Bronce") rankGuideCard.classList.add("modal-bronze");
+        else if (data.nombre === "Platino") rankGuideCard.classList.add("modal-platino");
+        else if (data.nombre === "Diamante") rankGuideCard.classList.add("modal-diamante");
 
         rankGuideName.textContent = data.nombre;
         rankGuideRequirement.textContent = data.minRutas + (data.minRutas === 1 ? " ruta" : " rutas");
