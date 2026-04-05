@@ -3162,7 +3162,7 @@
         <div class="hero-panel">
           <div class="top3-head">
             <div>
-              <div class="top3-title">Top 3 Aventurados</div>
+              <div class="top3-title">Top 3 aventurados</div>
             </div>
             <div class="chip">Actualizado hoy</div>
           </div>
@@ -3943,6 +3943,33 @@
         `;
       }
 
+      function fechaLocalYYYYMMDD(d) {
+        return (
+          d.getFullYear() +
+          '-' +
+          String(d.getMonth() + 1).padStart(2, '0') +
+          '-' +
+          String(d.getDate()).padStart(2, '0')
+        );
+      }
+
+      /**
+       * Próximas aventuras: el día del evento se dejan de mostrar a las 8:00 (hora local).
+       * Si el nombre de la ruta incluye "nocturna", se muestran hasta las 16:00 ese día.
+       */
+      function debeMostrarRutaEnProximas(ruta) {
+        const fechaEvento = String(ruta.fecha || '').slice(0, 10);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaEvento)) return true;
+        const ahora = new Date();
+        const hoyLocal = fechaLocalYYYYMMDD(ahora);
+        if (fechaEvento > hoyLocal) return true;
+        if (fechaEvento < hoyLocal) return false;
+        const esNocturna = /nocturna/i.test(String(ruta.nombre || ''));
+        const horaCorte = esNocturna ? 16 : 8;
+        const limite = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), horaCorte, 0, 0, 0);
+        return ahora < limite;
+      }
+
       // Función principal para cargar y mostrar rutas
       async function cargarRutasProximas() {
         const seccionRutas = document.getElementById('upcomingRoutes');
@@ -3958,10 +3985,8 @@
 
           const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
           
-          // Obtener fecha de hoy
-          const hoy = new Date();
-          hoy.setHours(0, 0, 0, 0);
-          const hoyISO = hoy.toISOString().split('T')[0];
+          // Fecha de hoy en calendario local (misma lógica que el corte 8:00 / 16:00 el día del evento)
+          const hoyISO = fechaLocalYYYYMMDD(new Date());
 
           // Consultar próximas rutas activas (más de 2 para "Ver más")
           const { data: rutas, error } = await supabaseClient
@@ -3979,18 +4004,20 @@
             return;
           }
 
+          const rutasFiltradas = (rutas || []).filter(debeMostrarRutaEnProximas);
+
           // Si no hay rutas, ocultar sección
-          if (!rutas || rutas.length === 0) {
+          if (!rutasFiltradas.length) {
             console.log('No se encontraron rutas próximas');
             seccionRutas.style.display = 'none';
             return;
           }
 
-          console.log(`Se encontraron ${rutas.length} rutas próximas`);
+          console.log(`Se encontraron ${rutasFiltradas.length} rutas próximas (tras filtro día del evento)`);
 
           // Calcular cupos ocupados para cada ruta
           const rutasConCupos = await Promise.all(
-            rutas.map(async (ruta) => {
+            rutasFiltradas.map(async (ruta) => {
               const cuposOcupados = await calcularCuposOcupados(ruta.id);
               return { ...ruta, cuposOcupados };
             })
