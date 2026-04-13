@@ -962,6 +962,11 @@
       background: rgba(255, 255, 255, 0.05);
     }
 
+    .info-box > .eyebrow,
+    .info-box > .box-title {
+      text-align: center;
+    }
+
     .cta-box {
       background: rgba(74, 222, 128, 0.1);
       border-color: rgba(74, 222, 128, 0.14);
@@ -983,76 +988,186 @@
 
     .points-list {
       margin-top: 16px;
+      margin-left: auto;
+      margin-right: auto;
       display: grid;
-      gap: 10px;
+      gap: 12px;
+      max-width: 248px;
+      width: 100%;
+    }
+
+    /* Una columna (sidebar a ancho completo): tarjetas más anchas, menos “callejones” laterales */
+    @media (max-width: 1023px) {
+      .points-list {
+        max-width: none;
+        width: 100%;
+      }
     }
 
     .points-item {
+      --rank-accent: rgba(255, 255, 255, 0.35);
+      --rank-accent-soft: rgba(255, 255, 255, 0.08);
+      --rank-bar: 3px;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 14px;
+      text-align: center;
+      gap: 6px;
+      padding: 16px 14px 14px;
       border-radius: 18px;
       border: 1px solid var(--line);
-      background: rgba(0, 0, 0, 0.18);
+      background: rgba(0, 0, 0, 0.22);
       cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    }
+
+    .points-item::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 14px;
+      bottom: 14px;
+      width: var(--rank-bar);
+      border-radius: 0 4px 4px 0;
+      background: var(--rank-accent);
+      opacity: 0.85;
+      pointer-events: none;
+    }
+
+    .points-badge-wrap {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      margin-bottom: 2px;
+    }
+
+    .points-hint {
+      margin: 4px 0 0;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      line-height: 1.35;
+      text-align: center;
+      letter-spacing: 0.06em;
+      opacity: 0.95;
     }
 
     .points-item:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+      transform: translateY(-2px);
     }
 
+    /* Progresión: bordes, brillo y barra lateral más marcados hacia Diamante */
     .points-item.rank-bronce {
-      border-color: rgba(205, 127, 50, 0.34);
-      background: linear-gradient(90deg, rgba(205, 127, 50, 0.12), rgba(0, 0, 0, 0.2));
-      box-shadow: inset 0 0 0 1px rgba(205, 127, 50, 0.08);
+      --rank-accent: #cd7f32;
+      --rank-bar: 3px;
+      border-color: rgba(205, 127, 50, 0.5);
+      background: linear-gradient(165deg, rgba(205, 127, 50, 0.16) 0%, rgba(12, 10, 8, 0.92) 55%, rgba(0, 0, 0, 0.55) 100%);
+      box-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .points-item.rank-bronce:hover {
+      box-shadow:
+        0 6px 18px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(205, 127, 50, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
     }
 
     .points-item.rank-plata {
-      border-color: rgba(192, 192, 192, 0.34);
-      background: linear-gradient(90deg, rgba(192, 192, 192, 0.12), rgba(0, 0, 0, 0.2));
-      box-shadow: inset 0 0 0 1px rgba(192, 192, 192, 0.08);
+      --rank-accent: #c8cdd4;
+      --rank-bar: 3px;
+      border-color: rgba(200, 205, 215, 0.55);
+      background: linear-gradient(165deg, rgba(190, 198, 208, 0.18) 0%, rgba(10, 12, 14, 0.9) 50%, rgba(0, 0, 0, 0.52) 100%);
+      box-shadow:
+        0 3px 14px rgba(0, 0, 0, 0.36),
+        inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    }
+
+    .points-item.rank-plata:hover {
+      box-shadow:
+        0 8px 22px rgba(0, 0, 0, 0.42),
+        0 0 24px rgba(200, 210, 220, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
     }
 
     .points-item.rank-oro {
-      border-color: rgba(255, 215, 0, 0.34);
-      background: linear-gradient(90deg, rgba(255, 215, 0, 0.12), rgba(0, 0, 0, 0.2));
-      box-shadow: inset 0 0 0 1px rgba(255, 215, 0, 0.08);
+      --rank-accent: #e6c200;
+      --rank-bar: 4px;
+      border-color: rgba(255, 210, 80, 0.58);
+      background: linear-gradient(168deg, rgba(255, 215, 0, 0.2) 0%, rgba(40, 32, 6, 0.88) 48%, rgba(0, 0, 0, 0.5) 100%);
+      box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.38),
+        0 0 22px rgba(255, 200, 60, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .points-item.rank-oro:hover {
+      box-shadow:
+        0 10px 26px rgba(0, 0, 0, 0.45),
+        0 0 32px rgba(255, 200, 60, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
 
     .points-item.rank-platino {
-      border-color: rgba(185, 242, 255, 0.34);
-      background: linear-gradient(90deg, rgba(185, 242, 255, 0.14), rgba(0, 0, 0, 0.2));
-      box-shadow: inset 0 0 0 1px rgba(185, 242, 255, 0.1);
+      --rank-accent: #b9f2ff;
+      --rank-bar: 4px;
+      border-color: rgba(160, 220, 240, 0.6);
+      background: linear-gradient(170deg, rgba(140, 210, 235, 0.22) 0%, rgba(8, 22, 28, 0.92) 50%, rgba(0, 0, 0, 0.48) 100%);
+      box-shadow:
+        0 5px 20px rgba(0, 0, 0, 0.4),
+        0 0 28px rgba(120, 200, 230, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .points-item.rank-platino:hover {
+      box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.48),
+        0 0 38px rgba(140, 210, 235, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
     }
 
     .points-item.rank-diamante {
-      border-color: rgba(120, 170, 245, 0.32);
-      background: linear-gradient(90deg, rgba(120, 170, 245, 0.12), rgba(0, 0, 0, 0.2));
-      box-shadow: inset 0 0 0 1px rgba(120, 170, 245, 0.08);
+      --rank-accent: #8cb4ff;
+      --rank-bar: 5px;
+      border-color: rgba(140, 180, 255, 0.72);
+      background: linear-gradient(172deg, rgba(100, 150, 255, 0.28) 0%, rgba(18, 28, 48, 0.95) 48%, rgba(0, 0, 0, 0.55) 100%);
+      box-shadow:
+        0 8px 28px rgba(0, 0, 0, 0.45),
+        0 0 36px rgba(120, 170, 255, 0.2),
+        inset 0 0 0 1px rgba(180, 210, 255, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
     }
 
-    .points-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 0;
+    .points-item.rank-diamante:hover {
+      transform: translateY(-3px);
+      box-shadow:
+        0 14px 40px rgba(0, 0, 0, 0.5),
+        0 0 48px rgba(130, 175, 255, 0.28),
+        inset 0 0 0 1px rgba(200, 220, 255, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
     }
 
     .points-icon {
       flex: 0 0 auto;
-      width: 52px;
-      height: 52px;
+      width: 76px;
+      height: 76px;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 7px;
-      border-radius: 10px;
-      background: rgba(9, 21, 27, 0.55);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 9px;
+      border-radius: 16px;
+      background: rgba(9, 21, 27, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .points-item.rank-diamante .points-icon {
+      width: 86px;
+      height: 86px;
+      padding: 10px;
+      border-radius: 18px;
     }
 
     .points-icon img {
@@ -1063,34 +1178,43 @@
     }
 
     .points-item.rank-bronce .points-icon {
-      box-shadow: 0 0 16px rgba(205, 127, 50, 0.32), 0 0 28px rgba(205, 127, 50, 0.14);
+      box-shadow: 0 0 20px rgba(205, 127, 50, 0.38), 0 0 36px rgba(205, 127, 50, 0.16);
     }
 
     .points-item.rank-plata .points-icon {
-      box-shadow: 0 0 16px rgba(192, 192, 192, 0.32), 0 0 28px rgba(192, 192, 192, 0.14);
+      box-shadow: 0 0 22px rgba(200, 210, 220, 0.4), 0 0 40px rgba(200, 210, 220, 0.14);
     }
 
     .points-item.rank-oro .points-icon {
-      box-shadow: 0 0 16px rgba(255, 215, 0, 0.34), 0 0 28px rgba(255, 215, 0, 0.15);
+      box-shadow: 0 0 24px rgba(255, 215, 0, 0.45), 0 0 44px rgba(255, 200, 60, 0.18);
     }
 
     .points-item.rank-platino .points-icon {
-      box-shadow: 0 0 16px rgba(185, 242, 255, 0.34), 0 0 28px rgba(185, 242, 255, 0.15);
+      box-shadow: 0 0 26px rgba(160, 220, 240, 0.42), 0 0 48px rgba(140, 210, 235, 0.16);
     }
 
     .points-item.rank-diamante .points-icon {
-      box-shadow: 0 0 16px rgba(120, 170, 245, 0.34), 0 0 28px rgba(120, 170, 245, 0.15);
+      box-shadow:
+        0 0 32px rgba(120, 170, 255, 0.5),
+        0 0 56px rgba(100, 150, 255, 0.22),
+        inset 0 0 0 1px rgba(200, 220, 255, 0.15);
     }
 
     .points-text {
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      color: var(--text);
+      width: 100%;
     }
 
     .points-value {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 800;
       white-space: nowrap;
+      color: var(--muted);
+      letter-spacing: 0.02em;
     }
 
     .full-btn {
@@ -1457,9 +1581,152 @@
       margin-bottom: 0;
     }
 
-    /* Modal guía de rangos: navegación tipo galería (flechas + swipe) */
-    .rank-guide-modal {
-      position: fixed;
+    /* Modal guía de rangos: navegación tipo galería (flechas + swipe) + entrada animada */
+    .modal.rank-guide-modal {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition:
+        opacity 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        visibility 0.32s step-end;
+    }
+
+    .modal.rank-guide-modal.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition:
+        opacity 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        visibility 0s step-start;
+    }
+
+    .modal.rank-guide-modal .rank-guide-viewport {
+      transform: scale(0.93) translateY(22px);
+      opacity: 0;
+      transition:
+        transform 0.42s cubic-bezier(0.34, 1.18, 0.52, 1),
+        opacity 0.36s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .modal.rank-guide-modal.active .rank-guide-viewport {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+      transition-delay: 0.04s;
+    }
+
+    .modal.rank-guide-modal .rank-guide-nav {
+      opacity: 0;
+      transition: opacity 0.28s ease 0.08s;
+    }
+
+    .modal.rank-guide-modal.active .rank-guide-nav {
+      opacity: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .modal.rank-guide-modal,
+      .modal.rank-guide-modal.active,
+      .modal.rank-guide-modal .rank-guide-viewport,
+      .modal.rank-guide-modal.active .rank-guide-viewport,
+      .modal.rank-guide-modal .rank-guide-nav,
+      .modal.rank-guide-modal.active .rank-guide-nav {
+        transition: none !important;
+        transition-delay: 0s !important;
+      }
+
+      .modal.rank-guide-modal .rank-guide-viewport {
+        transform: none;
+        opacity: 1;
+      }
+
+      .modal.rank-guide-modal:not(.active) .rank-guide-viewport {
+        opacity: 0;
+      }
+
+      .modal.rank-guide-modal .rank-guide-nav {
+        opacity: 1;
+      }
+    }
+
+    /* Modal detalle de persona (misma entrada que guía de rangos; viewport envuelve la card para no chocar con swipe translateX) */
+    .modal#profileModal {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition:
+        opacity 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        visibility 0.32s step-end;
+    }
+
+    .modal#profileModal.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition:
+        opacity 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        visibility 0s step-start;
+    }
+
+    .modal#profileModal .profile-modal-viewport {
+      position: relative;
+      max-width: 360px;
+      width: 100%;
+      flex-shrink: 0;
+      border-radius: 16px;
+      padding: 1px;
+      box-sizing: border-box;
+      overflow: hidden;
+      transform: scale(0.93) translateY(22px);
+      opacity: 0;
+      transition:
+        transform 0.42s cubic-bezier(0.34, 1.18, 0.52, 1),
+        opacity 0.36s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .modal#profileModal.active .profile-modal-viewport {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+      transition-delay: 0.04s;
+    }
+
+    .modal#profileModal .rank-guide-nav {
+      opacity: 0;
+      transition: opacity 0.28s ease 0.08s;
+    }
+
+    .modal#profileModal.active .rank-guide-nav {
+      opacity: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .modal#profileModal,
+      .modal#profileModal.active,
+      .modal#profileModal .profile-modal-viewport,
+      .modal#profileModal.active .profile-modal-viewport,
+      .modal#profileModal .rank-guide-nav,
+      .modal#profileModal.active .rank-guide-nav {
+        transition: none !important;
+        transition-delay: 0s !important;
+      }
+
+      .modal#profileModal .profile-modal-viewport {
+        transform: none;
+        opacity: 1;
+      }
+
+      .modal#profileModal:not(.active) .profile-modal-viewport {
+        opacity: 0;
+      }
+
+      .modal#profileModal .rank-guide-nav {
+        opacity: 1;
+      }
     }
 
     .rank-guide-viewport {
@@ -1917,47 +2184,52 @@
         <aside class="sidebar">
           <div class="info-box">
             <div class="eyebrow">Cómo subir en el ranking</div>
-            <h3 class="box-title">Guía de rangos por rutas</h3>
+            <h3 class="box-title">Sistema de rangos y recompensas</h3>
 
             <div class="points-list">
               <div class="points-item rank-bronce" data-rank="bronce">
-                <div class="points-left">
+                <div class="points-badge-wrap">
                   <div class="points-icon"><img src="badges/bronce.png" alt="Bronce"></div>
-                  <div class="points-text">Bronce</div>
                 </div>
+                <div class="points-text">Bronce</div>
                 <div class="points-value">2 rutas</div>
+                <p class="points-hint">Ver recompensas</p>
               </div>
 
               <div class="points-item rank-plata" data-rank="plata">
-                <div class="points-left">
+                <div class="points-badge-wrap">
                   <div class="points-icon"><img src="badges/plata.png" alt="Plata"></div>
-                  <div class="points-text">Plata</div>
                 </div>
+                <div class="points-text">Plata</div>
                 <div class="points-value">5 rutas</div>
+                <p class="points-hint">Ver recompensas</p>
               </div>
 
               <div class="points-item rank-oro" data-rank="oro">
-                <div class="points-left">
+                <div class="points-badge-wrap">
                   <div class="points-icon"><img src="badges/oro.png" alt="Oro"></div>
-                  <div class="points-text">Oro</div>
                 </div>
+                <div class="points-text">Oro</div>
                 <div class="points-value">10 rutas</div>
+                <p class="points-hint">Ver recompensas</p>
               </div>
 
               <div class="points-item rank-platino" data-rank="platino">
-                <div class="points-left">
+                <div class="points-badge-wrap">
                   <div class="points-icon"><img src="badges/platino.png" alt="Platino"></div>
-                  <div class="points-text">Platino</div>
                 </div>
+                <div class="points-text">Platino</div>
                 <div class="points-value">15 rutas</div>
+                <p class="points-hint">Ver recompensas</p>
               </div>
 
               <div class="points-item rank-diamante" data-rank="diamante">
-                <div class="points-left">
+                <div class="points-badge-wrap">
                   <div class="points-icon"><img src="badges/diamante.png" alt="Diamante"></div>
-                  <div class="points-text">Diamante</div>
                 </div>
+                <div class="points-text">Diamante</div>
                 <div class="points-value">20 rutas</div>
+                <p class="points-hint">Ver recompensas</p>
               </div>
             </div>
           </div>
@@ -2006,6 +2278,7 @@
   <div class="modal" id="profileModal" aria-hidden="true">
     <button type="button" class="rank-guide-nav rank-guide-nav--prev" id="profileModalNavPrev" aria-label="Aventurero anterior">‹</button>
     <button type="button" class="rank-guide-nav rank-guide-nav--next" id="profileModalNavNext" aria-label="Siguiente aventurero">›</button>
+    <div class="profile-modal-viewport" id="profileModalViewport">
     <div class="modal-card" id="modalCard">
       <button type="button" class="modal-close" id="modalClose" aria-label="Cerrar">&times;</button>
       <button type="button" class="modal-share" id="btnCompartirRanking" aria-label="Compartir ranking">Compartir</button>
@@ -2019,9 +2292,10 @@
       <div class="modal-routes-wrap" id="modalRoutesWrap"></div>
       <div class="modal-next" id="modalNext"></div>
     </div>
+    </div>
   </div>
 
-  <div class="modal rank-guide-modal" id="rankGuideModal" role="dialog" aria-modal="true" aria-label="Guía de rangos" aria-hidden="true">
+  <div class="modal rank-guide-modal" id="rankGuideModal" role="dialog" aria-modal="true" aria-label="Sistema de rangos y recompensas" aria-hidden="true">
     <button type="button" class="rank-guide-nav rank-guide-nav--prev" id="rankGuidePrev" aria-label="Rango anterior">‹</button>
     <button type="button" class="rank-guide-nav rank-guide-nav--next" id="rankGuideNext" aria-label="Siguiente rango">›</button>
     <div class="rank-guide-viewport" id="rankGuideViewport">
