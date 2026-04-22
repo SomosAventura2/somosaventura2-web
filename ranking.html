@@ -2375,12 +2375,14 @@
         return div.innerHTML;
       }
 
-      function calcularRangoAventurado(rutasAsistidas) {
-        if (rutasAsistidas < 2) return { nombre: "Novato", emoji: "🌱", color: "#22c55e", minRutas: 0 };
-        if (rutasAsistidas <= 4) return { nombre: "Bronce", emoji: "🥉", color: "#CD7F32", minRutas: 2 };
-        if (rutasAsistidas <= 9) return { nombre: "Plata", emoji: "🥈", color: "#C0C0C0", minRutas: 5 };
-        if (rutasAsistidas <= 14) return { nombre: "Oro", emoji: "🥇", color: "#FFD700", minRutas: 10 };
-        if (rutasAsistidas <= 19) return { nombre: "Platino", emoji: "💎", color: "#E5E4E2", minRutas: 15 };
+      /** Umbrales por asistencias totales (filas con asiste), igual que la app. */
+      function calcularRangoAventurado(asistenciasTotales) {
+        const n = Number(asistenciasTotales) || 0;
+        if (n < 2) return { nombre: "Novato", emoji: "🌱", color: "#22c55e", minRutas: 0 };
+        if (n <= 4) return { nombre: "Bronce", emoji: "🥉", color: "#CD7F32", minRutas: 2 };
+        if (n <= 9) return { nombre: "Plata", emoji: "🥈", color: "#C0C0C0", minRutas: 5 };
+        if (n <= 14) return { nombre: "Oro", emoji: "🥇", color: "#FFD700", minRutas: 10 };
+        if (n <= 19) return { nombre: "Platino", emoji: "💎", color: "#E5E4E2", minRutas: 15 };
         return { nombre: "Diamante", emoji: "✨", color: "#b9f2ff", minRutas: 20 };
       }
 
@@ -2941,7 +2943,8 @@
           modalNext.style.display = "none";
         } else {
           modalNext.style.display = "block";
-          let faltan = (sig.minRutas || 0) - (entry.rutasAsistidas || 0);
+          const asistTot = entry.totalAsistidas != null ? entry.totalAsistidas : entry.rutasAsistidas || 0;
+          let faltan = (sig.minRutas || 0) - asistTot;
           if (faltan < 0) faltan = 0;
           const totalPara = entry.totalParaSiguiente || 1;
           const progreso = entry.progreso || 0;
@@ -3425,7 +3428,8 @@
           ctx.font = "700 40px Poppins, sans-serif";
           ctx.fillText((sig.emoji || "") + " Próximo rango: " + safeText(sig.nombre), blockX + 26, blockY + 52);
 
-          const faltan = Math.max(0, (sig.minRutas || 0) - (entry.rutasAsistidas || 0));
+          const asistTotCanvas = entry.totalAsistidas != null ? entry.totalAsistidas : entry.rutasAsistidas || 0;
+          const faltan = Math.max(0, (sig.minRutas || 0) - asistTotCanvas);
           ctx.fillStyle = "rgba(255,255,255,0.65)";
           ctx.font = "500 34px Poppins, sans-serif";
           ctx.fillText("Necesitas " + faltan + " ruta" + (faltan !== 1 ? "s" : "") + " más", blockX + 26, blockY + 120);
@@ -3545,7 +3549,83 @@
           "Error al conectar con Supabase: " + (initErr && initErr.message ? initErr.message : String(initErr));
         return;
       }
-      const ordenRangos = { Diamante: 6, Platino: 5, Oro: 4, Plata: 3, Bronce: 2, Novato: 1 };
+      /** Misma regla que index.html / app para “ruta ya ocurrió” (tasa de asistencia en ranking). */
+      function rankingFechaLocalYYYYMMDD(d) {
+        return (
+          d.getFullYear() +
+          "-" +
+          String(d.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(d.getDate()).padStart(2, "0")
+        );
+      }
+      function rankingDebeMostrarRutaEnProximas(ruta) {
+        const fechaEvento = String(ruta.fecha || "").slice(0, 10);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaEvento)) return true;
+        const ahora = new Date();
+        const hoyLocal = rankingFechaLocalYYYYMMDD(ahora);
+        if (fechaEvento > hoyLocal) return true;
+        if (fechaEvento < hoyLocal) return false;
+        const esNocturna = /nocturna/i.test(String(ruta.nombre || ""));
+        const horaCorte = esNocturna ? 16 : 8;
+        const limite = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), horaCorte, 0, 0, 0);
+        return ahora < limite;
+      }
+      function rankingParticipacionAsiste(p) {
+        var v = p.asiste;
+        return v === true || v === 1 || v === "true" || v === "t";
+      }
+      function rankingRutaCuentaParaTasaRow(rRow) {
+        if (!rRow) return false;
+        if (rRow.archivada === true) return true;
+        return !rankingDebeMostrarRutaEnProximas(rRow);
+      }
+      /** Alineado con la app: `ruta_id` / `rutaId` o coincidencia por nombre (`ruta_nombre` / `ruta`). */
+      function rankingFindRutaParticipacion(p, rutasList) {
+        var list = rutasList || [];
+        var id = p.rutaId ?? p.ruta_id;
+        if (id != null && id !== "") {
+          for (var ri = 0; ri < list.length; ri++) {
+            if (String(list[ri].id) === String(id)) return list[ri];
+          }
+          return null;
+        }
+        var nom = String(p.ruta_nombre || p.ruta || "").trim();
+        if (!nom) return null;
+        for (var rj = 0; rj < list.length; rj++) {
+          if (String((list[rj].nombre || "").trim()) === nom) return list[rj];
+        }
+        return null;
+      }
+      function rankingTimestampEvento(rRow, p) {
+        var s = String((rRow && rRow.fecha) || (p && p.fecha) || "");
+        if (!s) return null;
+        var day = s.split("T")[0];
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) {
+          var t = new Date(s).getTime();
+          return isFinite(t) ? t : null;
+        }
+        var partes = day.split("-");
+        return new Date(parseInt(partes[0], 10), parseInt(partes[1], 10) - 1, parseInt(partes[2], 10), 12, 0, 0, 0).getTime();
+      }
+      function rankingMilestoneMs(participaciones, rutasList, nRutas) {
+        if (!nRutas || nRutas < 1) return Infinity;
+        var porRuta = new Map();
+        for (var i = 0; i < participaciones.length; i++) {
+          var p = participaciones[i];
+          if (!rankingParticipacionAsiste(p)) continue;
+          var rRow = rankingFindRutaParticipacion(p, rutasList);
+          if (!rRow) continue;
+          var ms = rankingTimestampEvento(rRow, p);
+          if (ms == null) continue;
+          var id = String(rRow.id);
+          var prev = porRuta.get(id);
+          if (prev == null || ms < prev) porRuta.set(id, ms);
+        }
+        var fechas = Array.from(porRuta.values()).sort(function (a, b) { return a - b; });
+        if (fechas.length < nRutas) return Infinity;
+        return fechas[nRutas - 1];
+      }
       let rankingBase = [];
       let rankingStep = 0; // 0 => 10, 1 => 20, 2 => 50, 3 => todo
 
@@ -3683,8 +3763,8 @@
 
       try {
         const results = await Promise.all([
-          db.from("participantes").select("nombre, ruta_id, asiste"),
-          db.from("rutas").select("id, nombre"),
+          db.from("participantes").select("*"),
+          db.from("rutas").select("id, nombre, fecha, archivada"),
           db.from("avatares_ranking").select("nombre, avatar_url")
         ]);
         const participantes = results[0].data || [];
@@ -3700,7 +3780,6 @@
           throw firstErr;
         }
 
-        const rutasMap = new Map(rutas.map(function (r) { return [r.id, r.nombre || ("Ruta " + r.id)]; }));
         avatarMap = new Map();
         avatares.forEach(function (a) {
           avatarMap.set((a.nombre || "").trim(), a.avatar_url);
@@ -3711,43 +3790,80 @@
         participantes.forEach(function (p) {
           const nombre = (p.nombre || "").trim();
           if (!nombre) return;
+          var rRow = rankingFindRutaParticipacion(p, rutas);
+          if (!rRow) return;
           if (!personasMap.has(nombre)) {
-            personasMap.set(nombre, { nombre: nombre, rutasSet: new Set(), rutasDetalleMap: new Map() });
+            personasMap.set(nombre, {
+              nombre: nombre,
+              participaciones: [],
+              rutasSet: new Set(),
+              rutasDetalleMap: new Map(),
+              totalParticipaciones: 0,
+              totalAsistidas: 0,
+              totalPartTasa: 0,
+              totalAsistTasa: 0
+            });
           }
           const persona = personasMap.get(nombre);
-          if (p.asiste === true && p.ruta_id) {
-            persona.rutasSet.add(p.ruta_id);
-            const nomRuta = rutasMap.get(p.ruta_id) || ("Ruta " + p.ruta_id);
+          persona.participaciones.push(p);
+          persona.totalParticipaciones += 1;
+          if (rankingParticipacionAsiste(p)) {
+            persona.totalAsistidas += 1;
+            persona.rutasSet.add(String(rRow.id));
+            const nomRuta = rRow.nombre || ("Ruta " + rRow.id);
             persona.rutasDetalleMap.set(nomRuta, (persona.rutasDetalleMap.get(nomRuta) || 0) + 1);
+          }
+          if (rankingRutaCuentaParaTasaRow(rRow)) {
+            persona.totalPartTasa += 1;
+            if (rankingParticipacionAsiste(p)) persona.totalAsistTasa += 1;
           }
         });
 
         rankingBase = Array.from(personasMap.values())
           .map(function (persona) {
+            const totalAsistidas = persona.totalAsistidas || 0;
+            const totalParticipaciones = persona.totalParticipaciones || 0;
             const rutasAsistidas = persona.rutasSet.size;
-            const rango = calcularRangoAventurado(rutasAsistidas);
+            const partT = persona.totalPartTasa || 0;
+            const asisT = persona.totalAsistTasa || 0;
+            const porcentajeAsistencia =
+              partT > 0 ? Math.round((asisT / partT) * 100) : 0;
+            const rango = calcularRangoAventurado(totalAsistidas);
             const siguienteRango = getSiguienteRangoLanding(rango);
             const rutasAsistidasList = Array.from(persona.rutasDetalleMap.entries()).map(function (e) {
               return { nombre: e[0], vecesAsistio: e[1] };
             }).sort(function (a, b) { return b.vecesAsistio - a.vecesAsistio; });
+            var milestoneMs = rankingMilestoneMs(persona.participaciones, rutas, rutasAsistidas);
             return {
               nombre: persona.nombre,
+              totalAsistidas: totalAsistidas,
+              totalParticipaciones: totalParticipaciones,
+              porcentajeAsistencia: porcentajeAsistencia,
+              _tasaPart: partT,
+              _tasaAsis: asisT,
+              _milestoneMs: milestoneMs,
               rutasAsistidas: rutasAsistidas,
               rutasAsistidasList: rutasAsistidasList,
               rango: rango,
               siguienteRango: siguienteRango,
-              progreso: rango && siguienteRango ? rutasAsistidas - rango.minRutas : 0,
+              progreso: rango && siguienteRango ? totalAsistidas - rango.minRutas : 0,
               totalParaSiguiente: rango && siguienteRango ? siguienteRango.minRutas - rango.minRutas : 0,
-              puntos: rutasAsistidas * 50
+              puntos: totalAsistidas * 50
             };
           })
-          .filter(function (p) { return p.rutasAsistidas >= 2; })
+          .filter(function (p) { return p.rango != null && p.totalAsistidas >= 2; })
           .sort(function (a, b) {
-            const pesoA = ordenRangos[a.rango.nombre] || 0;
-            const pesoB = ordenRangos[b.rango.nombre] || 0;
-            if (pesoB !== pesoA) return pesoB - pesoA;
             if (b.rutasAsistidas !== a.rutasAsistidas) return b.rutasAsistidas - a.rutasAsistidas;
-            return (a.nombre || "").localeCompare(b.nombre || "", "es");
+            var pctB = Number(b.porcentajeAsistencia) || 0;
+            var pctA = Number(a.porcentajeAsistencia) || 0;
+            if (pctB !== pctA) return pctB - pctA;
+            var rawB = (b._tasaPart || 0) > 0 ? (b._tasaAsis || 0) / b._tasaPart : -1;
+            var rawA = (a._tasaPart || 0) > 0 ? (a._tasaAsis || 0) / a._tasaPart : -1;
+            if (rawB !== rawA) return rawB > rawA ? 1 : (rawB < rawA ? -1 : 0);
+            var mA = a._milestoneMs != null ? a._milestoneMs : Infinity;
+            var mB = b._milestoneMs != null ? b._milestoneMs : Infinity;
+            if (mA !== mB) return mA - mB;
+            return (a.nombre || "").localeCompare(b.nombre || "", "es", { sensitivity: "base" });
           });
 
         rankingBase.forEach(function (entry, idx) {

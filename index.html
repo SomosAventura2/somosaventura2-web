@@ -4551,12 +4551,14 @@
       // =============================================
       // RANKING TOP 10 AVENTURADOS (desde participantes)
       // =============================================
-      function calcularRangoAventurado(rutasAsistidas) {
-        if (rutasAsistidas < 2) return { nombre: 'Novato', emoji: '🌱', color: '#22c55e', minRutas: 0 };
-        if (rutasAsistidas <= 4) return { nombre: 'Bronce', emoji: '🥉', color: '#CD7F32', minRutas: 2 };
-        if (rutasAsistidas <= 9) return { nombre: 'Plata', emoji: '🥈', color: '#C0C0C0', minRutas: 5 };
-        if (rutasAsistidas <= 14) return { nombre: 'Oro', emoji: '🥇', color: '#FFD700', minRutas: 10 };
-        if (rutasAsistidas <= 19) return { nombre: 'Platino', emoji: '💎', color: '#E5E4E2', minRutas: 15 };
+      /** Umbrales por asistencias totales (filas con asiste), igual que la app. */
+      function calcularRangoAventurado(asistenciasTotales) {
+        var n = Number(asistenciasTotales) || 0;
+        if (n < 2) return { nombre: 'Novato', emoji: '🌱', color: '#22c55e', minRutas: 0 };
+        if (n <= 4) return { nombre: 'Bronce', emoji: '🥉', color: '#CD7F32', minRutas: 2 };
+        if (n <= 9) return { nombre: 'Plata', emoji: '🥈', color: '#C0C0C0', minRutas: 5 };
+        if (n <= 14) return { nombre: 'Oro', emoji: '🥇', color: '#FFD700', minRutas: 10 };
+        if (n <= 19) return { nombre: 'Platino', emoji: '💎', color: '#E5E4E2', minRutas: 15 };
         return { nombre: 'Diamante', emoji: '✨', color: '#b9f2ff', minRutas: 20 };
       }
 
@@ -4568,6 +4570,68 @@
         if (rango.nombre === 'Oro') return calcularRangoAventurado(15);
         if (rango.nombre === 'Platino') return calcularRangoAventurado(20);
         return null;
+      }
+
+      /**
+       * Igual que la app (`findRutaPorParticipacion`): id numérico/string, o nombre de ruta si no hay id.
+       * Sin esto, el ranking web ignora filas con solo `ruta_nombre` y desincroniza respecto a la app.
+       */
+      function rankingLandingFindRuta(p, rutasArr) {
+        var list = rutasArr || [];
+        var id = p.rutaId ?? p.ruta_id;
+        if (id != null && id !== '') {
+          for (var ri = 0; ri < list.length; ri++) {
+            if (String(list[ri].id) === String(id)) return list[ri];
+          }
+          return null;
+        }
+        var nom = String(p.ruta_nombre || p.ruta || '').trim();
+        if (!nom) return null;
+        for (var rj = 0; rj < list.length; rj++) {
+          if (String((list[rj].nombre || '').trim()) === nom) return list[rj];
+        }
+        return null;
+      }
+
+      function rankingLandingParticipacionAsiste(p) {
+        var v = p.asiste;
+        return v === true || v === 1 || v === 'true' || v === 't';
+      }
+      /** Tasa (denominador): ruta archivada o ya fuera de “próximas” (misma idea que la app). */
+      function rankingLandingRutaCuentaParaTasa(rRow) {
+        if (!rRow) return false;
+        if (rRow.archivada === true) return true;
+        return !debeMostrarRutaEnProximas(rRow);
+      }
+      function rankingLandingTimestampEvento(rRow, p) {
+        var s = String((rRow && rRow.fecha) || (p && p.fecha) || '');
+        if (!s) return null;
+        var day = s.split('T')[0];
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) {
+          var t = new Date(s).getTime();
+          return isFinite(t) ? t : null;
+        }
+        var partes = day.split('-');
+        return new Date(parseInt(partes[0], 10), parseInt(partes[1], 10) - 1, parseInt(partes[2], 10), 12, 0, 0, 0).getTime();
+      }
+      /** Fecha en que alcanzó la N-ésima ruta distinta con asistencia (primero en el tiempo = mejor). */
+      function rankingLandingMilestoneMs(participaciones, rutasArr, nRutas) {
+        if (!nRutas || nRutas < 1) return Infinity;
+        var porRuta = new Map();
+        for (var i = 0; i < participaciones.length; i++) {
+          var p = participaciones[i];
+          if (!rankingLandingParticipacionAsiste(p)) continue;
+          var rRow = rankingLandingFindRuta(p, rutasArr);
+          if (!rRow) continue;
+          var ms = rankingLandingTimestampEvento(rRow, p);
+          if (ms == null) continue;
+          var id = String(rRow.id);
+          var prev = porRuta.get(id);
+          if (prev == null || ms < prev) porRuta.set(id, ms);
+        }
+        var fechas = Array.from(porRuta.values()).sort(function (a, b) { return a - b; });
+        if (fechas.length < nRutas) return Infinity;
+        return fechas[nRutas - 1];
       }
 
       function getRankingTestData() {
@@ -4582,20 +4646,42 @@
           { nombre: 'Diego Ramírez', rutasAsistidas: 4 },
           { nombre: 'Elena Torres', rutasAsistidas: 3 },
           { nombre: 'Javier Flores', rutasAsistidas: 2 }
-        ].map(p => {
-          var rango = calcularRangoAventurado(p.rutasAsistidas);
+        ].map(function (p, idx) {
+          var ta = p.rutasAsistidas;
+          var tp = ta;
+          var pct = Math.max(55, 99 - idx * 4);
+          var milestoneMs = Date.now() - idx * 86400000 * 40;
+          var rango = calcularRangoAventurado(ta);
           var siguienteRango = getSiguienteRangoLanding(rango);
           var rutasList = [];
           for (var i = 0; i < Math.min(p.rutasAsistidas, 5); i++) rutasList.push({ nombre: 'Ruta ejemplo ' + (i + 1), vecesAsistio: 1 });
           return {
             nombre: p.nombre,
+            totalAsistidas: ta,
+            totalParticipaciones: tp,
+            porcentajeAsistencia: pct,
             rutasAsistidas: p.rutasAsistidas,
             rango: rango,
             rutasAsistidasList: rutasList,
             siguienteRango: siguienteRango,
-            progreso: rango && siguienteRango ? p.rutasAsistidas - rango.minRutas : 0,
-            totalParaSiguiente: rango && siguienteRango ? siguienteRango.minRutas - rango.minRutas : 0
+            progreso: rango && siguienteRango ? ta - rango.minRutas : 0,
+            totalParaSiguiente: rango && siguienteRango ? siguienteRango.minRutas - rango.minRutas : 0,
+            _milestoneMs: milestoneMs,
+            _tasaPart: 20,
+            _tasaAsis: Math.round((pct / 100) * 20)
           };
+        }).sort(function (a, b) {
+          if (b.rutasAsistidas !== a.rutasAsistidas) return b.rutasAsistidas - a.rutasAsistidas;
+          var pctB = Number(b.porcentajeAsistencia) || 0;
+          var pctA = Number(a.porcentajeAsistencia) || 0;
+          if (pctB !== pctA) return pctB - pctA;
+          var rawB = (b._tasaPart || 0) > 0 ? (b._tasaAsis || 0) / b._tasaPart : -1;
+          var rawA = (a._tasaPart || 0) > 0 ? (a._tasaAsis || 0) / a._tasaPart : -1;
+          if (rawB !== rawA) return rawB > rawA ? 1 : (rawB < rawA ? -1 : 0);
+          var mA = a._milestoneMs != null ? a._milestoneMs : Infinity;
+          var mB = b._milestoneMs != null ? b._milestoneMs : Infinity;
+          if (mA !== mB) return mA - mB;
+          return (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' });
         });
       }
 
@@ -4675,11 +4761,15 @@
             ranking = getRankingTestData();
           } else {
             const [{ data: participantes, error: errPart }, { data: rutas, error: errRutas }, { data: avatares, error: errAv }] = await Promise.all([
-              supabaseClient.from('participantes').select('nombre, ruta_id, asiste'),
-              supabaseClient.from('rutas').select('id, nombre'),
+              supabaseClient.from('participantes').select('*'),
+              supabaseClient.from('rutas').select('id, nombre, fecha, archivada'),
               supabaseClient.from('avatares_ranking').select('nombre, avatar_url')
             ]);
-            rutasCatalogoCount = (rutas && rutas.length) || 0;
+            if (!errRutas) {
+              rutasCatalogoCount = (rutas && rutas.length) || 0;
+            } else {
+              console.warn('No se pudo leer rutas para el contador de la landing (RLS/permisos):', errRutas);
+            }
             if (!errAv && avatares && avatares.length) avatares.forEach(function (a) { avatarMap.set((a.nombre || '').trim(), a.avatar_url); });
 
             if (errPart) {
@@ -4690,46 +4780,82 @@
             }
 
             const raw = participantes || [];
-            const rutasMap = new Map((rutas || []).map(function (r) { return [r.id, r.nombre || ('Ruta ' + r.id)]; }));
+            const rutasArr = rutas || [];
             const personasMap = new Map();
             raw.forEach(function (p) {
               const nombre = (p.nombre || '').trim();
               if (!nombre) return;
+              var rRow = rankingLandingFindRuta(p, rutasArr);
+              if (!rRow) return;
               if (!personasMap.has(nombre)) {
-                personasMap.set(nombre, { nombre: nombre, rutasSet: new Set(), rutasDetalleMap: new Map() });
+                personasMap.set(nombre, {
+                  nombre: nombre,
+                  participaciones: [],
+                  rutasSet: new Set(),
+                  rutasDetalleMap: new Map(),
+                  totalParticipaciones: 0,
+                  totalAsistidas: 0,
+                  totalPartTasa: 0,
+                  totalAsistTasa: 0
+                });
               }
               const persona = personasMap.get(nombre);
-              if (p.asiste === true && p.ruta_id) {
-                persona.rutasSet.add(p.ruta_id);
-                const nomRuta = rutasMap.get(p.ruta_id) || ('Ruta ' + p.ruta_id);
+              persona.participaciones.push(p);
+              persona.totalParticipaciones += 1;
+              if (rankingLandingParticipacionAsiste(p)) {
+                persona.totalAsistidas += 1;
+                persona.rutasSet.add(String(rRow.id));
+                var nomRuta = rRow.nombre || ('Ruta ' + rRow.id);
                 persona.rutasDetalleMap.set(nomRuta, (persona.rutasDetalleMap.get(nomRuta) || 0) + 1);
+              }
+              if (rankingLandingRutaCuentaParaTasa(rRow)) {
+                persona.totalPartTasa += 1;
+                if (rankingLandingParticipacionAsiste(p)) persona.totalAsistTasa += 1;
               }
             });
 
-            const ordenRangos = { 'Diamante': 6, 'Platino': 5, 'Oro': 4, 'Plata': 3, 'Bronce': 2, 'Novato': 1 };
             ranking = Array.from(personasMap.values())
               .map(function (persona) {
-                const rutasAsistidas = persona.rutasSet.size;
-                const rango = calcularRangoAventurado(rutasAsistidas);
-                const siguienteRango = getSiguienteRangoLanding(rango);
-                const rutasAsistidasList = Array.from(persona.rutasDetalleMap.entries()).map(function (e) { return { nombre: e[0], vecesAsistio: e[1] }; });
+                var totalAsistidas = persona.totalAsistidas || 0;
+                var totalParticipaciones = persona.totalParticipaciones || 0;
+                var rutasAsistidas = persona.rutasSet.size;
+                var partT = persona.totalPartTasa || 0;
+                var asisT = persona.totalAsistTasa || 0;
+                var porcentajeAsistencia =
+                  partT > 0 ? Math.round((asisT / partT) * 100) : 0;
+                var rango = calcularRangoAventurado(totalAsistidas);
+                var siguienteRango = getSiguienteRangoLanding(rango);
+                var rutasAsistidasList = Array.from(persona.rutasDetalleMap.entries()).map(function (e) { return { nombre: e[0], vecesAsistio: e[1] }; });
+                var milestoneMs = rankingLandingMilestoneMs(persona.participaciones, rutasArr, rutasAsistidas);
                 return {
                   nombre: persona.nombre,
+                  totalAsistidas: totalAsistidas,
+                  totalParticipaciones: totalParticipaciones,
+                  porcentajeAsistencia: porcentajeAsistencia,
+                  _tasaPart: partT,
+                  _tasaAsis: asisT,
+                  _milestoneMs: milestoneMs,
                   rutasAsistidas: rutasAsistidas,
                   rango: rango,
                   rutasAsistidasList: rutasAsistidasList,
                   siguienteRango: siguienteRango,
-                  progreso: rango && siguienteRango ? rutasAsistidas - rango.minRutas : 0,
+                  progreso: rango && siguienteRango ? totalAsistidas - rango.minRutas : 0,
                   totalParaSiguiente: rango && siguienteRango ? siguienteRango.minRutas - rango.minRutas : 0
                 };
               })
-              .filter(function (p) { return p.rutasAsistidas >= 2; })
+              .filter(function (p) { return p.rango != null && p.totalAsistidas >= 2; })
               .sort(function (a, b) {
-                const pesoA = ordenRangos[a.rango.nombre] || 0;
-                const pesoB = ordenRangos[b.rango.nombre] || 0;
-                if (pesoB !== pesoA) return pesoB - pesoA;
                 if (b.rutasAsistidas !== a.rutasAsistidas) return b.rutasAsistidas - a.rutasAsistidas;
-                return (a.nombre || '').localeCompare(b.nombre || '', 'es');
+                var pctB = Number(b.porcentajeAsistencia) || 0;
+                var pctA = Number(a.porcentajeAsistencia) || 0;
+                if (pctB !== pctA) return pctB - pctA;
+                var rawB = (b._tasaPart || 0) > 0 ? (b._tasaAsis || 0) / b._tasaPart : -1;
+                var rawA = (a._tasaPart || 0) > 0 ? (a._tasaAsis || 0) / a._tasaPart : -1;
+                if (rawB !== rawA) return rawB > rawA ? 1 : (rawB < rawA ? -1 : 0);
+                var mA = a._milestoneMs != null ? a._milestoneMs : Infinity;
+                var mB = b._milestoneMs != null ? b._milestoneMs : Infinity;
+                if (mA !== mB) return mA - mB;
+                return (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' });
               });
           }
 
@@ -5099,7 +5225,8 @@
           ctx.font = '700 40px Poppins, sans-serif';
           ctx.fillText((sig.emoji || '') + ' Próximo rango: ' + safeText(sig.nombre), blockX + 26, blockY + 52);
 
-          var faltan = Math.max(0, (sig.minRutas || 0) - (entry.rutasAsistidas || 0));
+          var asistTotCanvas = entry.totalAsistidas != null ? entry.totalAsistidas : entry.rutasAsistidas || 0;
+          var faltan = Math.max(0, (sig.minRutas || 0) - asistTotCanvas);
           ctx.fillStyle = 'rgba(255,255,255,0.65)';
           ctx.font = '500 34px Poppins, sans-serif';
           ctx.fillText('Necesitas ' + faltan + ' ruta' + (faltan !== 1 ? 's' : '') + ' más', blockX + 26, blockY + 120);
@@ -5372,7 +5499,8 @@
             proximoEl.style.display = 'none';
           } else {
             proximoEl.style.display = 'block';
-            var faltan = (sig.minRutas || 0) - (entry.rutasAsistidas || 0);
+            var asistTotModal = entry.totalAsistidas != null ? entry.totalAsistidas : entry.rutasAsistidas || 0;
+            var faltan = (sig.minRutas || 0) - asistTotModal;
             if (faltan < 0) faltan = 0;
             var totalPara = entry.totalParaSiguiente || 1;
             var progreso = entry.progreso || 0;
